@@ -51,8 +51,6 @@ const BusinessCard = ({ business }: { business: Business }) => {
       ?.includes(search?.toLowerCase()?.trim())
   );
 
-  console.log("filteredServices: ", filteredServices);
-
   return (
     <div>
       <Link href={`/search-result/${business._id}`}>

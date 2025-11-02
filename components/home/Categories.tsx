@@ -37,7 +37,7 @@ const Categories = () => {
     },
   ];
 
-  const { setFamilyTag } = useFilterStore();
+  const { setFamilyTag, setInstrument, setSelectInstrument } = useFilterStore();
 
   return (
     <section className="bg-[#f0f9f9] py-20">
@@ -55,9 +55,17 @@ const Categories = () => {
             <Link
               key={index}
               href={category.link}
-              onClick={() => setFamilyTag(category.title)}
+              onClick={() => {
+                setFamilyTag(category?.title);
+              }}
             >
-              <div className="bg-white flex flex-col justify-center items-center py-5 shadow-[0px_2px_12px_0px_#003D3914] rounded-lg h-[250px]  hover:scale-105 transition-all duration-200">
+              <div
+                onClick={() => {
+                  setInstrument(category?.title);
+                  setSelectInstrument(true);
+                }}
+                className="bg-white flex flex-col justify-center items-center py-5 shadow-[0px_2px_12px_0px_#003D3914] rounded-lg h-[250px]  hover:scale-105 transition-all duration-200"
+              >
                 <div
                   className={`relative ${
                     category.title === "Woodwinds"

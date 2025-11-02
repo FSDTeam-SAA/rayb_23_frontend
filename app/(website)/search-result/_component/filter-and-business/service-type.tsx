@@ -42,10 +42,6 @@ const ServiceType: React.FC<InstrumentFamilyProps> = ({
   }))
   .filter((family) => family.instrumentTypes.length > 0);
 
-  console.log("service : ", service);
-
-  console.log("filteredServices : ", filteredServices);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setServiceTag(e.target.value);
   };
