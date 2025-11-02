@@ -1,4 +1,5 @@
 "use client";
+import { useFilterStore } from "@/zustand/stores/search-store";
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -30,6 +31,8 @@ const BusinessCard = ({ business }: { business: Business }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const images = business.businessInfo?.image || [];
 
+  const { search } = useFilterStore();
+
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % images.length);
   };
@@ -41,6 +44,14 @@ const BusinessCard = ({ business }: { business: Business }) => {
   const goToImage = (index: number) => {
     setCurrentImageIndex(index);
   };
+
+  const filteredServices = business?.services?.filter((service) =>
+    service?.newInstrumentName
+      ?.toLowerCase()
+      ?.includes(search?.toLowerCase()?.trim())
+  );
+
+  console.log("filteredServices: ", filteredServices);
 
   return (
     <div>
@@ -123,20 +134,34 @@ const BusinessCard = ({ business }: { business: Business }) => {
 
                   <div className="my-3 flex items-center gap-2">
                     <Star className="fill-yellow-400 text-yellow-400 font-bold h-4 w-4" />
-                    <span>{business.review ? business.review.length : 0}</span> <span className="text-xs">( by google )</span>
+                    <span>{business.review ? business.review.length : 0}</span>{" "}
+                    <span className="text-xs">( by google )</span>
                   </div>
 
                   <div className="flex flex-col gap-2">
                     <div className="flex flex-wrap items-center gap-2 mb-2">
-                      {business?.services?.map((service, index) => (
-                        <button
-                          className="h-[40px] lg:h-[48px] px-4 lg:px-5 rounded-lg bg-[#F8F8F8] text-sm lg:text-base flex items-center gap-5"
-                          key={index}
-                        >
-                          <span>{service.newInstrumentName}</span>
-                          <span>$ {service.price}</span>
-                        </button>
-                      ))}
+                      {}
+
+                      {business?.services
+                        ?.slice(0, 1)
+                        ?.map((service, index) => (
+                          <button
+                            className="h-[40px] lg:h-[48px] px-4 lg:px-5 rounded-lg bg-[#F8F8F8] text-sm lg:text-base flex items-center gap-5"
+                            key={index}
+                          >
+                            <span>
+                              {filteredServices
+                                ? filteredServices[0]?.newInstrumentName
+                                : service.newInstrumentName}
+                            </span>
+                            <span>
+                              ${" "}
+                              {filteredServices
+                                ? filteredServices[0]?.price
+                                : service.price}
+                            </span>
+                          </button>
+                        ))}
                     </div>
                     <div>
                       <Link href={`/search-result/${business._id}`}>
