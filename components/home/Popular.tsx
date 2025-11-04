@@ -195,7 +195,6 @@ const Popular = () => {
                                       5.0
                                     </span>
                                     <span className="text-xs flex items-center gap-1">
-                                      (
                                       <Image
                                         src="/images/google.jpeg"
                                         alt="google"
@@ -203,7 +202,6 @@ const Popular = () => {
                                         height={1000}
                                         className="h-4 w-4"
                                       />
-                                      )
                                     </span>
                                   </div>
                                 ) : (
@@ -211,7 +209,6 @@ const Popular = () => {
                                     <Star className="fill-yellow-400 text-yellow-400 font-bold h-4 w-4" />
                                     <span>{business?.review?.length}</span>
                                     <span className="text-xs flex items-center gap-1">
-                                      (
                                       <Image
                                         src="/images/google.jpeg"
                                         alt="google"
@@ -219,7 +216,6 @@ const Popular = () => {
                                         height={1000}
                                         className="h-4 w-4"
                                       />
-                                      )
                                     </span>
                                   </div>
                                 )}
