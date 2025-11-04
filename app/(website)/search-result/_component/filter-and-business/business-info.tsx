@@ -8,6 +8,7 @@ import ResultsFiltering from "./results-fiiltering";
 import Pagination from "./Pagination";
 import AddBusinessSection from "@/components/shared/AddBusinessSection";
 import { useFilterStore } from "@/zustand/stores/search-store";
+import { useSearchStore } from "@/components/home/states/useSearchStore";
 
 interface BusinessItem {
   email: string;
@@ -43,8 +44,10 @@ const BusinessInfo = () => {
     maxPriceRange,
     open,
     sort,
-    search
+    search,
   } = useFilterStore();
+
+  const { location } = useSearchStore();
 
   const { data: allBusiness = {}, isLoading } = useQuery({
     queryKey: [
@@ -58,33 +61,43 @@ const BusinessInfo = () => {
       maxPriceRange,
       open,
       sort,
-      search
+      search,
     ],
     queryFn: async () => {
-      const offersParams = offersTag.map(tag => {
-        switch(tag.label) {
-          case "Buy":
-            return "buyInstruments=true";
-          case "Sell":
-            return "sellInstruments=true";
-          case "Trade":
-            return "tradeInstruments=true";
-          case "Rental":
-            return "rentalInstruments=true";
-          case "Music Lessons":
-            return "offerMusicLessons=true";
-          default:
-            return "";
-        }
-      }).filter(param => param !== "").join("&");
+      const offersParams = offersTag
+        .map((tag) => {
+          switch (tag.label) {
+            case "Buy":
+              return "buyInstruments=true";
+            case "Sell":
+              return "sellInstruments=true";
+            case "Trade":
+              return "tradeInstruments=true";
+            case "Rental":
+              return "rentalInstruments=true";
+            case "Music Lessons":
+              return "offerMusicLessons=true";
+            default:
+              return "";
+          }
+        })
+        .filter((param) => param !== "")
+        .join("&");
 
       const baseUrl = `${process.env.NEXT_PUBLIC_API_URL}/business?page=${page}&limit=${limit}`;
-      
-      const filterParams = `&instrumentFamily=${familyTag[0]?.label || ""}&selectedInstrumentsGroup=${instrumentTag[0]?.label || ""}&newInstrumentName=${serviceTag[0]?.label || ""}&minPrice=${minPriceRange}&maxPrice=${maxPriceRange}&openNow=${open}&sort=${sort}&search=${search}`;
-      
-      const url = `${baseUrl}${filterParams}${offersParams ? `&${offersParams}` : ""}`;
-      
-      
+
+      const filterParams = `&instrumentFamily=${
+        familyTag[0]?.label || ""
+      }&selectedInstrumentsGroup=${
+        instrumentTag[0]?.label || ""
+      }&newInstrumentName=${
+        serviceTag[0]?.label || ""
+      }&minPrice=${minPriceRange}&maxPrice=${maxPriceRange}&openNow=${open}&sort=${sort}&search=${search}&search=${location}`;
+
+      const url = `${baseUrl}${filterParams}${
+        offersParams ? `&${offersParams}` : ""
+      }`;
+
       const res = await fetch(url);
       const data = await res.json();
       return data;
