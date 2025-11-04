@@ -131,9 +131,38 @@ const BusinessCard = ({ business }: { business: Business }) => {
                   </h3>
 
                   <div className="my-3 flex items-center gap-2">
-                    <Star className="fill-yellow-400 text-yellow-400 font-bold h-4 w-4" />
-                    <span>{business.review ? business.review.length : 0}</span>{" "}
-                    <span className="text-xs">( by google )</span>
+                    {business?.review?.length === 0 ? (
+                      <span className="text-sm text-gray-500">No reviews</span>
+                    ) : business?.review?.length === 1 ? (
+                      <div className="flex items-center gap-1">
+                        {/* Single 5-star */}
+                        <Star className="fill-yellow-400 text-yellow-400 font-bold h-4 w-4" />
+                        <span className="text-sm text-gray-700">5.0</span>
+                        <span className="text-xs flex items-center gap-1">
+                          <Image
+                            src="/images/google.jpeg"
+                            alt="google"
+                            width={1000}
+                            height={1000}
+                            className="h-4 w-4"
+                          />
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <Star className="fill-yellow-400 text-yellow-400 font-bold h-4 w-4" />
+                        <span>{business?.review?.length}</span>
+                        <span className="text-xs flex items-center gap-1">
+                          <Image
+                            src="/images/google.jpeg"
+                            alt="google"
+                            width={1000}
+                            height={1000}
+                            className="h-4 w-4"
+                          />
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex flex-col gap-2">

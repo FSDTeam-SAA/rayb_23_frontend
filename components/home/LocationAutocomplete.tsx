@@ -99,7 +99,7 @@ export function LocationAutocomplete({
   };
 
   const clearLocation = () => {
-    setLocation("");
+    setLocation("San Francisco, CA");
     setShowSuggestions(false);
   };
 
