@@ -7,6 +7,7 @@ import { useState, useEffect, useRef, KeyboardEvent } from "react";
 import Image from "next/image";
 import { useFilterStore } from "@/zustand/stores/search-store";
 import { Button } from "../ui/button";
+import { useSearchStore } from "../home/states/useSearchStore";
 
 interface Business {
   _id: string;
@@ -25,7 +26,10 @@ interface PlaceResult {
   display_name: string;
   address: {
     city?: string;
+    town?: string;
+    village?: string;
     state?: string;
+    state_code?: string;
     country?: string;
   };
 }
@@ -41,12 +45,16 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
   // Search functionality state
   const { search, setSearch } = useFilterStore();
   const [searchQuery, setSearchQuery] = useState<string>(search);
-  const [location, setLocation] = useState<string>("");
+  const { location, setLocation } = useSearchStore();
   const [showResults, setShowResults] = useState<boolean>(false);
   const [searchResults, setSearchResults] = useState<Business[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [isLoadingLocations, setIsLoadingLocations] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<
+    "search" | "location" | null
+  >(null);
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Update local state when store changes
@@ -59,6 +67,7 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
     if (!searchQuery.trim() && !location.trim()) {
       setSearchResults([]);
       setShowResults(false);
+      setActiveDropdown(null);
       return;
     }
 
@@ -74,6 +83,7 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
       const data = await response.json();
       setSearchResults(data.data || []);
       setShowResults(true);
+      setActiveDropdown("search");
     } catch (error) {
       console.error("Error fetching businesses:", error);
       setSearchResults([]);
@@ -91,56 +101,80 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
       ) {
         setShowResults(false);
         setShowLocationDropdown(false);
+        setActiveDropdown(null);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // OpenStreetMap location suggestions
+  // Improved OpenStreetMap location suggestions
   useEffect(() => {
     if (!location || location.length < 2) {
       setLocationSuggestions([]);
       setShowLocationDropdown(false);
+      if (activeDropdown === "location") {
+        setActiveDropdown(null);
+      }
       return;
     }
 
     const fetchLocations = async () => {
+      setIsLoadingLocations(true);
       try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(
             location
-          )}&format=json&addressdetails=1&limit=5`
+          )}&format=json&addressdetails=1&limit=10`
         );
-        const data: PlaceResult[] = await res.json();
+        const data: PlaceResult[] = await response.json();
 
-        const results = data
+        const formattedResults = data
           .map((place) => {
-            // Only show if city exists
             const city =
-              place.address.city ||
-              "";
-            if (!city) return null;
-            const state = place.address.state ? `, ${place.address.state}` : "";
-            return `${city}${state}`;
-          })
-          .filter((v): v is string => v !== null); // remove nulls
+              place.address.city || place.address.town || place.address.village;
 
-        setLocationSuggestions(Array.from(new Set(results)));
-        setShowLocationDropdown(results.length > 0);
-      } catch (err) {
-        console.error(err);
+            // Try to get 2-letter state code (capitalized)
+            let state = place.address.state_code
+              ? place.address.state_code.toUpperCase()
+              : "";
+
+            // If no state_code, use first two letters of state name
+            if (!state && place.address.state) {
+              state = place.address.state.slice(0, 2).toUpperCase();
+            }
+
+            if (!city) return "";
+
+            // Combine city and short state
+            return state ? `${city}, ${state}` : city;
+          })
+          .filter((v) => v.trim() !== "");
+
+        // Remove duplicates
+        const uniqueResults = Array.from(new Set(formattedResults));
+
+        setLocationSuggestions(uniqueResults);
+        setShowLocationDropdown(uniqueResults.length > 0);
+        if (uniqueResults.length > 0) {
+          setActiveDropdown("location");
+        }
+      } catch (error) {
+        console.error("Error fetching locations:", error);
         setLocationSuggestions([]);
+      } finally {
+        setIsLoadingLocations(false);
       }
     };
 
-    const timeout = setTimeout(fetchLocations, 400);
-    return () => clearTimeout(timeout);
-  }, [location]);
+    const timeoutId = setTimeout(fetchLocations, 400);
+    return () => clearTimeout(timeoutId);
+  }, [location, activeDropdown]);
 
   const handleLocationSelect = (selected: string) => {
     setLocation(selected);
     setShowLocationDropdown(false);
+    setActiveDropdown(null);
   };
 
   // Common handlers
@@ -156,6 +190,7 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
       setSearch(searchQuery.trim());
       router.push(`/search-result`);
       setShowResults(false);
+      setActiveDropdown(null);
       onResultClick?.();
     }
   };
@@ -169,20 +204,42 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
     setSearch("");
     setShowResults(false);
     setSearchResults([]);
+    setActiveDropdown(null);
   };
 
   const clearLocation = () => {
-    setLocation("");
+    setLocation("San Francisco, CA");
     setShowResults(false);
     setShowLocationDropdown(false);
+    setActiveDropdown(null);
   };
 
   const handleResultClick = () => {
     setShowResults(false);
+    setActiveDropdown(null);
     onResultClick?.();
   };
 
-  // Styles (unchanged)
+  const handleSearchFocus = () => {
+    if (searchResults.length > 0) {
+      setShowResults(true);
+      setActiveDropdown("search");
+    }
+  };
+
+  const handleLocationFocus = () => {
+    if (locationSuggestions.length > 0) {
+      setShowLocationDropdown(true);
+      setActiveDropdown("location");
+    }
+  };
+
+  // Only show one dropdown at a time
+  const shouldShowSearchResults = showResults && activeDropdown === "search";
+  const shouldShowLocationDropdown =
+    showLocationDropdown && activeDropdown === "location";
+
+  // Styles
   const containerClass =
     variant === "mobile"
       ? "relative"
@@ -216,7 +273,7 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleKeyPress}
-              onFocus={() => searchResults.length > 0 && setShowResults(true)}
+              onFocus={handleSearchFocus}
               placeholder="Guitar, strings, restringing..."
               className={searchInputClass}
             />
@@ -242,9 +299,7 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               onKeyDown={handleKeyPress}
-              onFocus={() =>
-                locationSuggestions.length > 0 && setShowLocationDropdown(true)
-              }
+              onFocus={handleLocationFocus}
               placeholder="Location"
               className={locationInputClass}
             />
@@ -258,23 +313,29 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
             )}
           </div>
 
-          {/* Location Suggestions Dropdown */}
-          {showLocationDropdown && locationSuggestions.length > 0 && (
+          {/* Improved Location Suggestions Dropdown */}
+          {shouldShowLocationDropdown && (
             <div className={locationDropdownClass}>
-              <ul>
-                {locationSuggestions.map((item, index) => (
-                  <li
-                    key={index}
-                    className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer"
-                    onClick={() => handleLocationSelect(item)}
-                  >
-                    <div className="p-3 flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-gray-500" />
-                      <span>{item}</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              {isLoadingLocations ? (
+                <div className="p-4 text-center">Loading locations...</div>
+              ) : locationSuggestions.length === 0 ? (
+                <div className="p-4 text-gray-500">No locations found</div>
+              ) : (
+                <ul>
+                  {locationSuggestions.map((item, index) => (
+                    <li
+                      key={index}
+                      className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer"
+                      onClick={() => handleLocationSelect(item)}
+                    >
+                      <div className="p-3 flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-gray-500" />
+                        <span>{item}</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           )}
         </div>
@@ -296,8 +357,8 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
         )}
       </div>
 
-      {/* Search Results Dropdown */}
-      {showResults && (
+      {/* Search Results Dropdown - Only show when active */}
+      {shouldShowSearchResults && (
         <div className={resultsClass}>
           {isLoading ? (
             <div className="p-4 text-center">Searching...</div>
