@@ -31,8 +31,6 @@ const ServiceType: React.FC<InstrumentFamilyProps> = ({
 }) => {
   const { serviceTag, setServiceTag, service } = useFilterStore();
 
-  console.log("service : ", service);
-
   const filteredServices = instrumentFamilies
   .map((family) => ({
     ...family,

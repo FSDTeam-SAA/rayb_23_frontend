@@ -759,7 +759,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
                   onClick={() => toggleSection("repair")}
                   className="w-full flex items-center justify-between text-left  mb-4"
                 >
-                  <h3 className="font-medium text-xl">Repair</h3>
+                  <h3 className="font-medium text-2xl">Repair</h3>
                   {expandedSections.repair ? (
                     <ChevronUp className="w-5 h-5" />
                   ) : (
@@ -772,26 +772,42 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
                     {Object.entries(groupedServices).map(
                       ([family, services]: [string, any]) => (
                         <div key={family}>
-                          <h4 className="font-medium text-teal-600 text-lg">
+                          <h4 className="font-medium text-primary text-xl">
                             {family}
                           </h4>
-                          <div className="space-y-2">
-                            {services.map((service: any, index: number) => (
-                              <div
-                                key={index}
-                                className="flex justify-between items-center py-1"
-                              >
-                                <div>
-                                  <div className="font-medium">
-                                    {service.selectedInstrumentsGroup}
-                                  </div>
-                                  <div className="text-sm text-gray-500">
-                                    {service.newInstrumentName}
-                                  </div>
+                          <div className="space-y-2 grid lg:grid-cols-2 gap-x-10">
+                            {(Object.entries(
+                              services.reduce((acc: Record<string, any[]>, service: any) => {
+                                const group = service.selectedInstrumentsGroup;
+                                if (!acc[group]) {
+                                  acc[group] = [];
+                                }
+                                acc[group].push(service);
+                                return acc;
+                              }, {} as Record<string, any[]>)
+                            ) as [string, any[]][]).map(([groupName, groupServices]: [string, any[]]) => (
+                              <div key={groupName} className="mb-3">
+                                {/* Group Name */}
+                                <div className="font-medium text-gray-700 mt-2">
+                                  {groupName}
                                 </div>
-                                <div className="font-semibold">
-                                  {formatPrice(service)}
-                                </div>
+
+                                {/* Group এর ভিতরের services */}
+                                {groupServices.map((service: any, index: number) => (
+                                  <div
+                                    key={index}
+                                    className="flex justify-between items-center py-1 text-sm"
+                                  >
+                                    <div>
+                                      <div className="text-gray-500">
+                                        {service.newInstrumentName}
+                                      </div>
+                                    </div>
+                                    <div className="font-medium text-xs text-gray-500">
+                                      {formatPrice(service)}
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
                             ))}
                           </div>
