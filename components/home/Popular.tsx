@@ -123,7 +123,7 @@ const Popular = () => {
               {allBusiness?.slice(0, 12)?.map((business: Business) => (
                 <SwiperSlide key={business?._id}>
                   <Link href={`search-result/${business?._id}`}>
-                    <div className="bg-white rounded-lg border border-gray-100 shadow-[0px_2px_12px_0px_#003D3914] p-6 h-full">
+                    <div className="bg-white rounded-lg border border-gray-100 shadow-[0px_2px_12px_0px_#003D3914] p-6 h-[500px]">
                       <div className="space-y-5 h-full">
                         {/* Profile Image Slider with Arrows */}
                         <div className="flex-shrink-0 overflow-hidden rounded-lg relative group">
