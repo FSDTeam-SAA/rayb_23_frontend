@@ -34,7 +34,9 @@ const BusinessCard = ({ business }: { business: Business }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const images = business.businessInfo?.image || [];
 
-  const { search } = useFilterStore();
+  const { search, serviceTag } = useFilterStore();
+
+  console.log("serviceTag: ", serviceTag);
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % images.length);
@@ -52,7 +54,11 @@ const BusinessCard = ({ business }: { business: Business }) => {
   const getDisplayPrice = (service: Service) => {
     if (service.pricingType === "exact" && service.price) {
       return `$${service.price}`;
-    } else if (service.pricingType === "range" && service.minPrice && service.maxPrice) {
+    } else if (
+      service.pricingType === "range" &&
+      service.minPrice &&
+      service.maxPrice
+    ) {
       return `$${service.minPrice} - $${service.maxPrice}`;
     } else if (service.price) {
       return `$${service.price}`;
@@ -62,11 +68,25 @@ const BusinessCard = ({ business }: { business: Business }) => {
     return "Price not available";
   };
 
-  const filteredServices = business?.services?.filter((service) =>
-    service?.newInstrumentName
-      ?.toLowerCase()
-      ?.includes(search?.toLowerCase()?.trim())
-  );
+  // Filter services based on search or serviceTag
+  const filteredServices = business?.services?.filter((service) => {
+    const serviceName = service?.newInstrumentName?.toLowerCase() || "";
+    
+    // If there's a search term, filter by it
+    if (search?.trim()) {
+      return serviceName.includes(search.toLowerCase().trim());
+    }
+    
+    // If there's a serviceTag, filter by it
+    if (serviceTag && serviceTag.length > 0) {
+      return serviceTag.some(tag => 
+        serviceName.includes(tag.label?.toLowerCase()?.trim())
+      );
+    }
+    
+    // If neither search nor serviceTag, return all services
+    return true;
+  });
 
   return (
     <div>
@@ -205,7 +225,9 @@ const BusinessCard = ({ business }: { business: Business }) => {
                           </button>
                         ))
                       ) : (
-                        <span className="text-sm text-gray-500">No services available</span>
+                        <span className="text-sm text-gray-500">
+                          No services available
+                        </span>
                       )}
                     </div>
                     <div>
