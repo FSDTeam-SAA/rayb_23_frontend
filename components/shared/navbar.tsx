@@ -253,7 +253,7 @@ const Navbar = () => {
                   For Customer <ChevronDown className="ml-1 h-4 w-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-white border-gray-700 border-none">
-                  <Link href={"/review-business"}>
+                  <Link href={"/review-a-business"}>
                     <DropdownMenuItem className="hover:bg-gray-100 focus:bg-gray-100 cursor-pointer">
                       Write A Review
                     </DropdownMenuItem>

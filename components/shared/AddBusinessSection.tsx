@@ -16,9 +16,9 @@ const AddBusinessSection = () => {
   const handleAddBusinessClick = (e: React.MouseEvent) => {
     e.preventDefault();
     if (authStatus === "authenticated") {
-      setIsModalOpen(true);
-    } else {
       router.push("/add-a-business");
+    } else {
+      setIsModalOpen(true);
     }
   };
 

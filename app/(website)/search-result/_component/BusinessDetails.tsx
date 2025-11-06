@@ -682,7 +682,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
             className="bg-[#e0f2f1] hover:bg-[#139a8e] flex items-center gap-2 px-5 py-3 rounded-lg text-[#139a8e] hover:text-white font-semibold"
           >
             <Star className="w-4 h-4 mr-1" />
-            Write Review
+            Write A Review
           </button>
           <button
             onClick={handleAddPhoto}
