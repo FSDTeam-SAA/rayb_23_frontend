@@ -23,14 +23,17 @@ interface BusinessItem {
 interface Service {
   newInstrumentName: string;
   price: string;
+  minPrice: string;
+  maxPrice: string;
+  pricingType: string;
 }
 
 interface Business {
   _id: string;
   businessInfo: BusinessItem;
+  review?: string;
   services: Service[];
 }
-
 const BusinessInfo = () => {
   const [page, setPage] = React.useState(1);
   const limit = 5;

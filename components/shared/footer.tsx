@@ -19,7 +19,7 @@ export default function Footer() {
           <div>
             <h1 className="font-semibold text-lg mb-3">For Customer</h1>
             <ul>
-              <Link href={"/review-business"}>
+              <Link href={"/review-a-business"}>
                 <li className="hover:underline">Write a Review</li>
               </Link>
               <Link href={"/add-a-business"}>

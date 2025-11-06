@@ -1,4 +1,5 @@
 "use client";
+import LoginModal from "@/components/business/modal/login-modal";
 import ReviewModal from "@/components/modals/ReviewModal";
 import ReviewSubmittedModal from "@/components/modals/ReviewSubmittedModal";
 import AddBusinessSection from "@/components/shared/AddBusinessSection";
@@ -6,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import { getAllbusiness } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { Search, Star } from "lucide-react";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React, { useState } from "react";
 
 interface BusinessItem {
@@ -29,9 +30,13 @@ interface Business {
 
 const ClaimReviewBusiness = () => {
   const pathname = usePathname();
+  const route = useRouter();
+  const session = useSession();
+  const status = session?.status;
   const [businessID, setBusinessID] = useState<string>();
   const [isOpen, setIsOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -78,7 +83,7 @@ const ClaimReviewBusiness = () => {
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <input
-                placeholder="Search for business..."
+                placeholder="Search for your business"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 border border-gray-200 bg-gray-50 h-[48px] focus:outline-none w-full rounded-md"
@@ -152,22 +157,31 @@ const ClaimReviewBusiness = () => {
                     {/* Action Button */}
                     <div className="mt-4 lg:mt-0 w-full sm:w-auto">
                       {pathname === "/claim-your-business" && (
-                        <Link href={`/claim-your-business/${business?._id}`}>
-                          <button className="w-full sm:w-[180px] bg-[#e0f2f1] h-[48px] text-[#139a8e] px-5 rounded-lg">
-                            Claim Business
-                          </button>
-                        </Link>
-                      )}
-
-                      {pathname === "/review-business" && (
                         <button
                           onClick={() => {
+                            if (status === "unauthenticated") {
+                              return setLoginModalOpen(true);
+                            }
+                            route.push('/claim-your-business');
+                          }}
+                          className="w-full sm:w-[180px] bg-[#e0f2f1] h-[48px] text-[#139a8e] px-5 rounded-lg"
+                        >
+                          Claim Business
+                        </button>
+                      )}
+
+                      {pathname === "/review-a-business" && (
+                        <button
+                          onClick={() => {
+                            if (status === "unauthenticated") {
+                              return setLoginModalOpen(true);
+                            }
                             setIsOpen(true);
                             setBusinessID(business?._id);
                           }}
                           className="w-full sm:w-[180px] bg-[#e0f2f1] h-[48px] text-[#139a8e] px-5 rounded-lg"
                         >
-                          Review Business 
+                          Review Business
                         </button>
                       )}
                     </div>
@@ -218,6 +232,13 @@ const ClaimReviewBusiness = () => {
 
         {isModalOpen && (
           <ReviewSubmittedModal setIsModalOpen={setIsModalOpen} />
+        )}
+
+        {loginModalOpen && (
+          <LoginModal
+            isLoginModalOpen={loginModalOpen}
+            setIsLoginModalOpen={() => setLoginModalOpen(false)}
+          />
         )}
       </div>
     </div>
