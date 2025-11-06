@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Star,
   ChevronDown,
@@ -109,6 +109,7 @@ interface BusinessProfileProps {
     isVerified: boolean;
     isClaimed: boolean;
     status: string;
+    images: string[];
   };
 }
 
@@ -179,7 +180,7 @@ const ShareModal = ({
 
 type SectionKey = "repair" | "lessons" | "otherService";
 
-// Image Slider Component
+// Updated Image Slider Component
 const ImageSlider = ({
   images,
   businessName,
@@ -189,19 +190,24 @@ const ImageSlider = ({
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  // Remove duplicates and filter out empty/null images
+  const uniqueImages = useMemo(() => {
+    return Array.from(new Set(images.filter(img => img && img.trim() !== '')));
+  }, [images]);
+
   const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % images.length);
+    setCurrentImageIndex((prev) => (prev + 1) % uniqueImages.length);
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+    setCurrentImageIndex((prev) => (prev - 1 + uniqueImages.length) % uniqueImages.length);
   };
 
   const goToImage = (index: number) => {
     setCurrentImageIndex(index);
   };
 
-  if (!images || images.length === 0) {
+  if (!uniqueImages || uniqueImages.length === 0) {
     return (
       <div className="flex-shrink-0">
         <div className="rounded-lg bg-gray-200 h-[172px] w-[172px] flex items-center justify-center">
@@ -215,15 +221,20 @@ const ImageSlider = ({
     <div className="flex-shrink-0 relative group">
       <div className="relative rounded-lg overflow-hidden h-[172px] w-[172px]">
         <Image
-          src={images[currentImageIndex]}
+          src={uniqueImages[currentImageIndex]}
           alt={`${businessName} - Image ${currentImageIndex + 1}`}
           width={172}
           height={172}
           className="rounded-lg object-cover h-full w-full"
+          onError={(e) => {
+            // Fallback if image fails to load
+            const target = e.target as HTMLImageElement;
+            target.src = '/images/placeholder-business.jpg';
+          }}
         />
 
         {/* Navigation Arrows - Show only if multiple images */}
-        {images.length > 1 && (
+        {uniqueImages.length > 1 && (
           <>
             <button
               onClick={prevImage}
@@ -241,17 +252,17 @@ const ImageSlider = ({
         )}
 
         {/* Image Counter */}
-        {images.length > 1 && (
+        {uniqueImages.length > 1 && (
           <div className="absolute top-1 right-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded-full z-10">
-            {currentImageIndex + 1} / {images.length}
+            {currentImageIndex + 1} / {uniqueImages.length}
           </div>
         )}
       </div>
 
       {/* Dot Indicators */}
-      {images.length > 1 && (
+      {uniqueImages.length > 1 && (
         <div className="flex justify-center mt-2 space-x-1">
-          {images.map((_, index) => (
+          {uniqueImages.map((_, index) => (
             <button
               key={index}
               onClick={() => goToImage(index)}
@@ -631,13 +642,19 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
     }
   };
 
+  // Combine all images from businessInfo.image and images array
+  const allBusinessImages = [
+    ...singleBusiness.businessInfo.image,
+    ...(singleBusiness.images || [])
+  ];
+
   return (
     <div>
       {/* Business Header */}
       <div className="flex items-center gap-6 border-b border-gray-200 pb-8">
         {/* Business Image Slider */}
         <ImageSlider
-          images={singleBusiness.businessInfo.image}
+          images={allBusinessImages}
           businessName={singleBusiness.businessInfo.name}
         />
 
