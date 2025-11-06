@@ -18,6 +18,9 @@ interface BusinessItem {
 interface Service {
   newInstrumentName: string;
   price: string;
+  minPrice: string;
+  maxPrice: string;
+  pricingType: string;
 }
 
 interface Business {
@@ -43,6 +46,20 @@ const BusinessCard = ({ business }: { business: Business }) => {
 
   const goToImage = (index: number) => {
     setCurrentImageIndex(index);
+  };
+
+  // Price display function
+  const getDisplayPrice = (service: Service) => {
+    if (service.pricingType === "exact" && service.price) {
+      return `$${service.price}`;
+    } else if (service.pricingType === "range" && service.minPrice && service.maxPrice) {
+      return `$${service.minPrice} - $${service.maxPrice}`;
+    } else if (service.price) {
+      return `$${service.price}`;
+    } else if (service.minPrice && service.maxPrice) {
+      return `$${service.minPrice} - $${service.maxPrice}`;
+    }
+    return "Price not available";
   };
 
   const filteredServices = business?.services?.filter((service) =>
@@ -167,28 +184,29 @@ const BusinessCard = ({ business }: { business: Business }) => {
 
                   <div className="flex flex-col gap-2">
                     <div className="flex flex-wrap items-center gap-2 mb-2">
-                      {}
-
-                      {business?.services
-                        ?.slice(0, 1)
-                        ?.map((service, index) => (
+                      {filteredServices && filteredServices.length > 0 ? (
+                        filteredServices.slice(0, 1).map((service, index) => (
                           <button
                             className="h-[40px] lg:h-[48px] px-4 lg:px-5 rounded-lg bg-[#F8F8F8] text-sm lg:text-base flex items-center gap-5"
                             key={index}
                           >
-                            <span>
-                              {filteredServices
-                                ? filteredServices[0]?.newInstrumentName
-                                : service.newInstrumentName}
-                            </span>
-                            <span>
-                              ${" "}
-                              {filteredServices
-                                ? filteredServices[0]?.price
-                                : service.price}
-                            </span>
+                            <span>{service.newInstrumentName}</span>
+                            <span>{getDisplayPrice(service)}</span>
                           </button>
-                        ))}
+                        ))
+                      ) : business?.services?.length > 0 ? (
+                        business.services.slice(0, 1).map((service, index) => (
+                          <button
+                            className="h-[40px] lg:h-[48px] px-4 lg:px-5 rounded-lg bg-[#F8F8F8] text-sm lg:text-base flex items-center gap-5"
+                            key={index}
+                          >
+                            <span>{service.newInstrumentName}</span>
+                            <span>{getDisplayPrice(service)}</span>
+                          </button>
+                        ))
+                      ) : (
+                        <span className="text-sm text-gray-500">No services available</span>
+                      )}
                     </div>
                     <div>
                       <Link href={`/search-result/${business._id}`}>
