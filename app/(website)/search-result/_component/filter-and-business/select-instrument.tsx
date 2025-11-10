@@ -72,7 +72,7 @@ const SelectInstrument: React.FC<InstrumentFamilyProps> = ({
                 className="flex flex-col gap-2 text-balance"
               >
                 {/* Instrument types */}
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-4">
                   {family.instrumentTypes.map((type) => (
                     <div key={type._id} className="flex items-center gap-2">
                       <label key={type._id} className="flex items-center gap-2">

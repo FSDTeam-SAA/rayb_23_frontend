@@ -75,7 +75,7 @@ const ServiceType: React.FC<InstrumentFamilyProps> = ({
                     <div key={type._id} className="flex flex-col gap-1">
                       {/* Service Types under this instrument */}
                       {type.serviceType.length > 0 && (
-                        <div className="flex flex-col gap-1">
+                        <div className="flex flex-col gap-4">
                           {type.serviceType.map((service, i) => (
                             <label key={i} className="flex items-center gap-2">
                               <input
