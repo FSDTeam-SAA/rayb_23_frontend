@@ -83,7 +83,7 @@ const ClaimReviewBusiness = () => {
             <div className="w-full">
               {/* Business Name Skeleton */}
               <Skeleton className="h-6 w-3/4 mb-2" />
-              
+
               {/* Rating Skeleton */}
               <div className="flex items-center gap-1 my-3">
                 <Skeleton className="h-4 w-4 rounded-full" />
@@ -93,10 +93,7 @@ const ClaimReviewBusiness = () => {
               {/* Services Skeleton */}
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 {[...Array(3)].map((_, index) => (
-                  <Skeleton 
-                    key={index} 
-                    className="h-[48px] w-20 rounded-lg" 
-                  />
+                  <Skeleton key={index} className="h-[48px] w-20 rounded-lg" />
                 ))}
               </div>
             </div>
@@ -222,7 +219,9 @@ const ClaimReviewBusiness = () => {
                                 if (status === "unauthenticated") {
                                   return setLoginModalOpen(true);
                                 }
-                                route.push('/claim-my-business');
+                                route.push(
+                                  `/claim-my-business/${business?._id}`
+                                );
                               }}
                               className="w-full sm:w-[180px] bg-[#e0f2f1] h-[48px] text-[#139a8e] px-5 rounded-lg"
                             >
