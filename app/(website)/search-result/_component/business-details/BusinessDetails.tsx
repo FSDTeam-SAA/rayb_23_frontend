@@ -28,7 +28,7 @@ import ReviewSubmittedModal from "@/components/modals/ReviewSubmittedModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSession } from "next-auth/react";
-import AddPhotoModal from "./modal/AddPhotoModal";
+import AddPhotoModal from "../modal/AddPhotoModal";
 import "leaflet/dist/leaflet.css";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import ReactDOMServer from "react-dom/server";
@@ -36,9 +36,10 @@ import { DivIcon } from "leaflet";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import LoginModal from "@/components/business/modal/login-modal";
-import ClaimModal from "./modal/claim-modal";
+import ClaimModal from "../modal/claim-modal";
 import AddPhotoSuccessModal from "@/components/modals/add-photo-modal";
-import BusinessGalleryModal from "./modal/BusinessGalleryModal";
+import BusinessGalleryModal from "../modal/BusinessGalleryModal";
+import ServiceType from "./service-type";
 
 interface Review {
   _id: string;
@@ -801,177 +802,13 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
           </div>
 
           {/* Service Type */}
-          <div className="pt-8 space-y-8 border-b border-gray-200 pb-10">
-            <h2 className="text-xl font-semibold mb-4">Service Type</h2>
-
-            {/* Repair Services */}
-            {singleBusiness.services.length > 0 && (
-              <div className="shadow-[0px_2px_12px_0px_#003D3914] p-4 rounded-lg">
-                <button
-                  onClick={() => toggleSection("repair")}
-                  className="w-full flex items-center justify-between text-left  mb-4"
-                >
-                  <h3 className="font-medium text-2xl">Repair</h3>
-                  {expandedSections.repair ? (
-                    <ChevronUp className="w-5 h-5" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5" />
-                  )}
-                </button>
-
-                {expandedSections.repair && (
-                  <div className="space-y-4">
-                    {Object.entries(groupedServices).map(
-                      ([family, services]: [string, any]) => (
-                        <div key={family}>
-                          <h4 className="font-medium text-primary text-xl">
-                            {family}
-                          </h4>
-                          <div className="space-y-2 grid lg:grid-cols-2 gap-x-10">
-                            {(
-                              Object.entries(
-                                services.reduce(
-                                  (
-                                    acc: Record<string, any[]>,
-                                    service: any
-                                  ) => {
-                                    const group =
-                                      service.selectedInstrumentsGroup;
-                                    if (!acc[group]) {
-                                      acc[group] = [];
-                                    }
-                                    acc[group].push(service);
-                                    return acc;
-                                  },
-                                  {} as Record<string, any[]>
-                                )
-                              ) as [string, any[]][]
-                            ).map(
-                              ([groupName, groupServices]: [string, any[]]) => (
-                                <div key={groupName} className="mb-3">
-                                  {/* Group Name */}
-                                  <div className="font-medium text-gray-700 mt-2">
-                                    {groupName}
-                                  </div>
-
-                                  {/* Group এর ভিতরের services */}
-                                  {groupServices.map(
-                                    (service: any, index: number) => (
-                                      <div
-                                        key={index}
-                                        className="flex justify-between items-center py-1 text-sm"
-                                      >
-                                        <div>
-                                          <div className="text-gray-500">
-                                            {service.newInstrumentName}
-                                          </div>
-                                        </div>
-                                        <div className="font-medium text-xs text-gray-500">
-                                          {formatPrice(service)}
-                                        </div>
-                                      </div>
-                                    )
-                                  )}
-                                </div>
-                              )
-                            )}
-                          </div>
-                        </div>
-                      )
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Music Lessons */}
-            {singleBusiness.musicLessons.length > 0 && (
-              <div className="shadow-[0px_2px_12px_0px_#003D3914] p-4 rounded-lg">
-                <button
-                  onClick={() => toggleSection("lessons")}
-                  className="w-full flex items-center justify-between text-left"
-                >
-                  <h3 className="font-medium text-lg">Lessons</h3>
-                  {expandedSections.lessons ? (
-                    <ChevronUp className="w-5 h-5" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5" />
-                  )}
-                </button>
-
-                {expandedSections.lessons && (
-                  <div className="py-4">
-                    <p className="text-sm text-gray-600 mb-4">
-                      These are hourly rates for lessons, contact the business
-                      for more details
-                    </p>
-                    <div className="space-y-4">
-                      <h4 className="font-medium text-teal-600">Strings</h4>
-                      <div className="space-y-2">
-                        {singleBusiness.musicLessons.map((lesson, index) => (
-                          <div
-                            key={index}
-                            className="flex justify-between items-center py-1"
-                          >
-                            <div className="font-medium">
-                              {lesson.selectedInstrumentsGroupMusic}
-                            </div>
-                            <div className="font-semibold">
-                              {formatPrice(lesson)}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* other services */}
-            <div className="shadow-[0px_2px_12px_0px_#003D3914] p-4 rounded-lg">
-              <button
-                onClick={() => toggleSection("otherService")}
-                className="w-full flex items-center justify-between text-left"
-              >
-                <h3 className="font-medium text-lg">Other Services</h3>
-                {expandedSections.otherService ? (
-                  <ChevronUp className="w-5 h-5" />
-                ) : (
-                  <ChevronDown className="w-5 h-5" />
-                )}
-              </button>
-
-              {expandedSections.otherService && (
-                <div className="py-4">
-                  <h1>
-                    The business provides{" "}
-                    {singleBusiness?.buyInstruments && (
-                      <span className="font-semibold">buying,</span>
-                    )}{" "}
-                    {singleBusiness?.sellInstruments && (
-                      <span className="font-semibold">selling,</span>
-                    )}{" "}
-                    {singleBusiness?.offerMusicLessons && (
-                      <span className="font-semibold">trading</span>
-                    )}{" "}
-                    {singleBusiness?.rentInstruments && (
-                      <span>
-                        & <span className="font-semibold">rental </span>
-                      </span>
-                    )}
-                    services. Please{" "}
-                    <Link href={"/"}>
-                      <span className="text-teal-600">
-                        contact the business
-                      </span>
-                    </Link>{" "}
-                    to get a personalized quote.
-                  </h1>
-                </div>
-              )}
-            </div>
-          </div>
+          <ServiceType
+            expandedSections={expandedSections}
+            formatPrice={formatPrice}
+            groupedServices={groupedServices}
+            singleBusiness={singleBusiness}
+            toggleSection={toggleSection}
+          />
 
           {/* Rating & Reviews */}
           <div className="pt-8">

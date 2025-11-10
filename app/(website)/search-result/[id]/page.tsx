@@ -4,7 +4,7 @@ import { getSingleBusiness } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import React from "react";
-import BusinessDetails from "../_component/BusinessDetails";
+import BusinessDetails from "../_component/business-details/BusinessDetails";
 
 const Page = () => {
   const { id } = useParams();
