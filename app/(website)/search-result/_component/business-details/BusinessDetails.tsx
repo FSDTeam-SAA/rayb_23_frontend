@@ -4,14 +4,9 @@
 import { useEffect, useState, useMemo } from "react";
 import {
   Star,
-  ChevronDown,
-  ChevronUp,
   SaveIcon,
   Share2Icon,
   LocateIcon,
-  MessageCircleCodeIcon,
-  Globe,
-  Phone,
   Loader2,
   Copy,
   X,
@@ -21,7 +16,6 @@ import {
   Search,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { toast } from "sonner";
 import ReviewModal from "@/components/modals/ReviewModal";
 import ReviewSubmittedModal from "@/components/modals/ReviewSubmittedModal";
@@ -29,8 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSession } from "next-auth/react";
 import AddPhotoModal from "../modal/AddPhotoModal";
-import "leaflet/dist/leaflet.css";
-import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
+import { useMap } from "react-leaflet";
 import ReactDOMServer from "react-dom/server";
 import { DivIcon } from "leaflet";
 import { useRouter } from "next/navigation";
@@ -40,6 +33,9 @@ import ClaimModal from "../modal/claim-modal";
 import AddPhotoSuccessModal from "@/components/modals/add-photo-modal";
 import BusinessGalleryModal from "../modal/BusinessGalleryModal";
 import ServiceType from "./service-type";
+import WorkingHours from "./working-hours";
+import ContactInfo from "./contact-info";
+import Location from "./location";
 
 interface Review {
   _id: string;
@@ -913,134 +909,24 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
         {/* Right Column */}
         <div className="space-y-8  pl-8">
           {/* Contact Info */}
-          <div className="border-b border-gray-300 pb-8">
-            <h3 className="text-lg font-semibold mb-4">Contact Info</h3>
-            <div className="space-y-5">
-              {singleBusiness.isClaimed && (
-                <button
-                  onClick={handleMessage}
-                  className=" flex items-center gap-2"
-                >
-                  <span className="text-[#139a8e]">
-                    <MessageCircleCodeIcon />
-                  </span>
-                  <span className="text-gray-600 hover:text-[#139a8e]">
-                    Message Business
-                  </span>
-                </button>
-              )}
-              <div>
-                <Link
-                  href={singleBusiness.businessInfo.website}
-                  className="flex items-center gap-2 font-medium"
-                >
-                  <span>
-                    <Globe className="text-[#139a8e] " />
-                  </span>
-                  <span className="text-gray-600 hover:text-[#139a8e]">
-                    {singleBusiness.businessInfo.website}
-                  </span>
-                </Link>
-              </div>
-
-              <div>
-                <Link href={""}>
-                  <div className="flex items-center gap-2 font-medium">
-                    <span>
-                      <Phone className="text-[#139a8e] " />
-                    </span>
-                    <span className="text-gray-600 hover:text-[#139a8e]">
-                      {singleBusiness.businessInfo.phone}
-                    </span>
-                  </div>
-                </Link>
-              </div>
-            </div>
-          </div>
+          <ContactInfo
+            singleBusiness={singleBusiness}
+            handleMessage={handleMessage}
+          />
 
           {/* Working Hours */}
-          <div className="border-b border-gray-300 pb-6">
-            <h3 className="text-lg font-semibold mb-4">Working Hours</h3>
-            <div className="space-y-2">
-              {singleBusiness.businessHours.map((hour, index) => (
-                <div key={index} className="flex flex-col">
-                  <span className="font-medium text-[#139a8e]">
-                    {hour.day.slice(0, 3)}
-                  </span>
-                  <span
-                    className={`${
-                      hour.enabled ? "text-gray-700" : "text-red-500"
-                    } font-medium`}
-                  >
-                    {hour.enabled
-                      ? `${formatTime(
-                          hour.startTime,
-                          hour.startMeridiem
-                        )} - ${formatTime(hour.endTime, hour.endMeridiem)}`
-                      : "Closed"}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <WorkingHours
+            singleBusiness={singleBusiness}
+            formatTime={formatTime}
+          />
 
-          <div>
-            <h1 className="text-xl font-bold mb-2">Location</h1>
-
-            <h1 className="text-primary font-medium mb-5">
-              {singleBusiness?.businessInfo?.address}
-            </h1>
-
-            {/* Location */}
-            <div className="h-[300px] w-[300px]">
-              <style jsx global>{`
-                .leaflet-control-container {
-                  display: none !important;
-                }
-              `}</style>
-
-              {coords && (
-                <MapContainer
-                  center={[coords.lat, coords.lng]}
-                  zoom={15} // adjust zoom here
-                  scrollWheelZoom={true}
-                  className="h-full w-full rounded-xl shadow-lg"
-                >
-                  <TileLayer
-                    url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-                    attribution=""
-                  />
-                  <Marker
-                    position={[coords.lat, coords.lng]}
-                    icon={customMarker}
-                  >
-                    <Popup>{singleBusiness.businessInfo.name}</Popup>
-                  </Marker>
-
-                  {/* Optional: reset view */}
-                  <SetMapView coords={coords} zoom={15} />
-                </MapContainer>
-              )}
-            </div>
-
-            <div className="mt-8">
-              <Button
-                onClick={() => {
-                  // Encode the business address for Google Maps
-                  const encodedAddress = encodeURIComponent(
-                    singleBusiness.businessInfo.address
-                  );
-                  const googleMapsUrl = `https://www.google.com/maps/dir//${encodedAddress}`;
-
-                  // Open Google Maps in a new tab
-                  window.open(googleMapsUrl, "_blank", "noopener,noreferrer");
-                }}
-                className="w-full bg-primary/20 hover:bg-primary/15 text-primary"
-              >
-                Get Directions
-              </Button>
-            </div>
-          </div>
+          {/* location */}
+          <Location
+            singleBusiness={singleBusiness}
+            SetMapView={SetMapView}
+            coords={coords}
+            customMarker={customMarker}
+          />
         </div>
 
         {isLoginModalOpen && (
