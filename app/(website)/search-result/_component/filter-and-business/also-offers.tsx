@@ -40,7 +40,7 @@ const AlsoOffers = ({}) => {
           </AccordionTrigger>
 
           <AccordionContent className="flex flex-col gap-2">
-            <div className="space-y-3">
+            <div className="space-y-4">
               {items.map((item, index) => (
                 <label key={index} className="flex items-center gap-2">
                   <input

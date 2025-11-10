@@ -10,6 +10,7 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import AddClaimModal from "./_component/AddClaimModal";
 import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const SingleBusiness = () => {
   const params = useParams();
@@ -29,8 +30,83 @@ const SingleBusiness = () => {
 
   if (isLoading)
     return (
-      <div className="text-center flex flex-col items-center justify-center min-h-[calc(100vh-88px)] text-lg">
-        Loading...
+      <div className="container pt-8 pb-16 space-y-10">
+        {/* PathTracker Skeleton */}
+        <div>
+          <Skeleton className="h-6 w-64 mb-2" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+
+        {/* Business Card Skeleton */}
+        <div className="bg-white rounded-lg shadow-[0px_2px_12px_0px_#003d3924] p-4 md:p-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-5">
+            {/* Profile Image Skeleton */}
+            <div className="flex-shrink-0 overflow-hidden rounded-lg w-full max-w-[200px]">
+              <Skeleton className="h-[200px] w-full rounded-lg" />
+            </div>
+
+            {/* Content Skeleton */}
+            <div className="flex-1 w-full space-y-4">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-y-4">
+                <div className="space-y-3 flex-1">
+                  {/* Business Name Skeleton */}
+                  <Skeleton className="h-6 w-64" />
+
+                  {/* Rating Skeleton */}
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-4 rounded-full" />
+                    <Skeleton className="h-4 w-12" />
+                  </div>
+
+                  {/* Services Skeleton */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {[...Array(3)].map((_, index) => (
+                      <Skeleton key={index} className="h-10 w-20 rounded-lg" />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Button Skeleton */}
+                <Skeleton className="h-10 w-[180px] rounded-lg" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Verification Section Skeleton */}
+        <div className="mt-10">
+          <div className="mb-8 space-y-2">
+            <Skeleton className="h-7 w-64" />
+            <Skeleton className="h-4 w-96" />
+          </div>
+
+          <div className="space-y-4">
+            {/* Email Verification Skeleton */}
+            {[...Array(2)].map((_, index) => (
+              <div
+                key={index}
+                className="p-4 md:p-6 bg-gray-50 border border-gray-200 rounded-lg"
+              >
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div className="flex items-start space-x-4 w-full">
+                    <Skeleton className="w-12 h-12 rounded-lg flex-shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-6 w-48" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-10 w-24 rounded-lg" />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Note Skeleton */}
+          <div className="mt-5">
+            <Skeleton className="h-4 w-full max-w-md" />
+          </div>
+        </div>
       </div>
     );
 
@@ -146,42 +222,6 @@ const SingleBusiness = () => {
               </button>
             </div>
           </div>
-
-          {/* Phone Verification */}
-          {/* <div className="p-4 md:p-6 bg-gray-50 border border-gray-200 rounded-lg">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div className="flex items-start space-x-4 w-full">
-                <div className="w-12 h-12 flex-shrink-0">
-                  <Image
-                    src={"/images/phone.png"}
-                    alt="/images/phone.png"
-                    width={2000}
-                    height={2000}
-                    className="h-full w-full"
-                  />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    Phone Verification
-                  </h3>
-                  <ul className="text-sm text-gray-600 space-y-1">
-                    <li>
-                      • A verification code will be sent to phone number via SMS
-                      or an automated phone call.
-                    </li>
-                    <li>
-                      • Enter the code received to complete the verification.
-                    </li>
-                  </ul>
-                </div>
-              </div>
-              <button
-                className={`bg-teal-600 hover:bg-teal-700 text-white px-8 h-[40px] rounded-lg w-full md:w-auto`}
-              >
-                Verify
-              </button>
-            </div>
-          </div> */}
 
           {/* Document Verification */}
           <div className="p-4 md:p-6 bg-gray-50 border border-gray-200 rounded-lg">

@@ -31,8 +31,44 @@ interface PlaceResult {
     state?: string;
     state_code?: string;
     country?: string;
+    postcode?: string;
+    country_code?: string;
+    county?: string;
+    road?: string;
+    house_number?: string;
   };
+  lat: string;
+  lon: string;
 }
+
+// Custom hook for phone number formatting
+const usePhoneFormatter = () => {
+  const formatPhoneNumber = (value: string): string => {
+    // Remove all non-digit characters
+    const cleaned = value.replace(/\D/g, '');
+    
+    // Limit to 10 digits (US phone number)
+    const limited = cleaned.slice(0, 10);
+    
+    // Apply formatting based on length
+    if (limited.length === 0) {
+      return '';
+    } else if (limited.length <= 3) {
+      return `(${limited}`;
+    } else if (limited.length <= 6) {
+      return `(${limited.slice(0, 3)}) ${limited.slice(3)}`;
+    } else {
+      return `(${limited.slice(0, 3)}) ${limited.slice(3, 6)}-${limited.slice(6, 10)}`;
+    }
+  };
+
+  const validatePhoneNumber = (value: string): boolean => {
+    const cleaned = value.replace(/\D/g, '');
+    return cleaned.length === 10;
+  };
+
+  return { formatPhoneNumber, validatePhoneNumber };
+};
 
 const BusinessInform: React.FC<BusinessInformProps> = ({
   handleFileChange,
@@ -53,9 +89,12 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
   website,
 }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<PlaceResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [phoneError, setPhoneError] = useState<string>("");
   const addressInputRef = useRef<HTMLInputElement>(null);
+  
+  const { formatPhoneNumber, validatePhoneNumber } = usePhoneFormatter();
 
   // Fetch location suggestions from OpenStreetMap (Nominatim)
   useEffect(() => {
@@ -71,48 +110,18 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
         const response = await fetch(
           `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
             addressName
-          )}&format=json&addressdetails=1&limit=10`
+          )}&format=json&addressdetails=1&limit=10&countrycodes=us,ca`
         );
         const data: PlaceResult[] = await response.json();
+        
+        // Filter results that have at least city/town and state information
+        const filteredResults = data.filter(place => 
+          (place.address.city || place.address.town || place.address.village) && 
+          place.address.state
+        );
 
-        const formattedResults = data
-          .map((place) => {
-            const city =
-              place.address.city ||
-              place.address.town ||
-              place.address.village;
-
-            // Try to get 2-letter state code (capitalized)
-            let state = place.address.state_code
-              ? place.address.state_code.toUpperCase()
-              : "";
-
-            // If no state_code, use first two letters of state name
-            if (!state && place.address.state) {
-              state = place.address.state.slice(0, 2).toUpperCase();
-            }
-
-            const fullAddress = place.display_name;
-
-            // Prefer city, state format if available, otherwise use full address
-            if (city && state) {
-              return `${city}, ${state}`;
-            } else if (city) {
-              return city;
-            } else {
-              // Shorten the full address if it's too long
-              return fullAddress.length > 50 
-                ? fullAddress.substring(0, 50) + '...' 
-                : fullAddress;
-            }
-          })
-          .filter((v) => v.trim() !== "");
-
-        // Remove duplicates
-        const uniqueResults = Array.from(new Set(formattedResults));
-
-        setSuggestions(uniqueResults);
-        setShowSuggestions(uniqueResults.length > 0);
+        setSuggestions(filteredResults);
+        setShowSuggestions(filteredResults.length > 0);
       } catch (error) {
         console.error("Error fetching locations:", error);
         setSuggestions([]);
@@ -125,8 +134,59 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
     return () => clearTimeout(timeoutId);
   }, [addressName]);
 
-  const handleLocationSelect = (selected: string) => {
-    setAddressName(selected);
+  // Validate phone number when it changes
+  useEffect(() => {
+    if (phoneNumber && phoneNumber.replace(/\D/g, '').length > 0) {
+      const isValid = validatePhoneNumber(phoneNumber);
+      if (!isValid && phoneNumber.replace(/\D/g, '').length === 10) {
+        setPhoneError("Please enter a valid 10-digit phone number");
+      } else {
+        setPhoneError("");
+      }
+    } else {
+      setPhoneError("");
+    }
+  }, [phoneNumber, validatePhoneNumber]);
+
+  const formatAddress = (place: PlaceResult): string => {
+    const address = place.address;
+    
+    // Build address components
+    const street = address.road ? `${address.house_number ? address.house_number + ' ' : ''}${address.road}` : '';
+    const city = address.city || address.town || address.village || '';
+    const state = address.state || '';
+    const postcode = address.postcode || '';
+    const country = address.country || '';
+
+    // Create formatted address
+    let formattedAddress = '';
+    
+    if (street) {
+      formattedAddress += street + ', ';
+    }
+    
+    if (city) {
+      formattedAddress += city + ', ';
+    }
+    
+    if (state) {
+      formattedAddress += state + ' ';
+    }
+    
+    if (postcode) {
+      formattedAddress += postcode;
+    }
+    
+    if (country && country !== 'United States' && country !== 'Canada') {
+      formattedAddress += ', ' + country;
+    }
+
+    return formattedAddress.trim();
+  };
+
+  const handleLocationSelect = (place: PlaceResult) => {
+    const fullAddress = formatAddress(place);
+    setAddressName(fullAddress);
     setShowSuggestions(false);
   };
 
@@ -137,6 +197,49 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
   const handleAddressBlur = () => {
     // Delay hiding suggestions to allow for click
     setTimeout(() => setShowSuggestions(false), 200);
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value;
+    
+    // Allow backspace to delete numbers including formatting characters
+    if (input.length < phoneNumber.length) {
+      // If user is deleting, remove last digit but maintain formatting
+      const cleanedCurrent = phoneNumber.replace(/\D/g, '');
+      const cleanedNew = input.replace(/\D/g, '');
+      
+      if (cleanedNew.length < cleanedCurrent.length) {
+        // User deleted a digit, format the remaining digits
+        const formatted = formatPhoneNumber(cleanedNew);
+        setPhoneNumber(formatted);
+        return;
+      }
+    }
+    
+    // Format the phone number as user types
+    const formatted = formatPhoneNumber(input);
+    setPhoneNumber(formatted);
+  };
+
+  const handlePhoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Allow only numbers, backspace, delete, tab, and arrow keys
+    if (
+      !/[\d]/.test(e.key) &&
+      !['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)
+    ) {
+      e.preventDefault();
+    }
+  };
+
+  const handlePhonePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const paste = e.clipboardData.getData('text');
+    const numbersOnly = paste.replace(/\D/g, '');
+    
+    if (numbersOnly.length > 0) {
+      e.preventDefault();
+      const formatted = formatPhoneNumber(numbersOnly);
+      setPhoneNumber(formatted);
+    }
   };
 
   return (
@@ -216,7 +319,7 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
                 <input
                   ref={addressInputRef}
                   type="text"
-                  placeholder="488 San Mateo Ave San Bruno, CA 94066"
+                  placeholder="488 San Mateo Ave, San Bruno, CA 94066"
                   className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 px-10 py-2 text-sm focus:outline-none h-[48px]"
                   value={addressName}
                   onChange={(e) => setAddressName(e.target.value)}
@@ -238,15 +341,24 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
                     <div className="p-3 text-gray-500">No locations found</div>
                   ) : (
                     <ul>
-                      {suggestions.map((item, index) => (
+                      {suggestions.map((place, index) => (
                         <li
                           key={index}
                           className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer"
-                          onClick={() => handleLocationSelect(item)}
+                          onClick={() => handleLocationSelect(place)}
                         >
-                          <div className="p-3 flex items-center gap-2">
-                            <MapPin className="h-4 w-4 text-gray-500" />
-                            <span className="text-sm">{item}</span>
+                          <div className="p-3 flex items-start gap-2">
+                            <MapPin className="h-4 w-4 text-gray-500 mt-1 flex-shrink-0" />
+                            <div>
+                              <span className="text-sm font-medium block">
+                                {formatAddress(place)}
+                              </span>
+                              <span className="text-xs text-gray-500 mt-1 block">
+                                {place.display_name.length > 100 
+                                  ? place.display_name.substring(0, 100) + '...' 
+                                  : place.display_name}
+                              </span>
+                            </div>
                           </div>
                         </li>
                       ))}
@@ -278,12 +390,23 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
                 Phone Number
               </label>
               <input
-                type="text"
+                type="tel"
                 placeholder="(650) 877-0805"
-                className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 px-4 py-2 text-sm focus:outline-none h-[48px]"
+                className={`mt-1 w-full rounded-md border bg-gray-50 px-4 py-2 text-sm focus:outline-none h-[48px] ${
+                  phoneError ? "border-red-500 focus:border-red-500" : "border-gray-300 focus:border-blue-500"
+                }`}
                 value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
+                onChange={handlePhoneChange}
+                onKeyDown={handlePhoneKeyDown}
+                onPaste={handlePhonePaste}
+                maxLength={14} // (3) 3-4 = 14 characters
               />
+              {phoneError && (
+                <p className="mt-1 text-sm text-red-600">{phoneError}</p>
+              )}
+              <p className="mt-1 text-xs text-gray-500">
+                Format: (XXX) XXX-XXXX
+              </p>
             </div>
 
             <div>

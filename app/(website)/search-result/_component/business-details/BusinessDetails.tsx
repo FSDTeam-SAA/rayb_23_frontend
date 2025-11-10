@@ -4,14 +4,9 @@
 import { useEffect, useState, useMemo } from "react";
 import {
   Star,
-  ChevronDown,
-  ChevronUp,
   SaveIcon,
   Share2Icon,
   LocateIcon,
-  MessageCircleCodeIcon,
-  Globe,
-  Phone,
   Loader2,
   Copy,
   X,
@@ -21,24 +16,26 @@ import {
   Search,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { toast } from "sonner";
 import ReviewModal from "@/components/modals/ReviewModal";
 import ReviewSubmittedModal from "@/components/modals/ReviewSubmittedModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSession } from "next-auth/react";
-import AddPhotoModal from "./modal/AddPhotoModal";
-import "leaflet/dist/leaflet.css";
-import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
+import AddPhotoModal from "../modal/AddPhotoModal";
+import { useMap } from "react-leaflet";
 import ReactDOMServer from "react-dom/server";
 import { DivIcon } from "leaflet";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import LoginModal from "@/components/business/modal/login-modal";
-import ClaimModal from "./modal/claim-modal";
+import ClaimModal from "../modal/claim-modal";
 import AddPhotoSuccessModal from "@/components/modals/add-photo-modal";
-import BusinessGalleryModal from "./modal/BusinessGalleryModal";
+import BusinessGalleryModal from "../modal/BusinessGalleryModal";
+import ServiceType from "./service-type";
+import WorkingHours from "./working-hours";
+import ContactInfo from "./contact-info";
+import Location from "./location";
 
 interface Review {
   _id: string;
@@ -50,6 +47,7 @@ interface Review {
     _id: string;
     name: string;
     email: string;
+    imageLink: string;
   } | null;
   business: string;
   googlePlaceId: string;
@@ -201,11 +199,13 @@ const ImageSlider = ({
     );
   }, [images]);
 
-  const nextImage = () => {
+  const nextImage = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Event bubbling বন্ধ করতে
     setCurrentImageIndex((prev) => (prev + 1) % uniqueImages.length);
   };
 
-  const prevImage = () => {
+  const prevImage = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Event bubbling বন্ধ করতে
     setCurrentImageIndex(
       (prev) => (prev - 1 + uniqueImages.length) % uniqueImages.length
     );
@@ -228,16 +228,16 @@ const ImageSlider = ({
   return (
     <div className="flex-shrink-0 relative group">
       <div
-        className="relative rounded-lg overflow-hidden h-[172px] w-[172px]"
-        onClick={onImageClick}
+        className="relative rounded-lg overflow-hidden h-[172px] w-[172px] cursor-pointer"
+        onClick={onImageClick} // শুধুমাত্র parent div-এ click handler
       >
         <Image
           src={uniqueImages[currentImageIndex]}
           alt={`${businessName} - Image ${currentImageIndex + 1}`}
           width={172}
           height={172}
-          className="rounded-lg object-cover h-full w-full cursor-pointer"
-          onClick={onImageClick}
+          className="rounded-lg object-cover h-full w-full"
+          // Image element থেকে onClick remove করা হয়েছে
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = "/images/placeholder-business.jpg";
@@ -276,7 +276,10 @@ const ImageSlider = ({
           {uniqueImages.map((_, index) => (
             <button
               key={index}
-              onClick={() => goToImage(index)}
+              onClick={(e) => {
+                e.stopPropagation(); // Event bubbling বন্ধ করতে
+                goToImage(index);
+              }}
               className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
                 index === currentImageIndex
                   ? "bg-[#139a8e]"
@@ -514,9 +517,19 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
         <div className="flex items-start gap-4">
           <div className="flex-shrink-0">
             <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
-              <span className="text-teal-800 font-semibold">
-                {review.user?.name?.[0]?.toUpperCase() || "U"}
-              </span>
+              {review?.user?.imageLink ? (
+                <Image
+                  src={review?.user?.imageLink || ""}
+                  alt="img.png"
+                  width={1000}
+                  height={1000}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+              ) : (
+                <span className="text-teal-800 font-semibold text-xs">
+                  {review.user?.name?.[0]?.toUpperCase() || "U"}
+                </span>
+              )}
             </div>
           </div>
 
@@ -699,9 +712,18 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
           <div className="flex items-center gap-2 mb-2">
             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
             <span className="text-gray-600 font-medium">{averageRating}</span>
-            <span className="text-gray-500">
-              ({singleBusiness.review.length} Reviews ){" "}
-              <span className="text-xs">by google</span>
+            <span className="text-gray-500 flex items-center gap-2">
+              ( {singleBusiness.review.length} Reviews
+              <span>
+                <Image
+                  src="/images/google.jpeg"
+                  alt="google"
+                  width={1000}
+                  height={1000}
+                  className="h-4 w-4"
+                />
+              </span>
+              ){" "}
             </span>
           </div>
           <div className="text-gray-600 mb-1">
@@ -720,7 +742,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
             className="bg-[#e0f2f1] hover:bg-[#139a8e] flex items-center gap-2 px-5 py-3 rounded-lg text-[#139a8e] hover:text-white font-semibold"
           >
             <Star className="w-4 h-4 mr-1" />
-            Write A Review
+            Write a Review
           </button>
           <button
             onClick={handleAddPhoto}
@@ -792,177 +814,13 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
           </div>
 
           {/* Service Type */}
-          <div className="pt-8 space-y-8 border-b border-gray-200 pb-10">
-            <h2 className="text-xl font-semibold mb-4">Service Type</h2>
-
-            {/* Repair Services */}
-            {singleBusiness.services.length > 0 && (
-              <div className="shadow-[0px_2px_12px_0px_#003D3914] p-4 rounded-lg">
-                <button
-                  onClick={() => toggleSection("repair")}
-                  className="w-full flex items-center justify-between text-left  mb-4"
-                >
-                  <h3 className="font-medium text-2xl">Repair</h3>
-                  {expandedSections.repair ? (
-                    <ChevronUp className="w-5 h-5" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5" />
-                  )}
-                </button>
-
-                {expandedSections.repair && (
-                  <div className="space-y-4">
-                    {Object.entries(groupedServices).map(
-                      ([family, services]: [string, any]) => (
-                        <div key={family}>
-                          <h4 className="font-medium text-primary text-xl">
-                            {family}
-                          </h4>
-                          <div className="space-y-2 grid lg:grid-cols-2 gap-x-10">
-                            {(
-                              Object.entries(
-                                services.reduce(
-                                  (
-                                    acc: Record<string, any[]>,
-                                    service: any
-                                  ) => {
-                                    const group =
-                                      service.selectedInstrumentsGroup;
-                                    if (!acc[group]) {
-                                      acc[group] = [];
-                                    }
-                                    acc[group].push(service);
-                                    return acc;
-                                  },
-                                  {} as Record<string, any[]>
-                                )
-                              ) as [string, any[]][]
-                            ).map(
-                              ([groupName, groupServices]: [string, any[]]) => (
-                                <div key={groupName} className="mb-3">
-                                  {/* Group Name */}
-                                  <div className="font-medium text-gray-700 mt-2">
-                                    {groupName}
-                                  </div>
-
-                                  {/* Group এর ভিতরের services */}
-                                  {groupServices.map(
-                                    (service: any, index: number) => (
-                                      <div
-                                        key={index}
-                                        className="flex justify-between items-center py-1 text-sm"
-                                      >
-                                        <div>
-                                          <div className="text-gray-500">
-                                            {service.newInstrumentName}
-                                          </div>
-                                        </div>
-                                        <div className="font-medium text-xs text-gray-500">
-                                          {formatPrice(service)}
-                                        </div>
-                                      </div>
-                                    )
-                                  )}
-                                </div>
-                              )
-                            )}
-                          </div>
-                        </div>
-                      )
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Music Lessons */}
-            {singleBusiness.musicLessons.length > 0 && (
-              <div className="shadow-[0px_2px_12px_0px_#003D3914] p-4 rounded-lg">
-                <button
-                  onClick={() => toggleSection("lessons")}
-                  className="w-full flex items-center justify-between text-left"
-                >
-                  <h3 className="font-medium text-lg">Lessons</h3>
-                  {expandedSections.lessons ? (
-                    <ChevronUp className="w-5 h-5" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5" />
-                  )}
-                </button>
-
-                {expandedSections.lessons && (
-                  <div className="py-4">
-                    <p className="text-sm text-gray-600 mb-4">
-                      These are hourly rates for lessons, contact the business
-                      for more details
-                    </p>
-                    <div className="space-y-4">
-                      <h4 className="font-medium text-teal-600">Strings</h4>
-                      <div className="space-y-2">
-                        {singleBusiness.musicLessons.map((lesson, index) => (
-                          <div
-                            key={index}
-                            className="flex justify-between items-center py-1"
-                          >
-                            <div className="font-medium">
-                              {lesson.selectedInstrumentsGroupMusic}
-                            </div>
-                            <div className="font-semibold">
-                              {formatPrice(lesson)}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* other services */}
-            <div className="shadow-[0px_2px_12px_0px_#003D3914] p-4 rounded-lg">
-              <button
-                onClick={() => toggleSection("otherService")}
-                className="w-full flex items-center justify-between text-left"
-              >
-                <h3 className="font-medium text-lg">Other Services</h3>
-                {expandedSections.otherService ? (
-                  <ChevronUp className="w-5 h-5" />
-                ) : (
-                  <ChevronDown className="w-5 h-5" />
-                )}
-              </button>
-
-              {expandedSections.otherService && (
-                <div className="py-4">
-                  <h1>
-                    The business provides{" "}
-                    {singleBusiness?.buyInstruments && (
-                      <span className="font-semibold">buying,</span>
-                    )}{" "}
-                    {singleBusiness?.sellInstruments && (
-                      <span className="font-semibold">selling,</span>
-                    )}{" "}
-                    {singleBusiness?.offerMusicLessons && (
-                      <span className="font-semibold">trading</span>
-                    )}{" "}
-                    {singleBusiness?.rentInstruments && (
-                      <span>
-                        & <span className="font-semibold">rental </span>
-                      </span>
-                    )}
-                    services. Please{" "}
-                    <Link href={"/"}>
-                      <span className="text-teal-600">
-                        contact the business
-                      </span>
-                    </Link>{" "}
-                    to get a personalized quote.
-                  </h1>
-                </div>
-              )}
-            </div>
-          </div>
+          <ServiceType
+            expandedSections={expandedSections}
+            formatPrice={formatPrice}
+            groupedServices={groupedServices}
+            singleBusiness={singleBusiness}
+            toggleSection={toggleSection}
+          />
 
           {/* Rating & Reviews */}
           <div className="pt-8">
@@ -1067,134 +925,24 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
         {/* Right Column */}
         <div className="space-y-8  pl-8">
           {/* Contact Info */}
-          <div className="border-b border-gray-300 pb-8">
-            <h3 className="text-lg font-semibold mb-4">Contact Info</h3>
-            <div className="space-y-5">
-              {singleBusiness.isClaimed && (
-                <button
-                  onClick={handleMessage}
-                  className=" flex items-center gap-2"
-                >
-                  <span className="text-[#139a8e]">
-                    <MessageCircleCodeIcon />
-                  </span>
-                  <span className="text-gray-600 hover:text-[#139a8e]">
-                    Message Business
-                  </span>
-                </button>
-              )}
-              <div>
-                <Link
-                  href={singleBusiness.businessInfo.website}
-                  className="flex items-center gap-2 font-medium"
-                >
-                  <span>
-                    <Globe className="text-[#139a8e] " />
-                  </span>
-                  <span className="text-gray-600 hover:text-[#139a8e]">
-                    {singleBusiness.businessInfo.website}
-                  </span>
-                </Link>
-              </div>
-
-              <div>
-                <Link href={""}>
-                  <div className="flex items-center gap-2 font-medium">
-                    <span>
-                      <Phone className="text-[#139a8e] " />
-                    </span>
-                    <span className="text-gray-600 hover:text-[#139a8e]">
-                      {singleBusiness.businessInfo.phone}
-                    </span>
-                  </div>
-                </Link>
-              </div>
-            </div>
-          </div>
+          <ContactInfo
+            singleBusiness={singleBusiness}
+            handleMessage={handleMessage}
+          />
 
           {/* Working Hours */}
-          <div className="border-b border-gray-300 pb-6">
-            <h3 className="text-lg font-semibold mb-4">Working Hours</h3>
-            <div className="space-y-2">
-              {singleBusiness.businessHours.map((hour, index) => (
-                <div key={index} className="flex flex-col">
-                  <span className="font-medium text-[#139a8e]">
-                    {hour.day.slice(0, 3)}
-                  </span>
-                  <span
-                    className={`${
-                      hour.enabled ? "text-gray-700" : "text-red-500"
-                    } font-medium`}
-                  >
-                    {hour.enabled
-                      ? `${formatTime(
-                          hour.startTime,
-                          hour.startMeridiem
-                        )} - ${formatTime(hour.endTime, hour.endMeridiem)}`
-                      : "Closed"}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <WorkingHours
+            singleBusiness={singleBusiness}
+            formatTime={formatTime}
+          />
 
-          <div>
-            <h1 className="text-xl font-bold mb-2">Location</h1>
-
-            <h1 className="text-primary font-medium mb-5">
-              {singleBusiness?.businessInfo?.address}
-            </h1>
-
-            {/* Location */}
-            <div className="h-[300px] w-[300px]">
-              <style jsx global>{`
-                .leaflet-control-container {
-                  display: none !important;
-                }
-              `}</style>
-
-              {coords && (
-                <MapContainer
-                  center={[coords.lat, coords.lng]}
-                  zoom={15} // adjust zoom here
-                  scrollWheelZoom={true}
-                  className="h-full w-full rounded-xl shadow-lg"
-                >
-                  <TileLayer
-                    url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-                    attribution=""
-                  />
-                  <Marker
-                    position={[coords.lat, coords.lng]}
-                    icon={customMarker}
-                  >
-                    <Popup>{singleBusiness.businessInfo.name}</Popup>
-                  </Marker>
-
-                  {/* Optional: reset view */}
-                  <SetMapView coords={coords} zoom={15} />
-                </MapContainer>
-              )}
-            </div>
-
-            <div className="mt-8">
-              <Button
-                onClick={() => {
-                  // Encode the business address for Google Maps
-                  const encodedAddress = encodeURIComponent(
-                    singleBusiness.businessInfo.address
-                  );
-                  const googleMapsUrl = `https://www.google.com/maps/dir//${encodedAddress}`;
-
-                  // Open Google Maps in a new tab
-                  window.open(googleMapsUrl, "_blank", "noopener,noreferrer");
-                }}
-                className="w-full bg-primary/20 hover:bg-primary/15 text-primary"
-              >
-                Get Directions
-              </Button>
-            </div>
-          </div>
+          {/* location */}
+          <Location
+            singleBusiness={singleBusiness}
+            SetMapView={SetMapView}
+            coords={coords}
+            customMarker={customMarker}
+          />
         </div>
 
         {isLoginModalOpen && (
