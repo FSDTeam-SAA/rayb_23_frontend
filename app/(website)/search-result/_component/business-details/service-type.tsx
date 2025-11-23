@@ -173,7 +173,7 @@ const ServiceType: React.FC<ServiceTypeProps> = ({
       )}
 
       {/* 💼 Other Services */}
-      <div className="shadow-[0px_2px_12px_0px_#003D3914] p-4 rounded-lg">
+      <div className="shadow-[0px_2px_12px_0px_#003D3914] p-8 rounded-lg">
         <button
           onClick={() => toggleSection("otherService")}
           className="w-full flex items-center justify-between text-left"
