@@ -28,11 +28,12 @@ interface Business {
   businessInfo: BusinessItem;
   review?: string;
   services: Service[];
+  images?: string[];
 }
 
 const BusinessCard = ({ business }: { business: Business }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const images = business.businessInfo?.image || [];
+  const images = business?.images || [];
 
   const { search, serviceTag } = useFilterStore();
 
@@ -93,7 +94,7 @@ const BusinessCard = ({ business }: { business: Business }) => {
       <Link href={`/search-result/${business._id}`}>
         <div className="bg-white rounded-lg shadow-[0px_2px_12px_0px_#003d3924] p-4 lg:p-6">
           <div className="flex flex-col sm:flex-row items-start gap-4 lg:gap-5">
-            <div className="flex-shrink-0 overflow-hidden rounded-lg w-full sm:w-auto relative group">
+            <div className="flex-shrink-0 overflow-hidden rounded-lg w-full sm:w-auto relative">
               {/* Image Slider */}
               <div className="relative w-full sm:w-[200px] h-[160px] sm:h-[200px] rounded-lg overflow-hidden">
                 <Image
@@ -113,7 +114,7 @@ const BusinessCard = ({ business }: { business: Business }) => {
                         e.stopPropagation();
                         prevImage();
                       }}
-                      className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100"
+                      className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1 rounded-full transition-all duration-200"
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </button>
@@ -123,7 +124,7 @@ const BusinessCard = ({ business }: { business: Business }) => {
                         e.stopPropagation();
                         nextImage();
                       }}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100"
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1 rounded-full transition-all duration-200"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </button>
