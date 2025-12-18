@@ -703,7 +703,14 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
               {singleBusiness.isClaimed ? (
                 <button>Claimed</button>
               ) : (
-                <button onClick={() => setIsClaimModalOpen(true)}>
+                <button
+                  onClick={() => {
+                    if (status === "unauthenticated") {
+                      return setIsLoginModalOpen(true);
+                    }
+                    setIsClaimModalOpen(true);
+                  }}
+                >
                   Unclaimed
                 </button>
               )}
@@ -712,8 +719,8 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
           <div className="flex items-center gap-2 mb-2">
             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
             <span className="text-gray-600 font-medium">{averageRating}</span>
-            <span className="text-gray-500 flex items-center gap-2">
-              ( {singleBusiness.review.length} Reviews
+            <span className="text-gray-500 flex items-center space-x-2">
+              (<span>{singleBusiness.review.length} Reviews</span>
               <span>
                 <Image
                   src="/images/google.jpeg"
@@ -723,7 +730,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
                   className="h-4 w-4"
                 />
               </span>
-              ){" "}
+              )
             </span>
           </div>
           <div className="text-gray-600 mb-1">
@@ -956,6 +963,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
           <ClaimModal
             isClaimModalOpen={isClaimModalOpen}
             setIsClaimModalOpen={setIsClaimModalOpen}
+            id={singleBusiness?._id}
           />
         )}
       </div>

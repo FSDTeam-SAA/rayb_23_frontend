@@ -4,11 +4,13 @@ import React from "react";
 interface LoginModalProps {
   isClaimModalOpen: boolean;
   setIsClaimModalOpen: (value: boolean) => void;
+  id: string;
 }
 
 const ClaimModal: React.FC<LoginModalProps> = ({
   isClaimModalOpen,
   setIsClaimModalOpen,
+  id,
 }) => {
   if (!isClaimModalOpen) return null;
 
@@ -16,7 +18,7 @@ const ClaimModal: React.FC<LoginModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black bg-opacity-50"
+        className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
         onClick={() => setIsClaimModalOpen(false)}
       ></div>
 
@@ -40,7 +42,7 @@ const ClaimModal: React.FC<LoginModalProps> = ({
           </button>
 
           <Link
-            href={"/claim-my-business"}
+            href={`/claim-my-business/${id}`}
             className="bg-primary text-white py-3 rounded-lg w-1/2 font-semibold"
           >
             <button>Claim Business</button>
