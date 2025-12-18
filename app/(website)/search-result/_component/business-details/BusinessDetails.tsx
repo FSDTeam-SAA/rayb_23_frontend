@@ -703,7 +703,14 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
               {singleBusiness.isClaimed ? (
                 <button>Claimed</button>
               ) : (
-                <button onClick={() => setIsClaimModalOpen(true)}>
+                <button
+                  onClick={() => {
+                    if (status === "unauthenticated") {
+                      return setIsLoginModalOpen(true);
+                    }
+                    setIsClaimModalOpen(true);
+                  }}
+                >
                   Unclaimed
                 </button>
               )}
@@ -956,6 +963,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
           <ClaimModal
             isClaimModalOpen={isClaimModalOpen}
             setIsClaimModalOpen={setIsClaimModalOpen}
+            id={singleBusiness?._id}
           />
         )}
       </div>
