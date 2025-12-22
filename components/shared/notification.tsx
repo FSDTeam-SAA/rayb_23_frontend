@@ -86,7 +86,7 @@ const styleMap: Record<NotificationType, NotificationStyle> = {
   },
 };
 
-const Page = () => {
+const Notifications = () => {
   const { data: session } = useSession();
   const userId = session?.user?.id;
   const queryClient = useQueryClient();
@@ -225,4 +225,4 @@ const Page = () => {
   );
 };
 
-export default Page;
+export default Notifications;
