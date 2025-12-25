@@ -38,7 +38,7 @@ const CheckCustomerModal: React.FC<LoginModalProps> = ({
 
         <div>
           <Link href={"/"}>
-            <Button className="mt-5">Back To Home</Button>
+            <Button className="mt-5 font-semibold">Back To Home</Button>
           </Link>
         </div>
 
