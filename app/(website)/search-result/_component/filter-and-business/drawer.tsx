@@ -14,7 +14,9 @@ export function FilterDrawer() {
         </Button>
       </DrawerTrigger>
       <DrawerContent className="p-5">
-        <FilterInfo />
+        <div className="h-[calc(100vh-200px)] overflow-y-scroll scrollbar-hide">
+          <FilterInfo />
+        </div>
       </DrawerContent>
     </Drawer>
   );
