@@ -82,7 +82,7 @@ const PriceRange = ({}) => {
               <input
                 type="number"
                 min="0"
-                className="border border-gray-200 focus:outline-none h-[50px] p-2 rounded-md bg-[#f7f8f8] w-[110px]"
+                className="border border-gray-200 focus:outline-none h-[50px] p-2 rounded-md bg-[#f7f8f8] w-[150px] lg:w-[110px]"
                 placeholder="Min"
                 onChange={handleMinPriceChange}
                 onBlur={(e) => {
@@ -97,7 +97,7 @@ const PriceRange = ({}) => {
               <input
                 type="number"
                 min="0"
-                className="border border-gray-200 focus:outline-none h-[50px] p-2 rounded-md bg-[#f7f8f8] w-[110px]"
+                className="border border-gray-200 focus:outline-none h-[50px] p-2 rounded-md bg-[#f7f8f8] w-[150px] lg:w-[110px]"
                 placeholder="Max"
                 onChange={handleMaxPriceChange}
                 onBlur={(e) => {
