@@ -107,7 +107,7 @@ const Navbar = () => {
               className="bg-white text-gray-900 border-gray-200 w-80"
             >
               <div className="flex flex-col space-y-6 p-4">
-                {/* Mobile Search Bar */}
+                {/* Mobile Search Bar
                 {shouldShowSearchBar && (
                   <SearchBar
                     variant="mobile"
@@ -119,7 +119,7 @@ const Navbar = () => {
                       )?.click();
                     }}
                   />
-                )}
+                )} */}
 
                 {/* User Profile Section (if authenticated) */}
                 {sessionStatus === "authenticated" && (
@@ -160,12 +160,16 @@ const Navbar = () => {
                     For Customer <ChevronDown className="h-4 w-4" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-white text-gray-900 border-gray-200 w-full">
-                    <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
-                      Write a Review
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
-                      Add a Business
-                    </DropdownMenuItem>
+                    <Link href={`/review-a-business`}>
+                      <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
+                        Write a Review
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link href={`/add-a-business`}>
+                      <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
+                        Add a Business
+                      </DropdownMenuItem>
+                    </Link>
                     {sessionStatus === "unauthenticated" && (
                       <DropdownMenuItem className="hover:bg-gray-100 focus:bg-gray-100 cursor-pointer">
                         <Link href="/auth/login">Log In</Link>
@@ -179,12 +183,17 @@ const Navbar = () => {
                     For Business <ChevronDown className="h-4 w-4" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-white text-gray-900 border-gray-200 w-full">
-                    <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
-                      Add my Business
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
-                      Claim my Business
-                    </DropdownMenuItem>
+                    <Link href={`/add-my-business`}>
+                      <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
+                        Add my Business
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link href={`/claim-my-business`}>
+                      {" "}
+                      <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
+                        Claim my Business
+                      </DropdownMenuItem>
+                    </Link>
                     {sessionStatus === "unauthenticated" && (
                       <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
                         <Link href="/auth/login">Log In</Link>
