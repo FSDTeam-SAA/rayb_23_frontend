@@ -37,6 +37,19 @@ export default function RootLayout({
             </BusinessContextProvider>
           </QueryProvider>
         </SessionWrapper>
+
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+      (function () {
+        var ua = navigator.userAgent;
+        if (/Safari/.test(ua) && !/Chrome/.test(ua)) {
+          document.documentElement.classList.add('safari');
+        }
+      })();
+    `,
+          }}
+        />
       </body>
     </html>
   );
