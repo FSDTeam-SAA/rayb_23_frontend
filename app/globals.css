@@ -121,25 +121,23 @@
   }
 }
 
-/* Safari checkbox safe fix */
-@supports (-webkit-touch-callout: none) {
-  input[type="checkbox"],
-  input[type="radio"] {
-    -webkit-appearance: auto;
-    appearance: auto;
-    accent-color: currentColor;
-  }
+/* ✅ SAFARI CHECKBOX + RADIO FIX */
+.safari input[type="checkbox"],
+.safari input[type="radio"] {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  vertical-align: middle;
 }
 
-@supports (-webkit-touch-callout: none) {
-  label {
-    display: inline-flex;
-    align-items: center;
-  }
+.safari label {
+  display: inline-flex;
+  align-items: center;
 }
 
-@supports (-webkit-touch-callout: none) {
-  .flex {
-    -webkit-gap: 0;
-  }
+.safari input[type="checkbox"],
+.safari input[type="radio"] {
+  all: revert;
+  accent-color: currentColor;
 }
+
