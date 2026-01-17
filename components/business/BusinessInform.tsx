@@ -3,6 +3,14 @@ import Image from "next/image";
 import React, { useState, useEffect, useRef } from "react";
 import { MdDelete } from "react-icons/md";
 
+interface Error {
+  businessName?: string;
+  addressName?: string;
+  description?: string;
+  phoneNumber?: string;
+  email?: string;
+}
+
 interface BusinessInformProps {
   handleFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   handleUploadImage: () => void;
@@ -14,12 +22,14 @@ interface BusinessInformProps {
   setPhoneNumber: (phone: string) => void;
   setEmail: (email: string) => void;
   setWebsite: (website: string) => void;
-  businessMan: string;
+  businessName: string;
   addressName: string;
   description: string;
   phoneNumber: string;
   email: string;
   website: string;
+  error: Error;
+  setError: React.Dispatch<React.SetStateAction<Error>>;
 }
 
 interface PlaceResult {
@@ -45,14 +55,14 @@ interface PlaceResult {
 const usePhoneFormatter = () => {
   const formatPhoneNumber = (value: string): string => {
     // Remove all non-digit characters
-    const cleaned = value.replace(/\D/g, '');
-    
+    const cleaned = value.replace(/\D/g, "");
+
     // Limit to 10 digits (US phone number)
     const limited = cleaned.slice(0, 10);
-    
+
     // Apply formatting based on length
     if (limited.length === 0) {
-      return '';
+      return "";
     } else if (limited.length <= 3) {
       return `(${limited}`;
     } else if (limited.length <= 6) {
@@ -63,7 +73,7 @@ const usePhoneFormatter = () => {
   };
 
   const validatePhoneNumber = (value: string): boolean => {
-    const cleaned = value.replace(/\D/g, '');
+    const cleaned = value.replace(/\D/g, "");
     return cleaned.length === 10;
   };
 
@@ -81,19 +91,21 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
   setPhoneNumber,
   setEmail,
   setWebsite,
-  businessMan,
+  businessName,
   addressName,
   description,
   phoneNumber,
   email,
   website,
+  error,
+  setError,
 }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState<PlaceResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [phoneError, setPhoneError] = useState<string>("");
   const addressInputRef = useRef<HTMLInputElement>(null);
-  
+
   const { formatPhoneNumber, validatePhoneNumber } = usePhoneFormatter();
 
   // Fetch location suggestions from OpenStreetMap (Nominatim)
@@ -109,15 +121,18 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
       try {
         const response = await fetch(
           `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-            addressName
-          )}&format=json&addressdetails=1&limit=10&countrycodes=us,ca`
+            addressName,
+          )}&format=json&addressdetails=1&limit=10&countrycodes=us,ca`,
         );
         const data: PlaceResult[] = await response.json();
-        
+
         // Filter results that have at least city/town and state information
-        const filteredResults = data.filter(place => 
-          (place.address.city || place.address.town || place.address.village) && 
-          place.address.state
+        const filteredResults = data.filter(
+          (place) =>
+            (place.address.city ||
+              place.address.town ||
+              place.address.village) &&
+            place.address.state,
         );
 
         setSuggestions(filteredResults);
@@ -136,9 +151,9 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
 
   // Validate phone number when it changes
   useEffect(() => {
-    if (phoneNumber && phoneNumber.replace(/\D/g, '').length > 0) {
+    if (phoneNumber && phoneNumber.replace(/\D/g, "").length > 0) {
       const isValid = validatePhoneNumber(phoneNumber);
-      if (!isValid && phoneNumber.replace(/\D/g, '').length === 10) {
+      if (!isValid && phoneNumber.replace(/\D/g, "").length === 10) {
         setPhoneError("Please enter a valid 10-digit phone number");
       } else {
         setPhoneError("");
@@ -150,35 +165,37 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
 
   const formatAddress = (place: PlaceResult): string => {
     const address = place.address;
-    
+
     // Build address components
-    const street = address.road ? `${address.house_number ? address.house_number + ' ' : ''}${address.road}` : '';
-    const city = address.city || address.town || address.village || '';
-    const state = address.state || '';
-    const postcode = address.postcode || '';
-    const country = address.country || '';
+    const street = address.road
+      ? `${address.house_number ? address.house_number + " " : ""}${address.road}`
+      : "";
+    const city = address.city || address.town || address.village || "";
+    const state = address.state || "";
+    const postcode = address.postcode || "";
+    const country = address.country || "";
 
     // Create formatted address
-    let formattedAddress = '';
-    
+    let formattedAddress = "";
+
     if (street) {
-      formattedAddress += street + ', ';
+      formattedAddress += street + ", ";
     }
-    
+
     if (city) {
-      formattedAddress += city + ', ';
+      formattedAddress += city + ", ";
     }
-    
+
     if (state) {
-      formattedAddress += state + ' ';
+      formattedAddress += state + " ";
     }
-    
+
     if (postcode) {
       formattedAddress += postcode;
     }
-    
-    if (country && country !== 'United States' && country !== 'Canada') {
-      formattedAddress += ', ' + country;
+
+    if (country && country !== "United States" && country !== "Canada") {
+      formattedAddress += ", " + country;
     }
 
     return formattedAddress.trim();
@@ -201,13 +218,13 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
-    
+
     // Allow backspace to delete numbers including formatting characters
     if (input.length < phoneNumber.length) {
       // If user is deleting, remove last digit but maintain formatting
-      const cleanedCurrent = phoneNumber.replace(/\D/g, '');
-      const cleanedNew = input.replace(/\D/g, '');
-      
+      const cleanedCurrent = phoneNumber.replace(/\D/g, "");
+      const cleanedNew = input.replace(/\D/g, "");
+
       if (cleanedNew.length < cleanedCurrent.length) {
         // User deleted a digit, format the remaining digits
         const formatted = formatPhoneNumber(cleanedNew);
@@ -215,26 +232,38 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
         return;
       }
     }
-    
+
     // Format the phone number as user types
     const formatted = formatPhoneNumber(input);
     setPhoneNumber(formatted);
+
+    if (formatted.replace(/\D/g, "").length > 0) {
+      setError((prev) => ({ ...prev, phoneNumber: "" }));
+    }
   };
 
   const handlePhoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     // Allow only numbers, backspace, delete, tab, and arrow keys
     if (
       !/[\d]/.test(e.key) &&
-      !['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)
+      ![
+        "Backspace",
+        "Delete",
+        "Tab",
+        "ArrowLeft",
+        "ArrowRight",
+        "ArrowUp",
+        "ArrowDown",
+      ].includes(e.key)
     ) {
       e.preventDefault();
     }
   };
 
   const handlePhonePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    const paste = e.clipboardData.getData('text');
-    const numbersOnly = paste.replace(/\D/g, '');
-    
+    const paste = e.clipboardData.getData("text");
+    const numbersOnly = paste.replace(/\D/g, "");
+
     if (numbersOnly.length > 0) {
       e.preventDefault();
       const formatted = formatPhoneNumber(numbersOnly);
@@ -305,9 +334,18 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
                 type="text"
                 placeholder="Business name"
                 className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 px-4 py-2 text-sm focus:outline-none h-[48px]"
-                value={businessMan}
-                onChange={(e) => setBusinessName(e.target.value)}
+                value={businessName}
+                onChange={(e) => {
+                  setBusinessName(e.target.value);
+
+                  if (e.target.value.trim()) {
+                    setError((prev) => ({ ...prev, businessName: "" }));
+                  }
+                }}
               />
+              {error && (
+                <p className="mt-1 text-red-500">{error?.businessName}</p>
+              )}
             </div>
 
             {/* Address with Autocomplete */}
@@ -322,7 +360,13 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
                   placeholder="488 San Mateo Ave, San Bruno, CA 94066"
                   className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 px-10 py-2 text-sm focus:outline-none h-[48px]"
                   value={addressName}
-                  onChange={(e) => setAddressName(e.target.value)}
+                  onChange={(e) => {
+                    setAddressName(e.target.value);
+
+                    if (e.target.value.trim()) {
+                      setError((prev) => ({ ...prev, addressName: "" }));
+                    }
+                  }}
                   onFocus={handleAddressFocus}
                   onBlur={handleAddressBlur}
                 />
@@ -332,11 +376,17 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
                 />
               </div>
 
+              {error && (
+                <p className="mt-1 text-red-500">{error?.addressName}</p>
+              )}
+
               {/* Suggestions Dropdown */}
               {showSuggestions && (
                 <div className="absolute z-20 w-full bg-white rounded-md shadow-lg border border-gray-200 max-h-[300px] overflow-y-auto mt-1">
                   {isLoading ? (
-                    <div className="p-3 text-center text-gray-500">Loading locations...</div>
+                    <div className="p-3 text-center text-gray-500">
+                      Loading locations...
+                    </div>
                   ) : suggestions.length === 0 ? (
                     <div className="p-3 text-gray-500">No locations found</div>
                   ) : (
@@ -354,8 +404,8 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
                                 {formatAddress(place)}
                               </span>
                               <span className="text-xs text-gray-500 mt-1 block">
-                                {place.display_name.length > 100 
-                                  ? place.display_name.substring(0, 100) + '...' 
+                                {place.display_name.length > 100
+                                  ? place.display_name.substring(0, 100) + "..."
                                   : place.display_name}
                               </span>
                             </div>
@@ -379,8 +429,16 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
               placeholder="Business description"
               className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 px-4 py-2 text-sm focus:outline-none h-[100px]"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => {
+                setDescription(e.target.value);
+
+                if (e.target.value.trim()) {
+                  setError((prev) => ({ ...prev, description: "" }));
+                }
+              }}
             />
+
+            {error && <p className="mt-1 text-red-500">{error?.description}</p>}
           </div>
 
           {/* Phone + Email */}
@@ -393,7 +451,9 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
                 type="tel"
                 placeholder="(650) 877-0805"
                 className={`mt-1 w-full rounded-md border bg-gray-50 px-4 py-2 text-sm focus:outline-none h-[48px] ${
-                  phoneError ? "border-red-500 focus:border-red-500" : "border-gray-300 focus:border-blue-500"
+                  phoneError
+                    ? "border-red-500 focus:border-red-500"
+                    : "border-gray-300 focus:border-blue-500"
                 }`}
                 value={phoneNumber}
                 onChange={handlePhoneChange}
@@ -401,8 +461,8 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
                 onPaste={handlePhonePaste}
                 maxLength={14} // (3) 3-4 = 14 characters
               />
-              {phoneError && (
-                <p className="mt-1 text-sm text-red-600">{phoneError}</p>
+              {error && (
+                <p className="mt-1 text-red-500">{error?.phoneNumber}</p>
               )}
             </div>
 
@@ -415,8 +475,15 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
                 placeholder="Business email"
                 className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 px-4 py-2 text-sm focus:outline-none h-[48px]"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+
+                  if (e.target.value.trim()) {
+                    setError((prev) => ({ ...prev, email: "" }));
+                  }
+                }}
               />
+              {error && <p className="mt-1 text-red-500">{error?.email}</p>}
             </div>
           </div>
 
