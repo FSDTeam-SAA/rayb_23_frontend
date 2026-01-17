@@ -16,6 +16,15 @@ import BusinessSuccessModal from "../modal/bussiness-success-modal";
 import LogOutBusinessSuccessModal from "../modal/log-out-business-success-modal";
 import TrackSubmissionModal from "../modal/track-submission-modal";
 
+interface Error {
+  businessName?: string;
+  addressName?: string;
+  description?: string;
+  phoneNumber?: string;
+  email?: string;
+  images?: string;
+}
+
 interface ServiceType {
   newInstrumentName: string;
   pricingType: string;
@@ -89,6 +98,14 @@ const AddBusiness = () => {
   const [selected, setSelected] = useState<ServiceType[]>([]);
   const [selectedMusic, setSelectedMusic] = useState<ServiceType[]>([]);
 
+  const [error, setError] = useState<Error>({
+    businessName: "",
+    addressName: "",
+    description: "",
+    phoneNumber: "",
+    email: "",
+  });
+
   const handleAddInstrument = () => {
     setSelected((prev) => [
       ...prev,
@@ -159,7 +176,7 @@ const AddBusiness = () => {
       day,
       enabled: false, // default to false
       ...defaultTime,
-    }))
+    })),
   );
 
   //get single Business by selected ID
@@ -171,7 +188,7 @@ const AddBusiness = () => {
     queryKey: ["get-single-business", selectedBusinessId],
     queryFn: async () => {
       const res = await axios(
-        `${process.env.NEXT_PUBLIC_API_URL}/business/${selectedBusinessId}`
+        `${process.env.NEXT_PUBLIC_API_URL}/business/${selectedBusinessId}`,
       );
       return res?.data?.data;
     },
@@ -186,7 +203,7 @@ const AddBusiness = () => {
 
   //business information related
   const [images, setImages] = useState<string[]>([]);
-  const [businessMan, setBusinessName] = useState("");
+  const [businessName, setBusinessName] = useState("");
   const [addressName, setAddressName] = useState("");
   const [description, setDescription] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -228,7 +245,7 @@ const AddBusiness = () => {
         const updatedHours = daysOfWeek.map((day) => {
           const found = businessHoursEnables.find(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (item: any) => item.day === day
+            (item: any) => item.day === day,
           );
           return found
             ? {
@@ -265,7 +282,7 @@ const AddBusiness = () => {
         // Extract all unique instrument group names from services
         const instrumentGroups = singleBusiness.services.map(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (s: any) => s.selectedInstrumentsGroup
+          (s: any) => s.selectedInstrumentsGroup,
         );
 
         // Prefill selected instruments
@@ -280,7 +297,7 @@ const AddBusiness = () => {
 
         const musicGroups = singleBusiness.musicLessons.map(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (s: any) => s.selectedInstrumentsGroupMusic
+          (s: any) => s.selectedInstrumentsGroupMusic,
         );
 
         setSelectedInstrumentsMusic(musicGroups);
@@ -307,11 +324,12 @@ const AddBusiness = () => {
     if (!files) return;
 
     const imageURLs = Array.from(files).map((file) =>
-      URL.createObjectURL(file)
+      URL.createObjectURL(file),
     );
 
     // Combine with existing images
     setImages((prev) => [...prev, ...imageURLs]);
+    setError((prev) => ({ ...prev, images: "" }));
   };
 
   const handleRemoveImage = (index: number) => {
@@ -327,13 +345,13 @@ const AddBusiness = () => {
   const { mutateAsync: addBusinessData, isPending } = useMutation({
     mutationKey: ["add-business"],
     mutationFn: async (data: FormData) => {
-      
-      const queryType = pathName === "/add-my-business" ? "myBusiness" : "addABusiness"
+      const queryType =
+        pathName === "/add-my-business" ? "myBusiness" : "addABusiness";
 
       const res = await addBusiness(data, queryType);
       if (!res.success) {
         throw new Error(
-          res.response.data.message || "Business creation failed"
+          res.response.data.message || "Business creation failed",
         );
       }
       return res;
@@ -350,6 +368,38 @@ const AddBusiness = () => {
     },
   });
 
+  const validateForm = () => {
+    const newErrors: Error = {};
+
+    if (!businessName.trim()) {
+      newErrors.businessName = "Business name is required";
+    }
+
+    if (!addressName.trim()) {
+      newErrors.addressName = "Address is required";
+    }
+
+    if (!description.trim()) {
+      newErrors.description = "Description is required";
+    }
+
+    if (!phoneNumber.trim()) {
+      newErrors.phoneNumber = "Phone number is required";
+    }
+
+    if (!email.trim()) {
+      newErrors.email = "Email is required";
+    }
+
+    if (images.length === 0) {
+      newErrors.images = "At least one business photo is required";
+    }
+
+    setError(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
+
   //post form data
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -358,9 +408,12 @@ const AddBusiness = () => {
       return setIsLoginModalOpen(true);
     }
 
+    const isValid = validateForm();
+    if (!isValid) return;
+
     const formData = new FormData();
     const imageInput = document.getElementById(
-      "image_input"
+      "image_input",
     ) as HTMLInputElement;
     const imageFiles = imageInput?.files ? Array.from(imageInput.files) : [];
 
@@ -370,7 +423,7 @@ const AddBusiness = () => {
 
     const businessData = {
       businessInfo: {
-        name: businessMan,
+        name: businessName,
         address: addressName,
         description,
         phone: phoneNumber,
@@ -417,9 +470,12 @@ const AddBusiness = () => {
   const handleLogOutSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    const isValid = validateForm();
+    if (!isValid) return;
+
     const formData = new FormData();
     const imageInput = document.getElementById(
-      "image_input"
+      "image_input",
     ) as HTMLInputElement;
     const imageFiles = imageInput?.files ? Array.from(imageInput.files) : [];
 
@@ -429,7 +485,7 @@ const AddBusiness = () => {
 
     const businessData = {
       businessInfo: {
-        name: businessMan,
+        name: businessName,
         address: addressName,
         description,
         phone: phoneNumber,
@@ -507,9 +563,8 @@ const AddBusiness = () => {
 
     const formData = new FormData();
 
-    // Add newly selected image files from input
     const imageInput = document.getElementById(
-      "image_input"
+      "image_input",
     ) as HTMLInputElement;
     const imageFiles = imageInput?.files ? Array.from(imageInput.files) : [];
 
@@ -517,16 +572,15 @@ const AddBusiness = () => {
       formData.append("image", file);
     });
 
-    // ✅ Keep existing image URLs when updating
     const businessData = {
       businessInfo: {
-        name: businessMan,
+        name: businessName,
         address: addressName,
         description,
         phone: phoneNumber,
         email,
         website,
-        image: images, // 👈 include existing image URLs
+        image: images,
       },
       services: selected.map((service) => ({
         newInstrumentName: service.newInstrumentName,
@@ -565,13 +619,6 @@ const AddBusiness = () => {
     await updateBusinessData({ id: selectedBusinessId, formData });
   };
 
-  // if (isLoading)
-  //   return (
-  //     <div className="min-h-[calc(100vh-500px)] flex flex-col items-center justify-center">
-  //       Loading...
-  //     </div>
-  //   );
-
   return (
     <div>
       <form
@@ -579,8 +626,8 @@ const AddBusiness = () => {
           pathName === "/business-dashboard/profile"
             ? handleUpdate
             : pathName === "/add-my-business"
-            ? handleSubmit
-            : handleLogOutSubmit
+              ? handleSubmit
+              : handleLogOutSubmit
         }
       >
         {/* business information */}
@@ -601,7 +648,7 @@ const AddBusiness = () => {
             phoneNumber={phoneNumber}
             description={description}
             addressName={addressName}
-            businessMan={businessMan}
+            businessName={businessName}
             handleFileChange={handleFileChange}
             handleUploadImage={handleUploadImage}
             images={images}
@@ -612,6 +659,8 @@ const AddBusiness = () => {
             setEmail={setEmail}
             setPhoneNumber={setPhoneNumber}
             setWebsite={setWebsite}
+            error={error}
+            setError={setError}
           />
         </div>
 
