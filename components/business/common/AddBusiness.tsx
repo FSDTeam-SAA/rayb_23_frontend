@@ -22,6 +22,7 @@ interface Error {
   description?: string;
   phoneNumber?: string;
   email?: string;
+  images?: string;
 }
 
 interface ServiceType {
@@ -328,6 +329,7 @@ const AddBusiness = () => {
 
     // Combine with existing images
     setImages((prev) => [...prev, ...imageURLs]);
+    setError((prev) => ({ ...prev, images: "" }));
   };
 
   const handleRemoveImage = (index: number) => {
@@ -387,6 +389,10 @@ const AddBusiness = () => {
 
     if (!email.trim()) {
       newErrors.email = "Email is required";
+    }
+
+    if (images.length === 0) {
+      newErrors.images = "At least one business photo is required";
     }
 
     setError(newErrors);

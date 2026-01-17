@@ -9,6 +9,7 @@ interface Error {
   description?: string;
   phoneNumber?: string;
   email?: string;
+  images?: string;
 }
 
 interface BusinessInformProps {
@@ -54,13 +55,10 @@ interface PlaceResult {
 // Custom hook for phone number formatting
 const usePhoneFormatter = () => {
   const formatPhoneNumber = (value: string): string => {
-    // Remove all non-digit characters
     const cleaned = value.replace(/\D/g, "");
 
-    // Limit to 10 digits (US phone number)
     const limited = cleaned.slice(0, 10);
 
-    // Apply formatting based on length
     if (limited.length === 0) {
       return "";
     } else if (limited.length <= 3) {
@@ -317,6 +315,10 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
             </div>
           ))}
         </div>
+
+        {error?.images && (
+          <p className="mt-5 text-red-500 text-sm">{error.images}</p>
+        )}
       </div>
 
       {/* business details */}
