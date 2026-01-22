@@ -23,7 +23,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 const signUpFormSchema = z.object({
-  email: z.string().email({ message: "Invalid email" }),
+  email: z.string().email({ message: "Invalid email" }).transform((val) => val.toLowerCase()),
   password: z
     .string()
     .min(8, { message: "Password must be at least 8 characters" }),
