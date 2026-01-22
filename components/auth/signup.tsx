@@ -24,7 +24,7 @@ import Link from 'next/link'
 
 const signUpFormSchema = z.object({
     name: z.string().min(1, { message: "Name is required" }),
-    email: z.string().email({ message: "Invalid email" }),
+    email: z.string().email({ message: "Invalid email" }).transform((val) => val.toLowerCase()),
     password: z.string().min(8, { message: "Password must be at least 8 characters" }),
     userType: z.enum(["user", "businessMan"]),
 })
