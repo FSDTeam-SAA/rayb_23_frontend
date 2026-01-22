@@ -360,7 +360,9 @@ const AddBusiness = () => {
       return pathName === "/add-my-business" ||
         pathName === "/business-dashboard/add-my-business"
         ? setIsBusinessSuccessModalOpen(true)
-        : setIsLogoutBusinessSuccessModalOpen(true);
+        : pathName === "/add-a-business" && isLoggedIn === "unauthenticated"
+          ? setIsLogoutBusinessSuccessModalOpen(true)
+          : setIsBusinessSuccessModalOpen(true);
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
