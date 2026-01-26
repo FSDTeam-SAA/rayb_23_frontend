@@ -19,11 +19,21 @@ import { Eye, Lock } from "lucide-react";
 import { changePassword } from "@/lib/api"; // <-- adjust path if needed
 import { toast } from "sonner";
 
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+
 const passFormSchema = z
   .object({
     currentPassword: z.string().min(8, "Must be at least 8 characters"),
-    newPassword: z.string().min(8, "Must be at least 8 characters"),
-    confirmPassword: z.string().min(8, "Must be at least 8 characters"),
+
+    newPassword: z
+      .string()
+      .min(8, "Must be at least 8 characters")
+      .regex(
+        passwordRegex,
+        "Must include uppercase, lowercase, number, and symbol",
+      ),
+
+    confirmPassword: z.string(),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
     message: "Passwords do not match",
