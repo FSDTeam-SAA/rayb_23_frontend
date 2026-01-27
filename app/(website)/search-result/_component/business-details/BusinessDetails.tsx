@@ -195,7 +195,7 @@ const ImageSlider = ({
   // Remove duplicates and filter out empty/null images
   const uniqueImages = useMemo(() => {
     return Array.from(
-      new Set(images.filter((img) => img && img.trim() !== ""))
+      new Set(images.filter((img) => img && img.trim() !== "")),
     );
   }, [images]);
 
@@ -207,7 +207,7 @@ const ImageSlider = ({
   const prevImage = (e: React.MouseEvent) => {
     e.stopPropagation(); // Event bubbling বন্ধ করতে
     setCurrentImageIndex(
-      (prev) => (prev - 1 + uniqueImages.length) % uniqueImages.length
+      (prev) => (prev - 1 + uniqueImages.length) % uniqueImages.length,
     );
   };
 
@@ -330,28 +330,111 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
   const address = singleBusiness.businessInfo.address;
 
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
-    null
+    null,
   );
 
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
 
   useEffect(() => {
-    const fetchLocation = async () => {
-      const res = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-          address
-        )}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
-      );
-      const data = await res.json();
+    console.log("📍 Starting geocoding for address:", address);
 
-      if (data.status === "OK") {
-        setCoords(data.results[0].geometry.location);
-      } else {
-        console.error("Geocode error:", data.status);
+    if (!address || address.trim() === "") {
+      console.warn("❌ Address is empty, skipping geocoding");
+      setCoords(null);
+      return;
+    }
+
+    let isActive = true;
+
+    const geocodeAddress = async (addr: string, attempt = 1): Promise<void> => {
+      if (!isActive) return;
+
+      try {
+        console.log(`🔄 Geocoding attempt ${attempt} for: ${addr}`);
+
+        // Direct call to Nominatim API
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}&limit=1&addressdetails=1`,
+          {
+            headers: {
+              "User-Agent": "MusicBusinessFinder",
+              Accept: "application/json",
+              "Accept-Language": "en",
+            },
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log("📊 Raw OSM response:", data);
+
+        if (!isActive) return;
+
+        if (Array.isArray(data) && data.length > 0) {
+          const location = data[0];
+          const coords = {
+            lat: parseFloat(location.lat),
+            lng: parseFloat(location.lon),
+          };
+
+          console.log("✅✅✅ SUCCESS - Dynamic coordinates found:", coords);
+          console.log("📍 Full location data:", location);
+
+          if (isActive) {
+            setCoords(coords);
+          }
+        } else {
+          console.warn(`⚠️ No results found for address: "${addr}"`);
+          console.log("Response was:", data);
+
+          // Try different variations
+          if (attempt === 1) {
+            // Try adding city if not present
+            if (
+              !addr.toLowerCase().includes("dhaka") &&
+              !addr.toLowerCase().includes("bangladesh")
+            ) {
+              setTimeout(() => geocodeAddress(`${addr}, Dhaka`, 2), 1000);
+            } else if (
+              addr.toLowerCase().includes("dhaka") &&
+              !addr.toLowerCase().includes("bangladesh")
+            ) {
+              setTimeout(() => geocodeAddress(`${addr}, Bangladesh`, 2), 1000);
+            } else {
+              if (isActive) setCoords(null);
+            }
+          } else if (attempt === 2) {
+            // Try just the first part of address
+            const firstPart = addr.split(",")[0].trim();
+            if (firstPart && firstPart !== addr) {
+              setTimeout(() => geocodeAddress(firstPart, 3), 1000);
+            } else {
+              if (isActive) setCoords(null);
+            }
+          } else {
+            if (isActive) setCoords(null);
+          }
+        }
+      } catch (error) {
+        console.error(`❌ Geocoding error (attempt ${attempt}):`, error);
+
+        if (attempt < 3) {
+          setTimeout(() => geocodeAddress(addr, attempt + 1), 1000 * attempt);
+        } else {
+          if (isActive) setCoords(null);
+        }
       }
     };
 
-    fetchLocation();
+    // Start geocoding
+    geocodeAddress(address);
+
+    return () => {
+      isActive = false;
+    };
   }, [address]);
 
   // Calculate star distribution
@@ -374,7 +457,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
     let reviews = singleBusiness.review.filter(
       (review) =>
         review.status === "approved" &&
-        review.feedback.toLowerCase().includes(searchQuery.toLowerCase())
+        review.feedback.toLowerCase().includes(searchQuery.toLowerCase()),
     );
 
     // Apply sorting
@@ -382,7 +465,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
       case "mostRecent":
         reviews = reviews.sort(
           (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
         );
         break;
       case "highestRated":
@@ -401,7 +484,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
   // Custom icon
   const customMarker = new DivIcon({
     html: ReactDOMServer.renderToString(
-      <MapPin fill="#139a8e" className="text-white w-8 h-8" />
+      <MapPin fill="#139a8e" className="text-white w-8 h-8" />,
     ),
     className: "", // remove default styles
     iconSize: [24, 24],
@@ -463,7 +546,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
           body: JSON.stringify({
             savedBusiness: singleBusiness._id,
           }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -504,7 +587,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
       acc[family].push(service);
       return acc;
     },
-    {}
+    {},
   );
 
   // ReviewItem component
@@ -607,7 +690,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
               Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify(data),
-          }
+          },
         );
 
         if (!response.ok) {

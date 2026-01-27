@@ -76,6 +76,8 @@ const AddBusiness = () => {
   const [isTrackSubmissionModalOpen, setIsTrackSubmissionModalOpen] =
     useState(false);
 
+  const [logOutEmail, setLogOutEmail] = useState("");
+
   // control instrument family
   const [selectedInstruments, setSelectedInstruments] = useState<string[]>([]);
   const [selectedInstrumentsMusic, setSelectedInstrumentsMusic] = useState<
@@ -360,9 +362,9 @@ const AddBusiness = () => {
       return pathName === "/add-my-business" ||
         pathName === "/business-dashboard/add-my-business"
         ? setIsBusinessSuccessModalOpen(true)
-        : pathName === "/add-a-business" && isLoggedIn === "unauthenticated"
-          ? setIsLogoutBusinessSuccessModalOpen(true)
-          : setIsBusinessSuccessModalOpen(true);
+        : pathName === "/add-a-business" && isLoggedIn === "authenticated"
+          ? setIsBusinessSuccessModalOpen(true)
+          : setIsLogoutBusinessSuccessModalOpen(false);
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
@@ -469,7 +471,10 @@ const AddBusiness = () => {
     await addBusinessData(formData);
   };
 
-  const handleLogOutSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAddABusinessSubmit = async (
+    e: React.FormEvent<HTMLFormElement>,
+  ) => {
+    console.log("clicked when add a business");
     e.preventDefault();
 
     const isValid = validateForm();
@@ -529,6 +534,77 @@ const AddBusiness = () => {
     formData.append("data", JSON.stringify(businessData));
 
     await addBusinessData(formData);
+  };
+
+  const handleLogOutSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    console.log("clicked when log out");
+    e.preventDefault();
+
+    const isValid = validateForm();
+    if (!isValid) return;
+
+    const formData = new FormData();
+    const imageInput = document.getElementById(
+      "image_input",
+    ) as HTMLInputElement;
+    const imageFiles = imageInput?.files ? Array.from(imageInput.files) : [];
+
+    imageFiles.forEach((file) => {
+      formData.append("image", file);
+    });
+
+    const businessData = {
+      businessInfo: {
+        name: businessName,
+        address: addressName,
+        description,
+        phone: phoneNumber,
+        email,
+        website,
+      },
+      services: selected.map((service) => ({
+        newInstrumentName: service.newInstrumentName,
+        pricingType: service.pricingType,
+        price: service.price,
+        minPrice: service.minPrice,
+        maxPrice: service.maxPrice,
+        selectedInstrumentsGroup: service.selectedInstrumentsGroup,
+        instrumentFamily: service.instrumentFamily,
+      })),
+      musicLessons: selectedMusic.map((lesson) => ({
+        newInstrumentName: lesson.newInstrumentName,
+        pricingType: lesson.pricingType,
+        price: lesson.price,
+        minPrice: lesson.minPrice,
+        maxPrice: lesson.maxPrice,
+        selectedInstrumentsGroupMusic: lesson.selectedInstrumentsGroupMusic,
+      })),
+      businessHours: businessHours.map((hour) => ({
+        day: hour.day, // Must match enum values exactly
+        startTime: hour.startTime,
+        startMeridiem: hour.startMeridiem,
+        endTime: hour.endTime,
+        endMeridiem: hour.endMeridiem,
+        enabled: hour.enabled,
+      })),
+      email: logOutEmail,
+      buyInstruments: selectedOptions.buy,
+      sellInstruments: selectedOptions.sell,
+      offerMusicLessons: selectedMusic.length > 0,
+      status: "pending",
+      isVerified: false,
+    };
+
+    formData.append("data", JSON.stringify(businessData));
+
+    await addBusinessData(formData);
+  };
+
+  const handleLogOutSubmitModalOpen = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const isValid = validateForm();
+    if (!isValid) return;
+    setIsLogoutBusinessSuccessModalOpen(true);
   };
 
   //update form data
@@ -629,7 +705,9 @@ const AddBusiness = () => {
             ? handleUpdate
             : pathName === "/add-my-business"
               ? handleSubmit
-              : handleLogOutSubmit
+              : isLoggedIn === "authenticated" && pathName === "/add-a-business"
+                ? handleAddABusinessSubmit
+                : handleLogOutSubmitModalOpen
         }
       >
         {/* business information */}
@@ -781,7 +859,7 @@ const AddBusiness = () => {
                 isPending && "opacity-70"
               }`}
             >
-              {isPending ? (
+              {isLoggedIn === "authenticated" && isPending ? (
                 <span className="flex items-center justify-center">
                   <Loader className="mr-2 h-4 w-4 animate-spin" />
                   Submitting...
@@ -815,6 +893,10 @@ const AddBusiness = () => {
             setIsLogoutBusinessSuccessModalOpen
           }
           handelOkay={handelOkay}
+          handleLogOutSubmit={handleLogOutSubmit}
+          setLogOutEmail={setLogOutEmail}
+          logOutEmail={logOutEmail}
+          isPending={isPending}
         />
       )}
 
