@@ -140,10 +140,10 @@ const ShareModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg p-4 md:p-6 w-full max-w-md mx-auto">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Share {businessName}</h2>
+          <h2 className="text-lg md:text-xl font-semibold">Share {businessName}</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
@@ -152,16 +152,16 @@ const ShareModal = ({
           </button>
         </div>
 
-        <p className="text-gray-600 mb-4">
+        <p className="text-gray-600 mb-4 text-sm md:text-base">
           Copy the link below to share this business with others
         </p>
 
-        <div className="flex gap-2">
-          <Input value={shareLink} readOnly className="flex-1" />
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Input value={shareLink} readOnly className="flex-1 text-sm" />
           <Button
             onClick={handleCopy}
             variant="outline"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 whitespace-nowrap"
           >
             <Copy className="h-4 w-4" />
             {copied ? "Copied!" : "Copy"}
@@ -169,7 +169,7 @@ const ShareModal = ({
         </div>
 
         <div className="mt-6 flex justify-end">
-          <Button onClick={onClose} className="bg-[#139a8e] hover:bg-[#0d7a70]">
+          <Button onClick={onClose} className="bg-[#139a8e] hover:bg-[#0d7a70] w-full sm:w-auto">
             Close
           </Button>
         </div>
@@ -180,7 +180,7 @@ const ShareModal = ({
 
 type SectionKey = "repair" | "lessons" | "otherService";
 
-// Updated Image Slider Component
+// Responsive Image Slider Component
 const ImageSlider = ({
   images,
   businessName,
@@ -218,8 +218,8 @@ const ImageSlider = ({
   if (!uniqueImages || uniqueImages.length === 0) {
     return (
       <div className="flex-shrink-0">
-        <div className="rounded-lg bg-gray-200 h-[172px] w-[172px] flex items-center justify-center">
-          <span className="text-gray-500">No Image</span>
+        <div className="rounded-lg bg-gray-200 h-[140px] w-[140px] sm:h-[172px] sm:w-[172px] flex items-center justify-center">
+          <span className="text-gray-500 text-sm">No Image</span>
         </div>
       </div>
     );
@@ -228,8 +228,8 @@ const ImageSlider = ({
   return (
     <div className="flex-shrink-0 relative group">
       <div
-        className="relative rounded-lg overflow-hidden h-[172px] w-[172px] cursor-pointer"
-        onClick={onImageClick} // শুধুমাত্র parent div-এ click handler
+        className="relative rounded-lg overflow-hidden h-[140px] w-[140px] sm:h-[172px] sm:w-[172px] cursor-pointer"
+        onClick={onImageClick}
       >
         <Image
           src={uniqueImages[currentImageIndex]}
@@ -237,7 +237,6 @@ const ImageSlider = ({
           width={172}
           height={172}
           className="rounded-lg object-cover h-full w-full"
-          // Image element থেকে onClick remove করা হয়েছে
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = "/images/placeholder-business.jpg";
@@ -251,13 +250,13 @@ const ImageSlider = ({
               onClick={prevImage}
               className="absolute left-1 top-1/2 transform -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-1 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 z-10"
             >
-              <ChevronLeft className="h-3 w-3" />
+              <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
             </button>
             <button
               onClick={nextImage}
               className="absolute right-1 top-1/2 transform -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-1 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 z-10"
             >
-              <ChevronRight className="h-3 w-3" />
+              <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
             </button>
           </>
         )}
@@ -277,7 +276,7 @@ const ImageSlider = ({
             <button
               key={index}
               onClick={(e) => {
-                e.stopPropagation(); // Event bubbling বন্ধ করতে
+                e.stopPropagation();
                 goToImage(index);
               }}
               className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
@@ -307,7 +306,6 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
   });
 
   const [isGalleryModalOpen, setIsGalleryModalOpen] = useState(false);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -596,17 +594,17 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
     const needsTruncation = review.feedback.length > 150;
 
     return (
-      <div className="border shadow-md rounded-lg p-4 border-gray-200 py-6">
-        <div className="flex items-start gap-4">
+      <div className="border shadow-md rounded-lg p-4 border-gray-200 py-4 md:py-6">
+        <div className="flex items-start gap-3 md:gap-4">
           <div className="flex-shrink-0">
-            <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-teal-100 rounded-full flex items-center justify-center">
               {review?.user?.imageLink ? (
                 <Image
                   src={review?.user?.imageLink || ""}
                   alt="img.png"
                   width={1000}
                   height={1000}
-                  className="w-10 h-10 rounded-full object-cover"
+                  className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover"
                 />
               ) : (
                 <span className="text-teal-800 font-semibold text-xs">
@@ -616,16 +614,16 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
             </div>
           </div>
 
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="mb-2">
-              <h1 className="text-sm font-medium text-gray-900 mb-1">
+              <h1 className="text-sm font-medium text-gray-900 mb-1 truncate">
                 {review.user?.name || "Anonymous User"}
               </h1>
               <div className="flex items-center">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
                     key={star}
-                    className={`w-4 h-4 ${
+                    className={`w-3 h-3 md:w-4 md:h-4 ${
                       star <= review.rating
                         ? "fill-yellow-400 text-yellow-400"
                         : "text-gray-300"
@@ -635,7 +633,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
               </div>
             </div>
 
-            <div className="text-sm text-gray-500 mb-2">
+            <div className="text-xs md:text-sm text-gray-500 mb-2">
               {new Date(review.createdAt).toLocaleDateString("en-US", {
                 year: "numeric",
                 month: "long",
@@ -643,14 +641,14 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
               })}
             </div>
 
-            <p className="text-gray-700">
+            <p className="text-gray-700 text-sm md:text-base">
               {needsTruncation && !expanded
                 ? `${review.feedback.substring(0, 150)}...`
                 : review.feedback}
               {needsTruncation && (
                 <button
                   onClick={() => setExpanded(!expanded)}
-                  className="text-teal-600 hover:text-teal-800 ml-1 font-medium"
+                  className="text-teal-600 hover:text-teal-800 ml-1 font-medium text-sm"
                 >
                   {expanded ? "Show less" : "Read more"}
                 </button>
@@ -658,9 +656,9 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
             </p>
 
             {review.image.length > 0 && (
-              <div className="flex gap-2 mt-3">
+              <div className="flex gap-2 mt-3 overflow-x-auto">
                 {review.image.map((img, index) => (
-                  <div key={index} className="w-20 h-20 relative">
+                  <div key={index} className="w-16 h-16 md:w-20 md:h-20 relative flex-shrink-0">
                     <Image
                       src={img}
                       alt={`Review image ${index + 1}`}
@@ -760,14 +758,16 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
 
   return (
     <div>
-      {/* Business Header */}
-      <div className="flex items-center gap-6 border-b border-gray-200 pb-8">
+      {/* Business Header - Made responsive */}
+      <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-6 border-b border-gray-200 pb-6 lg:pb-8">
         {/* Business Image Slider */}
-        <ImageSlider
-          images={allBusinessImages}
-          businessName={singleBusiness.businessInfo.name}
-          onImageClick={() => setIsGalleryModalOpen(true)}
-        />
+        <div className="self-center lg:self-auto">
+          <ImageSlider
+            images={allBusinessImages}
+            businessName={singleBusiness.businessInfo.name}
+            onImageClick={() => setIsGalleryModalOpen(true)}
+          />
+        </div>
 
         <BusinessGalleryModal
           isOpen={isGalleryModalOpen}
@@ -776,13 +776,12 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
         />
 
         {/* Business Info */}
-        <div className="flex-1">
-          <div className="flex items-center gap-5">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+        <div className="flex-1 w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-5 mb-2">
+            <h1 className="text-xl lg:text-2xl font-bold text-gray-900 break-words">
               {singleBusiness.businessInfo.name}
             </h1>
-
-            <h1 className="text-teal-500 font-medium">
+            <span className="text-teal-500 font-medium text-sm lg:text-base">
               {singleBusiness.isClaimed ? (
                 <button>Claimed</button>
               ) : (
@@ -797,12 +796,12 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
                   Unclaimed
                 </button>
               )}
-            </h1>
+            </span>
           </div>
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-            <span className="text-gray-600 font-medium">{averageRating}</span>
-            <span className="text-gray-500 flex items-center space-x-2">
+            <span className="text-gray-600 font-medium text-sm lg:text-base">{averageRating}</span>
+            <span className="text-gray-500 flex items-center space-x-2 text-sm">
               (<span>{singleBusiness.review.length} Reviews</span>
               <span>
                 <Image
@@ -810,55 +809,55 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
                   alt="google"
                   width={1000}
                   height={1000}
-                  className="h-4 w-4"
+                  className="h-3 w-3 lg:h-4 lg:w-4"
                 />
               </span>
               )
             </span>
           </div>
-          <div className="text-gray-600 mb-1">
+          <div className="text-gray-600 mb-1 text-sm lg:text-base break-words">
             {singleBusiness.businessInfo.address}
           </div>
-          <div className="text-gray-600">
+          <div className="text-gray-600 text-sm lg:text-base">
             {singleBusiness.businessHours[0].startTime} AM -{" "}
             {singleBusiness.businessHours[0].endTime} PM
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-5">
+        {/* Action Buttons - Made responsive */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-3 lg:gap-5 w-full lg:w-auto mt-4 lg:mt-0">
           <button
             onClick={handleReview}
-            className="bg-[#e0f2f1] hover:bg-[#139a8e] flex items-center gap-2 px-5 py-3 rounded-lg text-[#139a8e] hover:text-white font-semibold"
+            className="bg-[#e0f2f1] hover:bg-[#139a8e] flex items-center justify-center gap-1 lg:gap-2 px-3 lg:px-5 py-2 lg:py-3 rounded-lg text-[#139a8e] hover:text-white font-semibold text-sm lg:text-base"
           >
-            <Star className="w-4 h-4 mr-1" />
-            Write a Review
+            <Star className="w-3 h-3 lg:w-4 lg:h-4" />
+            <span className="truncate">Write a Review</span>
           </button>
           <button
             onClick={handleAddPhoto}
-            className="bg-[#e0f2f1] hover:bg-[#139a8e] flex items-center gap-2 px-5 py-3 rounded-lg text-[#139a8e] hover:text-white font-semibold"
+            className="bg-[#e0f2f1] hover:bg-[#139a8e] flex items-center justify-center gap-1 lg:gap-2 px-3 lg:px-5 py-2 lg:py-3 rounded-lg text-[#139a8e] hover:text-white font-semibold text-sm lg:text-base"
           >
-            <LocateIcon className="w-4 h-4 mr-1" />
-            Add Photo
+            <LocateIcon className="w-3 h-3 lg:w-4 lg:h-4" />
+            <span className="truncate">Add Photo</span>
           </button>
           <button
             onClick={() => setIsShareModalOpen(true)}
-            className="bg-[#e0f2f1] hover:bg-[#139a8e] flex items-center gap-2 px-5 py-3 rounded-lg text-[#139a8e] hover:text-white font-semibold"
+            className="bg-[#e0f2f1] hover:bg-[#139a8e] flex items-center justify-center gap-1 lg:gap-2 px-3 lg:px-5 py-2 lg:py-3 rounded-lg text-[#139a8e] hover:text-white font-semibold text-sm lg:text-base"
           >
-            <Share2Icon className="w-4 h-4 mr-1" />
-            Share
+            <Share2Icon className="w-3 h-3 lg:w-4 lg:h-4" />
+            <span className="truncate">Share</span>
           </button>
           <button
             onClick={handleSaveBusiness}
             disabled={isSaving}
-            className="bg-[#e0f2f1] hover:bg-[#139a8e] flex items-center gap-2 px-5 py-3 rounded-lg text-[#139a8e] hover:text-white font-semibold disabled:opacity-50"
+            className="bg-[#e0f2f1] hover:bg-[#139a8e] flex items-center justify-center gap-1 lg:gap-2 px-3 lg:px-5 py-2 lg:py-3 rounded-lg text-[#139a8e] hover:text-white font-semibold text-sm lg:text-base disabled:opacity-50"
           >
             {isSaving ? (
-              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+              <Loader2 className="w-3 h-3 lg:w-4 lg:h-4 animate-spin" />
             ) : (
-              <SaveIcon className="w-4 h-4 mr-1" />
+              <SaveIcon className="w-3 h-3 lg:w-4 lg:h-4" />
             )}
-            Save
+            <span className="truncate">Save</span>
           </button>
         </div>
       </div>
@@ -892,13 +891,13 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
         businessId={singleBusiness._id}
       />
 
-      <div className="flex pt-8 pb-16">
+      <div className="flex flex-col lg:flex-row pt-6 lg:pt-8 pb-8 lg:pb-16 gap-8 lg:gap-0">
         {/* Left Column */}
-        <div className="flex-1 border-r border-gray-200 pr-8">
+        <div className="flex-1 lg:border-r lg:border-gray-200 lg:pr-8">
           {/* About this Business */}
-          <div className="border-b border-gray-200 pb-8">
-            <h2 className="text-xl font-semibold mb-4">About this Business</h2>
-            <p className="text-gray-700 leading-relaxed">
+          <div className="border-b border-gray-200 pb-6 lg:pb-8">
+            <h2 className="text-lg lg:text-xl font-semibold mb-3 lg:mb-4">About this Business</h2>
+            <p className="text-gray-700 leading-relaxed text-sm lg:text-base">
               {singleBusiness.businessInfo.description}
             </p>
           </div>
@@ -913,32 +912,32 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
           />
 
           {/* Rating & Reviews */}
-          <div className="pt-8">
-            <h2 className="text-xl font-semibold mb-4">Rating & Reviews</h2>
+          <div className="pt-6 lg:pt-8">
+            <h2 className="text-lg lg:text-xl font-semibold mb-4">Rating & Reviews</h2>
 
             {/* Overall Rating */}
-            <div className="flex items-center gap-2 mb-6">
-              <div className="text-4xl font-bold">
+            <div className="flex items-center gap-2 mb-4 lg:mb-6">
+              <div className="text-3xl lg:text-4xl font-bold">
                 <Image
                   src={"/images/Star.png"}
                   alt="star.png"
                   width={1000}
                   height={1000}
-                  className="w-12 h-12"
+                  className="w-10 h-10 lg:w-12 lg:h-12"
                 />
               </div>
               <div>
                 <div>
-                  <h1 className="font-bold text-2xl">{averageRating}</h1>
+                  <h1 className="font-bold text-xl lg:text-2xl">{averageRating}</h1>
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-xs lg:text-sm text-gray-600">
                   {singleBusiness.review.length} Reviews
                 </div>
               </div>
             </div>
 
-            {/* Star Distribution - Following Figma Design */}
-            <div className="mb-8">
+            {/* Star Distribution - Made responsive */}
+            <div className="mb-6 lg:mb-8">
               {[5, 4, 3, 2, 1].map((star) => {
                 const count =
                   starDistribution[star as keyof typeof starDistribution];
@@ -948,15 +947,15 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
                     : 0;
 
                 return (
-                  <div key={star} className="flex items-center gap-5 mb-2">
-                    <div className="text-sm font-medium">{star} Star</div>
-                    <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div key={star} className="flex items-center gap-2 lg:gap-5 mb-2">
+                    <div className="text-xs lg:text-sm font-medium w-12 lg:w-auto">{star} Star</div>
+                    <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden min-w-[60px]">
                       <div
                         className="h-full bg-primary"
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
-                    <span className="text-sm text-gray-600 w-12">
+                    <span className="text-xs lg:text-sm text-gray-600 w-8 lg:w-12 text-right">
                       ({count})
                     </span>
                   </div>
@@ -964,8 +963,8 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
               })}
             </div>
 
-            {/* Search and Sort Controls */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            {/* Search and Sort Controls - Made responsive */}
+            <div className="flex flex-col sm:flex-row gap-3 lg:gap-4 mb-4 lg:mb-6">
               {/* Search Input */}
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -974,19 +973,19 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
                   placeholder="Search reviews"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-full"
+                  className="pl-10 pr-4 py-2 w-full text-sm lg:text-base"
                 />
               </div>
 
               {/* Sort Dropdown */}
               <div className="mb-1">
-                <div className="text-sm text-gray-600 whitespace-nowrap">
+                <div className="text-xs lg:text-sm text-gray-600 whitespace-nowrap">
                   Sort by
                 </div>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="text-sm focus:outline-none bg-transparent border-none "
+                  className="text-xs lg:text-sm focus:outline-none bg-transparent border-none w-full sm:w-auto"
                 >
                   <option value="mostRecent">Most Recent</option>
                   <option value="highestRated">Highest Rated</option>
@@ -997,13 +996,13 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
 
             {/* Reviews List */}
             {filteredReviews.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-6 lg:py-8 text-gray-500 text-sm lg:text-base">
                 {searchQuery
                   ? "No reviews match your search."
                   : "No reviews yet. Be the first to leave a review!"}
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 lg:space-y-4">
                 {filteredReviews.map((review) => (
                   <ReviewItem key={review._id} review={review} />
                 ))}
@@ -1012,8 +1011,8 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
           </div>
         </div>
 
-        {/* Right Column */}
-        <div className="space-y-8  pl-8">
+        {/* Right Column - Made responsive */}
+        <div className="space-y-6 lg:space-y-8 lg:w-[400px] xl:w-[450px] lg:pl-8">
           {/* Contact Info */}
           <ContactInfo
             singleBusiness={singleBusiness}
