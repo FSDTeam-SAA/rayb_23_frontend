@@ -703,7 +703,7 @@ const AddBusiness = () => {
         onSubmit={
           pathName === "/business-dashboard/profile"
             ? handleUpdate
-            : pathName === "/add-my-business"
+            : pathName === "/add-my-business" || pathName === "/business-dashboard/add-my-business"
               ? handleSubmit
               : isLoggedIn === "authenticated" && pathName === "/add-a-business"
                 ? handleAddABusinessSubmit
