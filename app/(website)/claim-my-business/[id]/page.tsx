@@ -7,10 +7,13 @@ import { useQuery } from "@tanstack/react-query";
 import { Star } from "lucide-react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AddClaimModal from "./_component/AddClaimModal";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSession } from "next-auth/react";
+import LoginModal from "@/components/business/modal/login-modal";
+import CheckCustomerModal from "@/components/business/modal/check-customer-modal";
 
 const SingleBusiness = () => {
   const params = useParams();
@@ -18,6 +21,32 @@ const SingleBusiness = () => {
   const [isAddPhotoOpen, setIsAddPhotoOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const id = params?.id;
+  const session = useSession();
+  const status = session?.status;
+  const role = session?.data?.user?.userType;
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
+  const [isCheckCustomerModal, setIsCheckCustomerModal] =
+    useState<boolean>(false);
+
+  useEffect(() => {
+    if (status === "loading") {
+      setTimeout(() => {
+        setIsLoginModalOpen(false);
+      }, 1000);
+    }
+
+    if (status === "unauthenticated") {
+      setInterval(() => {
+        setIsLoginModalOpen(true);
+      }, 1000);
+    }
+
+    if (role === "user") {
+      setInterval(() => {
+        setIsCheckCustomerModal(true);
+      }, 1000);
+    }
+  }, [status, role]);
 
   const {
     data: singleBusiness,
@@ -153,7 +182,7 @@ const SingleBusiness = () => {
                       >
                         {service?.serviceName}
                       </button>
-                    )
+                    ),
                   )}
                 </div>
               </div>
@@ -297,6 +326,16 @@ const SingleBusiness = () => {
             reviewed by the admin and you will be notified through SMS or email.
           </p>
         </div>
+
+        <LoginModal
+          isLoginModalOpen={isLoginModalOpen}
+          setIsLoginModalOpen={() => setIsLoginModalOpen(false)}
+        />
+
+        <CheckCustomerModal
+          isLoginModalOpen={isCheckCustomerModal}
+          setIsLoginModalOpen={() => setIsCheckCustomerModal(false)}
+        />
       </div>
     </div>
   );
