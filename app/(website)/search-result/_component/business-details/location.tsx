@@ -34,7 +34,7 @@ const Location: React.FC<LocationProps> = ({
       </h1>
 
       {/* Location */}
-      <div className="h-[300px] w-[300px]">
+      <div className="h-[300px] w-full">
         <style jsx global>{`
           .leaflet-control-container {
             display: none !important;
