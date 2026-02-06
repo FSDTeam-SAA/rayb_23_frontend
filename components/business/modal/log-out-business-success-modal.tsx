@@ -55,10 +55,6 @@ const LogOutBusinessSuccessModal: React.FC<LoginModalProps> = ({
     setTouched(true);
   };
 
-  const handleCancel = () => {
-    setIsLogoutBusinessSuccessModalOpen(false);
-  };
-
   const handleOkay = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -67,15 +63,18 @@ const LogOutBusinessSuccessModal: React.FC<LoginModalProps> = ({
 
     setTouched(true);
 
-    // Removed required email check
-    // Only validate if email is provided
     if (logOutEmail.trim() && !validateEmail(logOutEmail)) {
       setError("Please enter a valid email address.");
       return;
     }
 
     handleLogOutSubmit(e as any);
-    handelOkay();
+
+    setIsLogoutBusinessSuccessModalOpen(false);
+
+    if (logOutEmail.trim() && validateEmail(logOutEmail)) {
+      handelOkay();
+    }
   };
 
   if (!isLogoutBusinessSuccessModalOpen) return null;
@@ -143,7 +142,7 @@ const LogOutBusinessSuccessModal: React.FC<LoginModalProps> = ({
 
           <div className="flex items-center gap-5 mt-5">
             <button
-              onClick={handleCancel}
+              onClick={handleOkay}
               className="border border-primary text-primary py-2 rounded-lg w-1/2 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
