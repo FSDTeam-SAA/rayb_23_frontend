@@ -29,9 +29,8 @@ const LogOutBusinessSuccessModal: React.FC<LoginModalProps> = ({
 
   useEffect(() => {
     if (touched) {
-      if (!logOutEmail.trim()) {
-        setError("Email is required.");
-      } else if (!validateEmail(logOutEmail)) {
+      // Removed "Email is required" check - only check for valid format
+      if (logOutEmail.trim() && !validateEmail(logOutEmail)) {
         setError("Please enter a valid email address.");
       } else {
         setError("");
@@ -56,45 +55,25 @@ const LogOutBusinessSuccessModal: React.FC<LoginModalProps> = ({
     setTouched(true);
   };
 
-  const handleCancel = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    
-    if (isPending) return;
-    
-    setTouched(true);
-    
-    if (!logOutEmail.trim()) {
-      setError("Email is required.");
-      return;
-    }
-    
-    if (!validateEmail(logOutEmail)) {
-      setError("Please enter a valid email address.");
-      return;
-    }
-    
-    handleLogOutSubmit(e as any);
+  const handleCancel = () => {
     setIsLogoutBusinessSuccessModalOpen(false);
   };
 
   const handleOkay = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    e.stopPropagation(); 
-    
+    e.stopPropagation();
+
     if (isPending) return;
-    
+
     setTouched(true);
-    
-    if (!logOutEmail.trim()) {
-      setError("Email is required.");
-      return;
-    }
-    
-    if (!validateEmail(logOutEmail)) {
+
+    // Removed required email check
+    // Only validate if email is provided
+    if (logOutEmail.trim() && !validateEmail(logOutEmail)) {
       setError("Please enter a valid email address.");
       return;
     }
-    
+
     handleLogOutSubmit(e as any);
     handelOkay();
   };
@@ -108,21 +87,19 @@ const LogOutBusinessSuccessModal: React.FC<LoginModalProps> = ({
       }}
     >
       <div className="fixed inset-0 z-50 flex items-center justify-center">
-        <div 
+        <div
           className="absolute inset-0 bg-black bg-opacity-50"
           onClick={() => {
             if (isPending) return;
-            
+
             setTouched(true);
-            if (!logOutEmail.trim() || !validateEmail(logOutEmail)) {
-              return;
-            }
+            // Removed validation check for closing
             setIsLogoutBusinessSuccessModalOpen(false);
           }}
         ></div>
 
         {/* Modal Content */}
-        <div 
+        <div
           className="relative bg-white w-full max-w-2xl rounded-2xl shadow-lg p-6 z-10 animate-fadeIn text-center"
           onClick={(e) => e.stopPropagation()}
         >
@@ -156,7 +133,7 @@ const LogOutBusinessSuccessModal: React.FC<LoginModalProps> = ({
                 value={logOutEmail}
                 onChange={handleInputChange}
                 onBlur={handleInputBlur}
-                disabled={isPending} 
+                disabled={isPending}
               />
 
               <Mail className="h-5 w-5 absolute top-1/4 left-2 text-gray-700" />
@@ -166,11 +143,10 @@ const LogOutBusinessSuccessModal: React.FC<LoginModalProps> = ({
 
           <div className="flex items-center gap-5 mt-5">
             <button
-              disabled={isPending}
               onClick={handleCancel}
               className="border border-primary text-primary py-2 rounded-lg w-1/2 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isPending ? "Canceling..." : "Cancel"}
+              Cancel
             </button>
 
             <button
