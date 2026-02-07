@@ -232,7 +232,7 @@ const BusinessGalleryModal = ({
 
         {/* No items message */}
         {galleryItems.length === 0 && (
-          <div className="text-center py-4 text-gray-500">
+          <div className="text-center py-4 text-gray-500 border border-red-500">
             No review images available for this business.
           </div>
         )}
