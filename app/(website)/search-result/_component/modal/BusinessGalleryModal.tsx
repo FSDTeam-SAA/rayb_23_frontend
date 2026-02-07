@@ -8,7 +8,6 @@ import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
-import { useSession } from "next-auth/react";
 
 interface Review {
   _id: string;
@@ -44,8 +43,6 @@ const BusinessGalleryModal = ({
 }: BusinessGalleryModalProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const { id } = useParams();
-  const session = useSession();
-  const token = session?.data?.user?.accessToken;
 
   // Fetch reviews from API
   const { data, isLoading } = useQuery({
@@ -53,16 +50,11 @@ const BusinessGalleryModal = ({
     queryFn: async () => {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/review/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
       );
       const response = await res.json();
       return response.data || [];
     },
-    enabled: !!id && !!token,
+    enabled: !!id,
   });
 
   // Combine all images from API reviews
@@ -81,7 +73,11 @@ const BusinessGalleryModal = ({
     // Process each review from API
     data.forEach((review: Review) => {
       // Check if review has images and is approved
-      if (review.image && review.image.length > 0 && review.status === "approved") {
+      if (
+        review.image &&
+        review.image.length > 0 &&
+        review.status === "approved"
+      ) {
         // Process each image in the review
         review.image.forEach((img) => {
           if (img && img.trim() !== "") {
@@ -109,7 +105,9 @@ const BusinessGalleryModal = ({
 
   const prevItem = () => {
     if (galleryItems.length > 0) {
-      setCurrentIndex((prev) => (prev - 1 + galleryItems.length) % galleryItems.length);
+      setCurrentIndex(
+        (prev) => (prev - 1 + galleryItems.length) % galleryItems.length,
+      );
     }
   };
 
@@ -216,7 +214,6 @@ const BusinessGalleryModal = ({
                   }`}
                 />
               ))}
-             
             </div>
 
             {/* Feedback */}
@@ -225,14 +222,12 @@ const BusinessGalleryModal = ({
                 {currentItem.feedback}
               </p>
             )}
-
-           
           </div>
         )}
 
         {/* No items message */}
         {galleryItems.length === 0 && (
-          <div className="text-center py-4 text-gray-500 border border-red-500">
+          <div className="text-center py-4 text-gray-500">
             No review images available for this business.
           </div>
         )}
