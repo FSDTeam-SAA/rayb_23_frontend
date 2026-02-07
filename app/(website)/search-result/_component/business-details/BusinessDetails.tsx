@@ -143,7 +143,9 @@ const ShareModal = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg p-4 md:p-6 w-full max-w-md mx-auto">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg md:text-xl font-semibold">Share {businessName}</h2>
+          <h2 className="text-lg md:text-xl font-semibold">
+            Share {businessName}
+          </h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
@@ -169,7 +171,10 @@ const ShareModal = ({
         </div>
 
         <div className="mt-6 flex justify-end">
-          <Button onClick={onClose} className="bg-[#139a8e] hover:bg-[#0d7a70] w-full sm:w-auto">
+          <Button
+            onClick={onClose}
+            className="bg-[#139a8e] hover:bg-[#0d7a70] w-full sm:w-auto"
+          >
             Close
           </Button>
         </div>
@@ -658,7 +663,10 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
             {review.image.length > 0 && (
               <div className="flex gap-2 mt-3 overflow-x-auto">
                 {review.image.map((img, index) => (
-                  <div key={index} className="w-16 h-16 md:w-20 md:h-20 relative flex-shrink-0">
+                  <div
+                    key={index}
+                    className="w-16 h-16 md:w-20 md:h-20 relative flex-shrink-0"
+                  >
                     <Image
                       src={img}
                       alt={`Review image ${index + 1}`}
@@ -772,7 +780,6 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
         <BusinessGalleryModal
           isOpen={isGalleryModalOpen}
           onClose={() => setIsGalleryModalOpen(false)}
-          singleBusiness={singleBusiness}
         />
 
         {/* Business Info */}
@@ -800,7 +807,9 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
           </div>
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-            <span className="text-gray-600 font-medium text-sm lg:text-base">{averageRating}</span>
+            <span className="text-gray-600 font-medium text-sm lg:text-base">
+              {averageRating}
+            </span>
             <span className="text-gray-500 flex items-center space-x-2 text-sm">
               (<span>{singleBusiness.review.length} Reviews</span>
               <span>
@@ -896,7 +905,9 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
         <div className="flex-1 lg:border-r lg:border-gray-200 lg:pr-8">
           {/* About this Business */}
           <div className="border-b border-gray-200 pb-6 lg:pb-8">
-            <h2 className="text-lg lg:text-xl font-semibold mb-3 lg:mb-4">About this Business</h2>
+            <h2 className="text-lg lg:text-xl font-semibold mb-3 lg:mb-4">
+              About this Business
+            </h2>
             <p className="text-gray-700 leading-relaxed text-sm lg:text-base">
               {singleBusiness.businessInfo.description}
             </p>
@@ -913,7 +924,9 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
 
           {/* Rating & Reviews */}
           <div className="pt-6 lg:pt-8">
-            <h2 className="text-lg lg:text-xl font-semibold mb-4">Rating & Reviews</h2>
+            <h2 className="text-lg lg:text-xl font-semibold mb-4">
+              Rating & Reviews
+            </h2>
 
             {/* Overall Rating */}
             <div className="flex items-center gap-2 mb-4 lg:mb-6">
@@ -928,7 +941,9 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
               </div>
               <div>
                 <div>
-                  <h1 className="font-bold text-xl lg:text-2xl">{averageRating}</h1>
+                  <h1 className="font-bold text-xl lg:text-2xl">
+                    {averageRating}
+                  </h1>
                 </div>
                 <div className="text-xs lg:text-sm text-gray-600">
                   {singleBusiness.review.length} Reviews
@@ -947,8 +962,13 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
                     : 0;
 
                 return (
-                  <div key={star} className="flex items-center gap-2 lg:gap-5 mb-2">
-                    <div className="text-xs lg:text-sm font-medium w-12 lg:w-auto">{star} Star</div>
+                  <div
+                    key={star}
+                    className="flex items-center gap-2 lg:gap-5 mb-2"
+                  >
+                    <div className="text-xs lg:text-sm font-medium w-12 lg:w-auto">
+                      {star} Star
+                    </div>
                     <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden min-w-[60px]">
                       <div
                         className="h-full bg-primary"
