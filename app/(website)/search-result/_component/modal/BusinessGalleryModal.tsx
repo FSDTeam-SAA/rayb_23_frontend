@@ -24,17 +24,22 @@ interface Review {
   createdAt: string;
 }
 
+interface Picture {
+  _id: string;
+  image: string[];
+  user: {
+    _id: string;
+    name: string;
+    email: string;
+    imageLink?: string;
+  };
+  status: string;
+  createdAt: string;
+}
+
 interface BusinessGalleryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  singleBusiness?: {
-    businessInfo: {
-      name: string;
-      image: string[];
-    };
-    images: string[];
-    review: Review[];
-  };
 }
 
 const BusinessGalleryModal = ({
@@ -45,7 +50,7 @@ const BusinessGalleryModal = ({
   const { id } = useParams();
 
   // Fetch reviews from API
-  const { data, isLoading } = useQuery({
+  const { data: reviewsData, isLoading: reviewsLoading } = useQuery({
     queryKey: ["review", id],
     queryFn: async () => {
       const res = await fetch(
@@ -57,45 +62,91 @@ const BusinessGalleryModal = ({
     enabled: !!id,
   });
 
-  // Combine all images from API reviews
-  const galleryItems = useMemo(() => {
-    if (!data || !Array.isArray(data)) return [];
+  // Fetch pictures from API
+  const { data: picturesData, isLoading: picturesLoading } = useQuery({
+    queryKey: ["pictures", id],
+    queryFn: async () => {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/picture/get-all-pictures-by-business/${id}`,
+      );
+      const response = await res.json();
+      return response.data || [];
+    },
+    enabled: !!id,
+  });
 
+  // Combine all images from both reviews and pictures
+  const galleryItems = useMemo(() => {
     const items: Array<{
       imageUrl: string;
-      user: Review["user"];
-      rating: number;
+      user: {
+        _id: string;
+        name: string;
+        email: string;
+        imageLink?: string;
+      } | null;
+      rating?: number;
       createdAt: string;
-      reviewId: string;
-      feedback: string;
+      reviewId?: string;
+      feedback?: string;
+      source: "review" | "picture";
     }> = [];
 
-    // Process each review from API
-    data.forEach((review: Review) => {
-      // Check if review has images and is approved
-      if (
-        review.image &&
-        review.image.length > 0 &&
-        review.status === "approved"
-      ) {
-        // Process each image in the review
-        review.image.forEach((img) => {
-          if (img && img.trim() !== "") {
-            items.push({
-              imageUrl: img,
-              user: review.user,
-              rating: review.rating,
-              createdAt: review.createdAt,
-              reviewId: review._id,
-              feedback: review.feedback,
-            });
-          }
-        });
-      }
-    });
+    // Process reviews
+    if (reviewsData && Array.isArray(reviewsData)) {
+      reviewsData.forEach((review: Review) => {
+        if (
+          review.image &&
+          review.image.length > 0 &&
+          review.status === "approved"
+        ) {
+          review.image.forEach((img) => {
+            if (img && img.trim() !== "") {
+              items.push({
+                imageUrl: img,
+                user: review.user,
+                rating: review.rating,
+                createdAt: review.createdAt,
+                reviewId: review._id,
+                feedback: review.feedback,
+                source: "review",
+              });
+            }
+          });
+        }
+      });
+    }
 
-    return items;
-  }, [data]);
+    // Process pictures
+    if (picturesData && Array.isArray(picturesData)) {
+      picturesData.forEach((picture: Picture) => {
+        if (
+          picture.image &&
+          picture.image.length > 0 &&
+          picture.status === "approved"
+        ) {
+          picture.image.forEach((img) => {
+            if (img && img.trim() !== "") {
+              items.push({
+                imageUrl: img,
+                user: picture.user,
+                createdAt: picture.createdAt,
+                source: "picture",
+              });
+            }
+          });
+        }
+      });
+    }
+
+    // Sort by createdAt (newest first)
+    return items.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+  }, [reviewsData, picturesData]);
+
+  console.log("galleryItems: ", galleryItems);
 
   const nextItem = () => {
     if (galleryItems.length > 0) {
@@ -113,7 +164,7 @@ const BusinessGalleryModal = ({
 
   const currentItem = galleryItems[currentIndex];
 
-  if (isLoading) {
+  if (reviewsLoading || picturesLoading) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-xl w-full max-h-[80vh] overflow-auto p-4">
@@ -173,9 +224,9 @@ const BusinessGalleryModal = ({
           )}
         </div>
 
-        {/* User Information Section */}
+        {/* User Information Section - Only show for items that have user data */}
         {currentItem && currentItem.user && (
-          <div className="border-t pt-4 mt-4">
+          <div>
             <div className="flex items-center gap-3 mb-3">
               <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center overflow-hidden">
                 {currentItem.user.imageLink ? (
@@ -202,22 +253,24 @@ const BusinessGalleryModal = ({
               </div>
             </div>
 
-            {/* Rating Stars */}
-            <div className="flex items-center gap-1 mb-2">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                  key={star}
-                  className={`w-4 h-4 ${
-                    star <= currentItem.rating
-                      ? "fill-yellow-400 text-yellow-400"
-                      : "text-gray-300"
-                  }`}
-                />
-              ))}
-            </div>
+            {/* Rating Stars - Only show for review items */}
+            {currentItem.source === "review" && currentItem.rating && (
+              <div className="flex items-center gap-1 mb-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className={`w-4 h-4 ${
+                      star <= currentItem.rating!
+                        ? "fill-yellow-400 text-yellow-400"
+                        : "text-gray-300"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
 
-            {/* Feedback */}
-            {currentItem.feedback && (
+            {/* Feedback - Only show for review items */}
+            {currentItem.source === "review" && currentItem.feedback && (
               <p className="text-sm text-gray-700 mb-2">
                 {currentItem.feedback}
               </p>
@@ -228,7 +281,7 @@ const BusinessGalleryModal = ({
         {/* No items message */}
         {galleryItems.length === 0 && (
           <div className="text-center py-4 text-gray-500">
-            No review images available for this business.
+            No images available for this business.
           </div>
         )}
       </DialogContent>
