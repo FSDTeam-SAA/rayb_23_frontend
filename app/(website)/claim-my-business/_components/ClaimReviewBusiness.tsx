@@ -28,6 +28,7 @@ interface Business {
   _id: string;
   businessInfo: BusinessItem;
   instrumentInfo: Service[];
+  isClaimed?: boolean;
 }
 
 const ClaimReviewBusiness = () => {
@@ -52,7 +53,11 @@ const ClaimReviewBusiness = () => {
   const filteredBusiness = allBusiness.filter((business: Business) =>
     business?.businessInfo?.name
       ?.toLowerCase()
-      .includes(searchQuery.toLowerCase())
+      .includes(searchQuery.toLowerCase()),
+  );
+
+  const unClaimedBusiness = allBusiness.filter(
+    (business: Business) => business?.isClaimed === false,
   );
 
   // ✅ Pagination applied to filtered list
@@ -121,6 +126,31 @@ const ClaimReviewBusiness = () => {
     </div>
   );
 
+  // Empty state component
+  const EmptyState = ({ message }: { message: string }) => (
+    <div className="text-center py-12 bg-white rounded-lg shadow-[0px_2px_12px_0px_#003d3924]">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center">
+          <Search className="h-8 w-8 text-gray-400" />
+        </div>
+        <p className="text-gray-500 text-lg">{message}</p>
+        {pathname === "/claim-my-business" && (
+          <p className="text-gray-400 text-sm">
+            All businesses will appear here once they are available for claiming
+          </p>
+        )}
+        {pathname === "/review-a-business" && searchQuery && (
+          <Button
+            onClick={() => setSearchQuery("")}
+            className="bg-teal-600 hover:bg-teal-700 text-white mt-2"
+          >
+            Clear Search
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className="mt-8">
       <div>
@@ -159,107 +189,182 @@ const ClaimReviewBusiness = () => {
             ))
           ) : (
             <>
-              {/* No Results */}
-              {filteredBusiness.length === 0 && (
-                <div className="text-center py-12">
-                  <p className="text-gray-500">
-                    No instructors found matching your search.
-                  </p>
-                </div>
-              )}
-
-              {currentBusiness.map((business: Business) => (
-                <div
-                  key={business?._id}
-                  className="bg-white rounded-lg shadow-[0px_2px_12px_0px_#003d3924] p-6"
-                >
-                  <div className="flex flex-col lg:flex-row items-start lg:items-center gap-5">
-                    {/* Profile Image */}
-                    <div className="flex-shrink-0 overflow-hidden rounded-lg w-full sm:w-auto">
-                      <Link href={`/search-result/${business?._id}`}>
-                        <Image
-                          src={business?.businessInfo?.image?.[0]}
-                          alt="business.png"
-                          width={1000}
-                          height={1000}
-                          className="rounded-lg object-cover w-full sm:w-[200px] h-[200px] hover:scale-105 transition"
-                        />
-                      </Link>
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 w-full">
-                      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                        <div>
-                          <Link href={`/search-result/${business?._id}`}>
-                            <h3 className="text-lg font-semibold text-gray-900">
-                              {business?.businessInfo?.name}
-                            </h3>
-                          </Link>
-
-                          {/* Rating */}
-                          <div className="flex items-center gap-1 my-3">
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                            <span className="text-sm font-medium">{"3.7"}</span>
+              {pathname === "/review-a-business" && (
+                <>
+                  {currentBusiness.length === 0 ? (
+                    <EmptyState 
+                      message={
+                        searchQuery 
+                          ? "No instructors found matching your search." 
+                          : "No businesses available for review at the moment."
+                      } 
+                    />
+                  ) : (
+                    currentBusiness.map((business: Business) => (
+                      <div
+                        key={business?._id}
+                        className="bg-white rounded-lg shadow-[0px_2px_12px_0px_#003d3924] p-6"
+                      >
+                        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-5">
+                          {/* Profile Image */}
+                          <div className="flex-shrink-0 overflow-hidden rounded-lg w-full sm:w-auto">
+                            <Link href={`/search-result/${business?._id}`}>
+                              <Image
+                                src={business?.businessInfo?.image?.[0] || "/placeholder.jpg"}
+                                alt="business.png"
+                                width={1000}
+                                height={1000}
+                                className="rounded-lg object-cover w-full sm:w-[200px] h-[200px] hover:scale-105 transition"
+                              />
+                            </Link>
                           </div>
 
-                          {/* Services */}
-                          <div className="flex flex-wrap items-center gap-2 mb-2">
-                            {business?.instrumentInfo?.map((service, index) => (
-                              <button
-                                className="h-[48px] px-5 rounded-lg bg-[#F8F8F8]"
-                                key={index}
-                              >
-                                {service?.serviceName}
-                              </button>
-                            ))}
+                          {/* Content */}
+                          <div className="flex-1 w-full">
+                            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                              <div>
+                                <Link href={`/search-result/${business?._id}`}>
+                                  <h3 className="text-lg font-semibold text-gray-900">
+                                    {business?.businessInfo?.name}
+                                  </h3>
+                                </Link>
+
+                                {/* Rating */}
+                                <div className="flex items-center gap-1 my-3">
+                                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                  <span className="text-sm font-medium">
+                                    {"3.7"}
+                                  </span>
+                                </div>
+
+                                {/* Services */}
+                                <div className="flex flex-wrap items-center gap-2 mb-2">
+                                  {business?.instrumentInfo?.map(
+                                    (service, index) => (
+                                      <button
+                                        className="h-[48px] px-5 rounded-lg bg-[#F8F8F8]"
+                                        key={index}
+                                      >
+                                        {service?.serviceName}
+                                      </button>
+                                    ),
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Action Button */}
+                              <div className="mt-4 lg:mt-0 w-full sm:w-auto">
+                                <button
+                                  onClick={() => {
+                                    if (status === "unauthenticated") {
+                                      return setLoginModalOpen(true);
+                                    }
+                                    setIsOpen(true);
+                                    setBusinessID(business?._id);
+                                  }}
+                                  className="w-full sm:w-[180px] bg-[#e0f2f1] h-[48px] text-[#139a8e] px-5 rounded-lg"
+                                >
+                                  Review Business
+                                </button>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-
-                        {/* Action Button */}
-                        <div className="mt-4 lg:mt-0 w-full sm:w-auto">
-                          {pathname === "/claim-my-business" && (
-                            <button
-                              onClick={() => {
-                                if (status === "unauthenticated") {
-                                  return setLoginModalOpen(true);
-                                }
-                                route.push(
-                                  `/claim-my-business/${business?._id}`
-                                );
-                              }}
-                              className="w-full sm:w-[180px] bg-[#e0f2f1] h-[48px] text-[#139a8e] px-5 rounded-lg"
-                            >
-                              Claim Business
-                            </button>
-                          )}
-
-                          {pathname === "/review-a-business" && (
-                            <button
-                              onClick={() => {
-                                if (status === "unauthenticated") {
-                                  return setLoginModalOpen(true);
-                                }
-                                setIsOpen(true);
-                                setBusinessID(business?._id);
-                              }}
-                              className="w-full sm:w-[180px] bg-[#e0f2f1] h-[48px] text-[#139a8e] px-5 rounded-lg"
-                            >
-                              Review Business
-                            </button>
-                          )}
                         </div>
                       </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                    ))
+                  )}
+                </>
+              )}
+
+              {pathname === "/claim-my-business" && (
+                <>
+                  {unClaimedBusiness.length === 0 ? (
+                    <EmptyState 
+                      message="No unclaimed businesses available at the moment." 
+                    />
+                  ) : (
+                    unClaimedBusiness.map((business: Business) => (
+                      <div
+                        key={business?._id}
+                        className="bg-white rounded-lg shadow-[0px_2px_12px_0px_#003d3924] p-6"
+                      >
+                        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-5">
+                          {/* Profile Image */}
+                          <div className="flex-shrink-0 overflow-hidden rounded-lg w-full sm:w-auto">
+                            <Link href={`/search-result/${business?._id}`}>
+                              <Image
+                                src={business?.businessInfo?.image?.[0] || "/placeholder.jpg"}
+                                alt="business.png"
+                                width={1000}
+                                height={1000}
+                                className="rounded-lg object-cover w-full sm:w-[200px] h-[200px] hover:scale-105 transition"
+                              />
+                            </Link>
+                          </div>
+
+                          {/* Content */}
+                          <div className="flex-1 w-full">
+                            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                              <div>
+                                <Link href={`/search-result/${business?._id}`}>
+                                  <h3 className="text-lg font-semibold text-gray-900">
+                                    {business?.businessInfo?.name}
+                                  </h3>
+                                </Link>
+
+                                {/* Rating */}
+                                <div className="flex items-center gap-1 my-3">
+                                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                  <span className="text-sm font-medium">
+                                    {"3.7"}
+                                  </span>
+                                </div>
+
+                                {/* Services */}
+                                <div className="flex flex-wrap items-center gap-2 mb-2">
+                                  {business?.instrumentInfo?.map(
+                                    (service, index) => (
+                                      <button
+                                        className="h-[48px] px-5 rounded-lg bg-[#F8F8F8]"
+                                        key={index}
+                                      >
+                                        {service?.serviceName}
+                                      </button>
+                                    ),
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Action Button */}
+                              <div className="mt-4 lg:mt-0 w-full sm:w-auto">
+                                <button
+                                  onClick={() => {
+                                    if (status === "unauthenticated") {
+                                      return setLoginModalOpen(true);
+                                    }
+                                    route.push(
+                                      `/claim-my-business/${business?._id}`,
+                                    );
+                                  }}
+                                  className="w-full sm:w-[180px] bg-[#e0f2f1] h-[48px] text-[#139a8e] px-5 rounded-lg"
+                                >
+                                  Claim Business
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </>
+              )}
             </>
           )}
         </div>
 
-        {/* Pagination */}
-        {!isLoading && totalPages > 1 && (
+        {/* Pagination - Only show when there are items */}
+        {!isLoading && pathname === "/review-a-business" && totalPages > 1 && currentBusiness.length > 0 && (
           <div className="flex flex-wrap items-center justify-center gap-2 mt-8">
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <Button

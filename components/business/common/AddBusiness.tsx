@@ -347,8 +347,13 @@ const AddBusiness = () => {
   const { mutateAsync: addBusinessData, isPending } = useMutation({
     mutationKey: ["add-business"],
     mutationFn: async (data: FormData) => {
-      const queryType =
-        pathName === "/add-my-business" ? "myBusiness" : "addABusiness";
+      const addMyBusinessPaths = [
+        "/add-my-business",
+        "/business-dashboard/add-my-business",
+      ];
+      const queryType = addMyBusinessPaths.includes(pathName)
+        ? "myBusiness"
+        : "addABusiness";
 
       const res = await addBusiness(data, queryType);
       if (!res.success) {
@@ -703,7 +708,8 @@ const AddBusiness = () => {
         onSubmit={
           pathName === "/business-dashboard/profile"
             ? handleUpdate
-            : pathName === "/add-my-business" || pathName === "/business-dashboard/add-my-business"
+            : pathName === "/add-my-business" ||
+                pathName === "/business-dashboard/add-my-business"
               ? handleSubmit
               : isLoggedIn === "authenticated" && pathName === "/add-a-business"
                 ? handleAddABusinessSubmit
