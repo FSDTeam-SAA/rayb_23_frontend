@@ -49,6 +49,7 @@ interface Review {
     email: string;
     imageLink: string;
   } | null;
+  userId: string;
   business: string;
   googlePlaceId: string;
   createdAt: string;
@@ -62,6 +63,7 @@ interface Review {
 interface BusinessProfileProps {
   singleBusiness: {
     _id: string;
+    userId: string;
     businessInfo: {
       name: string;
       image: string[];
@@ -284,11 +286,10 @@ const ImageSlider = ({
                 e.stopPropagation();
                 goToImage(index);
               }}
-              className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
-                index === currentImageIndex
-                  ? "bg-[#139a8e]"
-                  : "bg-gray-300 hover:bg-gray-400"
-              }`}
+              className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${index === currentImageIndex
+                ? "bg-[#139a8e]"
+                : "bg-gray-300 hover:bg-gray-400"
+                }`}
             />
           ))}
         </div>
@@ -628,11 +629,10 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
                     key={star}
-                    className={`w-3 h-3 md:w-4 md:h-4 ${
-                      star <= review.rating
-                        ? "fill-yellow-400 text-yellow-400"
-                        : "text-gray-300"
-                    }`}
+                    className={`w-3 h-3 md:w-4 md:h-4 ${star <= review.rating
+                      ? "fill-yellow-400 text-yellow-400"
+                      : "text-gray-300"
+                      }`}
                   />
                 ))}
               </div>
@@ -685,7 +685,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
 
   const { mutateAsync: chatCreation } = useMutation({
     mutationKey: ["create-chat"],
-    mutationFn: async (data: { userId: string; bussinessId: string }) => {
+    mutationFn: async (data: { participants: { userId: string; role: string }[] }) => {
       try {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/chat/create`,
@@ -731,14 +731,24 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
   };
 
   const handleMessage = async () => {
-    if (!userId) {
+    if (!userId || !role) {
       toast.error("You must be logged in to send a message.");
       return;
     }
 
     const data = {
-      userId: userId,
-      bussinessId: singleBusiness._id,
+      // userId: userId,
+      // bussinessId: singleBusiness._id,
+      participants: [
+        {
+          userId: userId,
+          role: role,
+        },
+        {
+          userId: singleBusiness.userId,
+          role: "businessMan",
+        },
+      ],
     };
 
     try {
@@ -757,6 +767,8 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
       }
     }
   };
+
+  console.log("singleBusiness", singleBusiness)
 
   // Combine all images from businessInfo.image and images array
   const allBusinessImages = [
