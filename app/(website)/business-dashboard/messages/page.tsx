@@ -6,7 +6,7 @@ import { useMemo } from "react"
 
 
 import InboxComponent from "@/components/shared/inbox"
-import { getChatByBusinessMan, getMyChat } from "@/lib/api"
+import { getMyChat } from "@/lib/api"
 import { useBusinessContext } from "@/lib/business-context"
 
 export default function BusinessInboxPage() {
