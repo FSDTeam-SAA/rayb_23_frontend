@@ -1,5 +1,7 @@
 "use client"
 
+import { useMemo } from "react"
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 
@@ -10,7 +12,7 @@ import { useBusinessContext } from "@/lib/business-context"
 export default function BusinessInboxPage() {
     const { selectedBusinessId } = useBusinessContext()
 
-    const businessInboxConfig = {
+    const businessInboxConfig = useMemo(() => ({
         fetchChats: (_userId?: string, businessId?: string) =>
             businessId ? getChatByBusinessMan(businessId).then((res) => res.data) : Promise.resolve([]),
 
@@ -30,7 +32,7 @@ export default function BusinessInboxPage() {
         emptyStateLinkText: "Go to Search Results",
 
         additionalData: selectedBusinessId || "", // If you want to ensure string, fallback to ""
-    }
+    }), [selectedBusinessId])
 
     return <InboxComponent config={businessInboxConfig} />
 }

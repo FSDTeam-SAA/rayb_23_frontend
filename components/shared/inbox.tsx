@@ -5,7 +5,7 @@
 import type React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useRef } from "react";
-import { getMessages, sendMessage } from "@/lib/api";
+import { getMessages } from "@/lib/api";
 import { initSocket } from "@/lib/socket";
 import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -70,6 +70,8 @@ export default function InboxComponent({ config }: InboxComponentProps) {
       !!myUserId && (config.additionalData ? !!config.additionalData : true),
   });
 
+  console.log("Config:", config);
+
   // Refetch when additional data changes (for business inbox)
   useEffect(() => {
     if (config.additionalData) {
@@ -85,7 +87,9 @@ export default function InboxComponent({ config }: InboxComponentProps) {
     socketRef.current = socket;
     console.log("Socket connecting...");
 
-    socket.on("message", (msg: Message) => {
+    socket.emit("joinNotification", myUserId);
+
+    socket.on("newMessage", (msg: Message) => {
       console.log("New message received:", msg);
 
       if (msg?.chat === currentChatRef.current) {
@@ -95,11 +99,14 @@ export default function InboxComponent({ config }: InboxComponentProps) {
             return prev;
           }
 
+          const getSenderId = (sender: string | { _id: string }) =>
+            typeof sender === "object" ? sender._id : sender;
+
           // 2. If optimistic message exists with same sender + same text → replace
           const optimisticIndex = prev.findIndex(
             (m) =>
               m.tempId &&
-              m.senderId === msg.senderId &&
+              getSenderId(m.senderId) === getSenderId(msg.senderId) &&
               m.message === msg.message
           );
 
@@ -122,7 +129,7 @@ export default function InboxComponent({ config }: InboxComponentProps) {
     });
 
     return () => {
-      socket.off("message");
+      socket.off("newMessage");
       socket.off("connect_error");
       socket.disconnect();
     };
@@ -153,7 +160,12 @@ export default function InboxComponent({ config }: InboxComponentProps) {
     });
 
     // Load messages after joining the room
-    getMessages(chatId)
+    const params: any = { chatId, userId: myUserId };
+    if (config.additionalData) {
+      params.businessId = config.additionalData;
+    }
+
+    getMessages(params)
       .then((res) => {
         console.log("Loaded messages:", res.data.length);
         setLiveMessages(res.data);
@@ -164,17 +176,17 @@ export default function InboxComponent({ config }: InboxComponentProps) {
   }, [selectedChat, config]);
 
   // Send message mutation
-  const sendMutation = useMutation({
-    mutationFn: (formData: FormData) =>
-      sendMessage({ data: formData }).then((res) => res.data),
-    onSuccess: () => {
-      setNewMessage("");
-      queryClient.invalidateQueries({ queryKey: config.queryKey });
-    },
-    onError: (error) => {
-      console.error("Failed to send message:", error);
-    },
-  });
+  // const sendMutation = useMutation({
+  //   mutationFn: (formData: FormData) =>
+  //     sendMessage({ data: formData }).then((res) => res.data),
+  //   onSuccess: () => {
+  //     setNewMessage("");
+  //     queryClient.invalidateQueries({ queryKey: config.queryKey });
+  //   },
+  //   onError: (error) => {
+  //     console.error("Failed to send message:", error);
+  //   },
+  // });
 
   const handleSend = () => {
     if (!newMessage.trim() || !myUserId || !selectedChat) return;
@@ -190,7 +202,18 @@ export default function InboxComponent({ config }: InboxComponentProps) {
     formData.append("data", JSON.stringify(payload));
 
     // Remove optimistic update, just send the message
-    sendMutation.mutate(formData);
+    // sendMutation.mutate(formData);
+
+    const socket = socketRef.current;
+    if (socket) {
+      socket.emit("sendMessage", {
+        chatId: config.getChatId(selectedChat),
+        senderId: myUserId,
+        receiverId: config.getReceiverId(selectedChat),
+        message: newMessage,
+        image: null // TODO: Add image support
+      });
+    }
 
     setNewMessage("");
   };
@@ -306,9 +329,8 @@ export default function InboxComponent({ config }: InboxComponentProps) {
     <div className="flex gap-5 h-[70vh] bg-white container">
       {/* Left Sidebar - Chat List */}
       <div
-        className={`w-full md:w-80 border-gray-200 flex flex-col ${
-          showChatList ? "block" : "hidden md:flex"
-        }`}
+        className={`w-full md:w-80 border-gray-200 flex flex-col ${showChatList ? "block" : "hidden md:flex"
+          }`}
       >
         <ScrollArea className="flex-1">
           <div className="divide-y divide-gray-100">
@@ -322,11 +344,10 @@ export default function InboxComponent({ config }: InboxComponentProps) {
                 .map((chat: any) => (
                   <div
                     key={config.getChatId(chat)}
-                    className={`p-4 rounded-xl cursor-pointer hover:bg-[#F7F8F8] transition-colors ${
-                      config.getChatId(selectedChat) === config.getChatId(chat)
-                        ? "bg-[#F7F8F8]"
-                        : ""
-                    }`}
+                    className={`p-4 rounded-xl cursor-pointer hover:bg-[#F7F8F8] transition-colors ${config.getChatId(selectedChat) === config.getChatId(chat)
+                      ? "bg-[#F7F8F8]"
+                      : ""
+                      }`}
                     onClick={() => handleChatSelect(chat)}
                   >
                     <div className="flex items-center space-x-3">
@@ -386,9 +407,8 @@ export default function InboxComponent({ config }: InboxComponentProps) {
 
       {/* Right Chat Window */}
       <div
-        className={`flex-1 flex flex-col border rounded-lg ${
-          showChatList ? "hidden md:flex" : "flex"
-        }`}
+        className={`flex-1 flex flex-col border rounded-lg ${showChatList ? "hidden md:flex" : "flex"
+          }`}
       >
         {selectedChat ? (
           <>
@@ -440,9 +460,8 @@ export default function InboxComponent({ config }: InboxComponentProps) {
                   return (
                     <div
                       key={msg._id}
-                      className={`flex ${
-                        isMyMessage ? "justify-end" : "justify-start"
-                      }`}
+                      className={`flex ${isMyMessage ? "justify-end" : "justify-start"
+                        }`}
                     >
                       <div className="flex items-start space-x-2 max-w-xs lg:max-w-md">
                         {!isMyMessage && (
@@ -460,11 +479,10 @@ export default function InboxComponent({ config }: InboxComponentProps) {
                           </Avatar>
                         )}
                         <div
-                          className={`px-4 py-2 rounded-2xl ${
-                            isMyMessage
-                              ? "bg-[#00998E] text-white rounded-br-md"
-                              : "bg-gray-100 text-gray-900 rounded-bl-md"
-                          }`}
+                          className={`px-4 py-2 rounded-2xl ${isMyMessage
+                            ? "bg-[#00998E] text-white rounded-br-md"
+                            : "bg-gray-100 text-gray-900 rounded-bl-md"
+                            }`}
                         >
                           <p className="text-sm">{msg?.message}</p>
                         </div>
@@ -504,7 +522,7 @@ export default function InboxComponent({ config }: InboxComponentProps) {
                 </div>
                 <Button
                   onClick={handleSend}
-                  disabled={!newMessage.trim() || sendMutation.isPending}
+                  disabled={!newMessage.trim()}
                   className="h-10 w-10 rounded-full bg-[#00998E] hover:bg-[#008A7E] p-0"
                 >
                   <Send className="h-4 w-4" />
