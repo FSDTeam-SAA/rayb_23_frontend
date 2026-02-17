@@ -6,26 +6,27 @@ import { useMemo } from "react"
 
 
 import InboxComponent from "@/components/shared/inbox"
-import { getChatByBusinessMan } from "@/lib/api"
+import { getChatByBusinessMan, getMyChat } from "@/lib/api"
 import { useBusinessContext } from "@/lib/business-context"
 
 export default function BusinessInboxPage() {
     const { selectedBusinessId } = useBusinessContext()
 
     const businessInboxConfig = useMemo(() => ({
-        fetchChats: (_userId?: string, businessId?: string) =>
-            businessId ? getChatByBusinessMan(businessId).then((res) => res.data) : Promise.resolve([]),
+        fetchChats: (userId?: string) => {
+            return userId ? getMyChat(userId).then((res) => res.data) : Promise.resolve([])
+        },
 
         queryKey: selectedBusinessId
             ? ["business-chats", selectedBusinessId]
             : ["business-chats"],
 
-        getChatName: (chat: any) => chat?.userId?.name || "Unknown User",
-        getChatEmail: (chat: any) => chat?.userId?.email || "",
-        getChatImage: (chat: any) => chat?.userId?.image,
+        getChatName: (chat: any) => chat?.participants[0]?.userId?.name || "Unknown User",
+        getChatEmail: (chat: any) => chat?.participants[0]?.userId?.email || "",
+        getChatImage: (chat: any) => chat?.participants[0]?.userId?.imageLink,
         getChatId: (chat: any) => chat?._id,
 
-        getReceiverId: (chat: any) => chat?.userId?._id,
+        getReceiverId: (chat: any) => chat?.participants[0]?.userId?._id,
 
         emptyStateText: "You have no messages yet.",
         emptyStateLink: "/search-result",

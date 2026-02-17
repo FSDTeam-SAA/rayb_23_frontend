@@ -173,7 +173,7 @@ export default function InboxComponent({ config }: InboxComponentProps) {
       .catch((error) => {
         console.error("Error loading messages:", error);
       });
-  }, [selectedChat, config]);
+  }, [selectedChat, config, myUserId]);
 
   // Send message mutation
   // const sendMutation = useMutation({
