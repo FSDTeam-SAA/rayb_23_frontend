@@ -1,6 +1,6 @@
 "use client"
 import Image from "next/image"
-import { MapPin, Star } from "lucide-react"
+import { Mail, MapPin, Star } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
@@ -17,6 +17,7 @@ interface BusinessEntryProps {
   image: string
   address: string
   status: "under_review" | "approved" | "rejected"
+  email: string
 }
 
 // Raw API data interfaces
@@ -95,6 +96,7 @@ async function fetchBusinesses({
     image: entry.businessInfo.image[0],
     address: entry.businessInfo.address || "No address available",
     status: entry.status === "pending" ? "under_review" : (entry.status as "under_review" | "approved" | "rejected"),
+    email: entry.businessInfo.email
   }))
 }
 
@@ -227,6 +229,8 @@ export default function BusinessSubmissionsComponent() {
     return <div className="min-h-screen flex items-center justify-center text-red-500">Error: {error?.message}</div>
   }
 
+  console.log("Submissions", submissions)
+
   return (
     <div className="min-h-screen">
       <div className="w-full mx-auto bg-white p-6 md:p-8">
@@ -312,6 +316,10 @@ export default function BusinessSubmissionsComponent() {
                 />
                 <div className="flex-1 grid gap-2">
                   <h2 className="text-[24px] font-bold text-[#1D2020]">{submission.name}</h2>
+                  <div className="flex items-center gap-2 text-xl text-[#485150]">
+                    <Mail className="w-4 h-4" />
+                    <span>{submission.email}</span>
+                  </div>
                   <div className="flex items-center gap-2 text-xl text-[#485150]">
                     <Star className="w-4 h-4 text-gray-400" />
                     <span>Not Rated</span>

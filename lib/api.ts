@@ -142,9 +142,9 @@ export async function getChatByBusinessMan(businessId: string) {
 }
 
 // get messages
-export async function getMessages(chatId: string) {
+export async function getMessages(data: any) {
   try {
-    const response = await api.get(`/message/${chatId}`);
+    const response = await api.post(`/message/get-messages`, data);
     return response.data;
   } catch (error) {
     console.error("Error fetching messages:", error);
@@ -315,7 +315,7 @@ export async function getAllInstrument() {
 }
 
 //get all instrument types
-export async function getInstrumentTypes(selectedInstrumentsGroup : string, selectedInstrumentsGroupMusic : string) {
+export async function getInstrumentTypes(selectedInstrumentsGroup: string, selectedInstrumentsGroupMusic: string) {
   try {
     const response = await api.get(`/instrument-family?name=${selectedInstrumentsGroup || selectedInstrumentsGroupMusic}&`);
     return response.data;
@@ -349,7 +349,7 @@ export async function deleteNotification(id: string) {
 
 
 //get my review
-export async function getMyReview(id : string) {
+export async function getMyReview(id: string) {
   try {
     const response = await api.get(`/review/${id}`);
     return response.data;
