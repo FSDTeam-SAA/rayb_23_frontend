@@ -14,7 +14,7 @@ export default function BusinessInboxPage() {
 
     const businessInboxConfig = useMemo(() => ({
         fetchChats: (userId?: string) => {
-            return userId ? getMyChat(userId).then((res) => res.data) : Promise.resolve([])
+            return userId ? getMyChat(userId, selectedBusinessId).then((res) => res.data) : Promise.resolve([])
         },
 
         queryKey: selectedBusinessId

@@ -165,7 +165,7 @@ export default function InboxComponent({ config }: InboxComponentProps) {
       params.businessId = config.additionalData;
     }
 
-    getMessages(params)
+    getMessages(params, config.additionalData)
       .then((res) => {
         console.log("Loaded messages:", res.data.length);
         setLiveMessages(res.data);
