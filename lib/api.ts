@@ -20,7 +20,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // User API
@@ -122,7 +122,9 @@ export async function getMyBusinesses() {
 // Get my chat (for user/customer)
 export async function getMyChat(userId: string, businessId?: string) {
   try {
-    const response = await api.get(`/chat/my-chat/${userId}?${businessId ? `businessId=${businessId}` : ""}`);
+    const response = await api.get(
+      `/chat/my-chat/${userId}?${businessId ? `businessId=${businessId}` : ""}`,
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching my chat:", error);
@@ -144,7 +146,10 @@ export async function getChatByBusinessMan(businessId: string) {
 // get messages
 export async function getMessages(data: any, businessId?: string) {
   try {
-    const response = await api.post(`/message/get-messages?businessId=${businessId}`, data);
+    const response = await api.post(
+      `/message/get-messages?${businessId ? `businessId=${businessId}` : ""}`,
+      data,
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching messages:", error);
@@ -166,7 +171,10 @@ export async function sendMessage({ data }: any) {
 //add a business
 export async function addBusiness(payload: any, queryType: string) {
   try {
-    const response = await api.post(`/business/create?type=${queryType}`, payload);
+    const response = await api.post(
+      `/business/create?type=${queryType}`,
+      payload,
+    );
     return response.data;
   } catch (error) {
     console.error("Error sending message:", error);
@@ -245,7 +253,7 @@ export async function getAllBusinessClaims(query?: {
 
 export async function updateBusinessClaimStatus(
   claimId: string,
-  status: string
+  status: string,
 ) {
   try {
     const response = await api.put(`/claim-bussiness/claim/${claimId}`, {
@@ -282,7 +290,7 @@ export async function addReview(data: ReviewType) {
         rating: data.rating,
         feedback: data.feedback,
         business: data.business,
-      })
+      }),
     );
 
     // Append each file
@@ -315,9 +323,14 @@ export async function getAllInstrument() {
 }
 
 //get all instrument types
-export async function getInstrumentTypes(selectedInstrumentsGroup: string, selectedInstrumentsGroupMusic: string) {
+export async function getInstrumentTypes(
+  selectedInstrumentsGroup: string,
+  selectedInstrumentsGroupMusic: string,
+) {
   try {
-    const response = await api.get(`/instrument-family?name=${selectedInstrumentsGroup || selectedInstrumentsGroupMusic}&`);
+    const response = await api.get(
+      `/instrument-family?name=${selectedInstrumentsGroup || selectedInstrumentsGroupMusic}&`,
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching saved business:", error);
@@ -346,7 +359,6 @@ export async function deleteNotification(id: string) {
     return error;
   }
 }
-
 
 //get my review
 export async function getMyReview(id: string) {
