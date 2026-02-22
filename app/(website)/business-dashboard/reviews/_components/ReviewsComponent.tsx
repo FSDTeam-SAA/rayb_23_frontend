@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton"; // Add this import
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useBusinessContext } from "@/lib/business-context";
 import { getMyReview } from "@/lib/api";
@@ -52,7 +53,7 @@ interface Review {
   updatedAt: string;
   report: Report;
   __v: number;
-  reply?: Reply[]; // Updated to array of Reply objects
+  reply?: Reply[];
 }
 
 interface ReviewsResponse {
@@ -66,6 +67,103 @@ interface ReplyResponse {
   data: {
     reply: Reply[];
   };
+}
+
+// Loading Skeleton Component
+function ReviewsSkeleton() {
+  return (
+    <div className="space-y-6 bg-white">
+      {/* Header Skeleton */}
+      <div className="flex justify-between items-start">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-32" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <div className="flex gap-3">
+          <Skeleton className="h-10 w-32" />
+          <Skeleton className="h-10 w-24" />
+        </div>
+      </div>
+
+      {/* Rating Summary Card Skeleton */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="space-y-8">
+            {/* Overall Rating Skeleton */}
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-14 w-14 rounded-lg" />
+              <div>
+                <Skeleton className="h-8 w-16 mb-1" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            </div>
+
+            {/* Rating Distribution Skeleton */}
+            <div className="flex-1 space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <Skeleton className="h-4 w-12" />
+                  <div className="flex-1">
+                    <Skeleton className="h-2 w-full rounded-full" />
+                  </div>
+                  <Skeleton className="h-4 w-8" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Reviews List Skeleton */}
+      <div className="space-y-6">
+        {[...Array(3)].map((_, index) => (
+          <Card key={index} className="border border-gray-200 overflow-hidden">
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                {/* Review Header Skeleton */}
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-3">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-5 w-32" />
+                        <Skeleton className="h-5 w-16 rounded-full" />
+                      </div>
+                      <Skeleton className="h-3 w-24" />
+                      <div className="flex items-center gap-1 mt-1">
+                        <Skeleton className="h-4 w-20" />
+                      </div>
+                    </div>
+                  </div>
+                  <Skeleton className="h-8 w-16" />
+                </div>
+
+                {/* Review Content Skeleton */}
+                <div className="pl-13">
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-4 w-3/4" />
+
+                  {/* Images Skeleton */}
+                  <div className="flex gap-2 mt-3">
+                    <Skeleton className="h-16 w-16 rounded-lg" />
+                    <Skeleton className="h-16 w-16 rounded-lg" />
+                  </div>
+                </div>
+
+                {/* Reply Input Skeleton */}
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <div className="flex gap-3">
+                    <Skeleton className="flex-1 h-10" />
+                    <Skeleton className="h-10 w-20" />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default function ReviewsComponent() {
@@ -134,21 +232,24 @@ export default function ReviewsComponent() {
   };
 
   // Calculate rating distribution from API data
-  const ratingDistribution =
-    data?.data?.reduce(
-      (acc, review) => {
-        const index = 5 - review.rating;
+  const ratingDistribution = (data?.data ?? []).reduce(
+    (acc, review) => {
+      const rating = Math.min(5, Math.max(1, review.rating));
+      const index = 5 - rating;
+
+      if (acc[index]) {
         acc[index].count++;
-        return acc;
-      },
-      [
-        { stars: 5, count: 0, percentage: 0 },
-        { stars: 4, count: 0, percentage: 0 },
-        { stars: 3, count: 0, percentage: 0 },
-        { stars: 2, count: 0, percentage: 0 },
-        { stars: 1, count: 0, percentage: 0 },
-      ],
-    ) || [];
+      }
+      return acc;
+    },
+    [
+      { stars: 5, count: 0, percentage: 0 },
+      { stars: 4, count: 0, percentage: 0 },
+      { stars: 3, count: 0, percentage: 0 },
+      { stars: 2, count: 0, percentage: 0 },
+      { stars: 1, count: 0, percentage: 0 },
+    ],
+  );
 
   // Calculate percentages
   const totalReviews = ratingDistribution.reduce(
@@ -175,8 +276,23 @@ export default function ReviewsComponent() {
     });
   };
 
-  if (isLoading) return <div>Loading reviews...</div>;
-  if (error) return <div>Error loading reviews</div>;
+  // Show skeleton while loading
+  if (isLoading) {
+    return <ReviewsSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-red-600">
+            Error loading reviews
+          </h3>
+          <p className="text-sm text-gray-500 mt-2">Please try again later</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 bg-white">
@@ -260,7 +376,10 @@ export default function ReviewsComponent() {
       <div className="space-y-6">
         {data?.data?.length ? (
           data.data.map((review) => (
-            <Card key={review._id} className="border border-gray-200 overflow-hidden">
+            <Card
+              key={review._id}
+              className="border border-gray-200 overflow-hidden"
+            >
               <CardContent className="p-6">
                 <div className="space-y-4">
                   {/* Review Header */}
@@ -325,7 +444,7 @@ export default function ReviewsComponent() {
                     <p className="text-sm text-gray-700 leading-relaxed">
                       {review.feedback}
                     </p>
-                    
+
                     {/* Review Images */}
                     {review.image && review.image.length > 0 && (
                       <div className="flex gap-2 mt-3">
@@ -345,7 +464,10 @@ export default function ReviewsComponent() {
                   {review.reply && review.reply.length > 0 && (
                     <div className="ml-13 mt-4 space-y-3">
                       {review.reply.map((reply) => (
-                        <div key={reply._id} className="flex gap-3 pl-4 border-l-2 border-teal-200">
+                        <div
+                          key={reply._id}
+                          className="flex gap-3 pl-4 border-l-2 border-teal-200"
+                        >
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                               <MessageCircle className="h-3 w-3 text-teal-500" />
