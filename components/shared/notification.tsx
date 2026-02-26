@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -95,6 +96,7 @@ const Notifications = () => {
   const { data: session } = useSession();
   const userId = session?.user?.id;
   const token = session?.user?.accessToken;
+  const role = session?.user?.userType;
   const queryClient = useQueryClient();
 
   const [live, setLive] = useState<Notification[]>([]);
@@ -113,7 +115,7 @@ const Notifications = () => {
 
   // Mark all as read mutation
   const markAllAsReadMutation = useMutation({
-    mutationFn: markAllNotificationsAsRead,
+    mutationFn: () => markAllNotificationsAsRead(token as string, role as any),
     onSuccess: () => {
       // Update both query cache and live state
       queryClient.setQueryData<Notification[]>(
@@ -170,7 +172,7 @@ const Notifications = () => {
 
   const handleMarkAllAsRead = () => {
     if (notifications.length > 0) {
-      markAllAsReadMutation.mutate(token as string);
+      markAllAsReadMutation.mutate();
     }
   };
 

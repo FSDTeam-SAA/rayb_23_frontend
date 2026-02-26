@@ -368,17 +368,18 @@ export async function getMyReview(id: string) {
 
 export const markAllNotificationsAsRead = async (
   token: string,
+  role: any,
 ): Promise<any> => {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/notification/all-read`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+  const api = `${process.env.NEXT_PUBLIC_API_URL}/notification/all-read`;
+  const adminApi = `${process.env.NEXT_PUBLIC_API_URL}/notification/all-read-admin`;
+
+  const response = await fetch(role === "admin" ? adminApi : api, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
-  );
+  });
 
   if (!response.ok) {
     const error = await response.json();
