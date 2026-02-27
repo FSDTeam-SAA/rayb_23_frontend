@@ -120,9 +120,9 @@ export async function getMyBusinesses() {
 // Message API
 
 // Get my chat (for user/customer)
-export async function getMyChat(userId: string) {
+export async function getMyChat(userId: string, businessId?: string) {
   try {
-    const response = await api.get(`/chat/my-chat/${userId}`);
+    const response = await api.get(`/chat/my-chat/${userId}?${businessId ? `businessId=${businessId}` : ""}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching my chat:", error);
@@ -142,9 +142,9 @@ export async function getChatByBusinessMan(businessId: string) {
 }
 
 // get messages
-export async function getMessages(chatId: string) {
+export async function getMessages(data: any, businessId?: string) {
   try {
-    const response = await api.get(`/message/${chatId}`);
+    const response = await api.post(`/message/get-messages?businessId=${businessId}`, data);
     return response.data;
   } catch (error) {
     console.error("Error fetching messages:", error);
@@ -318,10 +318,7 @@ export async function getAllInstrument() {
 }
 
 //get all instrument types
-export async function getInstrumentTypes(
-  selectedInstrumentsGroup: string,
-  selectedInstrumentsGroupMusic: string,
-) {
+export async function getInstrumentTypes(selectedInstrumentsGroup: string, selectedInstrumentsGroupMusic: string) {
   try {
     const response = await api.get(
       `/instrument-family?name=${selectedInstrumentsGroup || selectedInstrumentsGroupMusic}&`,

@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Search,
+  MessageCircle,
 } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
@@ -37,6 +38,13 @@ import WorkingHours from "./working-hours";
 import ContactInfo from "./contact-info";
 import Location from "./location";
 
+interface Reply {
+  _id: string;
+  text: string;
+  repliedBy: string;
+  repliedAt: string;
+}
+
 interface Review {
   _id: string;
   rating: number;
@@ -49,6 +57,7 @@ interface Review {
     email: string;
     imageLink: string;
   } | null;
+  userId: string;
   business: string;
   googlePlaceId: string;
   createdAt: string;
@@ -57,11 +66,13 @@ interface Review {
     isReported: boolean;
     reportMessage: string;
   };
+  reply?: Reply[];
 }
 
 interface BusinessProfileProps {
   singleBusiness: {
     _id: string;
+    userId: string;
     businessInfo: {
       name: string;
       image: string[];
@@ -205,12 +216,12 @@ const ImageSlider = ({
   }, [images]);
 
   const nextImage = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Event bubbling বন্ধ করতে
+    e.stopPropagation();
     setCurrentImageIndex((prev) => (prev + 1) % uniqueImages.length);
   };
 
   const prevImage = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Event bubbling বন্ধ করতে
+    e.stopPropagation();
     setCurrentImageIndex(
       (prev) => (prev - 1 + uniqueImages.length) % uniqueImages.length,
     );
@@ -593,7 +604,29 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
     {},
   );
 
-  // ReviewItem component
+  // Format date function for replies
+  const formatReplyDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      return "Today";
+    } else if (diffDays === 1) {
+      return "Yesterday";
+    } else if (diffDays < 7) {
+      return `${diffDays} days ago`;
+    } else {
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    }
+  };
+
+  // ReviewItem component with reply display
   const ReviewItem = ({ review }: { review: Review }) => {
     const [expanded, setExpanded] = useState(false);
     const needsTruncation = review.feedback.length > 150;
@@ -660,12 +693,17 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
               )}
             </p>
 
+            {/* Review Images */}
             {review.image.length > 0 && (
-              <div className="flex gap-2 mt-3 overflow-x-auto">
+              <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
                 {review.image.map((img, index) => (
                   <div
                     key={index}
-                    className="w-16 h-16 md:w-20 md:h-20 relative flex-shrink-0"
+                    className="w-16 h-16 md:w-20 md:h-20 relative flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => {
+                      // You can add image lightbox functionality here
+                      console.log("Open image lightbox");
+                    }}
                   >
                     <Image
                       src={img}
@@ -673,6 +711,46 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
                       fill
                       className="object-cover rounded-md"
                     />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Business Replies Section */}
+            {review.reply && review.reply.length > 0 && (
+              <div className="mt-4 space-y-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <MessageCircle className="h-4 w-4 text-teal-500" />
+                  <h4 className="text-sm font-semibold text-gray-700">
+                    Business Responses
+                  </h4>
+                </div>
+                
+                {review.reply.map((reply, index) => (
+                  <div
+                    key={reply._id}
+                    className="pl-4 border-l-2 border-teal-200"
+                  >
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-medium text-teal-600">
+                            {reply.repliedBy === singleBusiness.userId 
+                              ? "Business Owner" 
+                              : "Staff"}
+                          </span>
+                          <span className="text-xs text-gray-400">
+                            • {formatReplyDate(reply.repliedAt)}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-700">{reply.text}</p>
+                    </div>
+                    
+                    {/* Add separator between multiple replies */}
+                    {review.reply && index < review.reply.length - 1 && (
+                      <div className="my-2 ml-2 w-0.5 h-4 bg-gray-200"></div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -685,7 +763,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
 
   const { mutateAsync: chatCreation } = useMutation({
     mutationKey: ["create-chat"],
-    mutationFn: async (data: { userId: string; bussinessId: string }) => {
+    mutationFn: async (data: { participants: { userId: string; role: string }[] }) => {
       try {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/chat/create`,
@@ -731,14 +809,22 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
   };
 
   const handleMessage = async () => {
-    if (!userId) {
+    if (!userId || !role) {
       toast.error("You must be logged in to send a message.");
       return;
     }
 
     const data = {
-      userId: userId,
-      bussinessId: singleBusiness._id,
+      participants: [
+        {
+          userId: userId,
+          role: role,
+        },
+        {
+          userId: singleBusiness.userId,
+          role: "businessMan",
+        },
+      ],
     };
 
     try {
@@ -757,6 +843,8 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
       }
     }
   };
+
+  console.log("singleBusiness", singleBusiness)
 
   // Combine all images from businessInfo.image and images array
   const allBusinessImages = [
