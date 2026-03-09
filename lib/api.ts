@@ -122,7 +122,9 @@ export async function getMyBusinesses() {
 // Get my chat (for user/customer)
 export async function getMyChat(userId: string, businessId?: string) {
   try {
-    const response = await api.get(`/chat/my-chat/${userId}?${businessId ? `businessId=${businessId}` : ""}`);
+    const response = await api.get(
+      `/chat/my-chat/${userId}?${businessId ? `businessId=${businessId}` : ""}`,
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching my chat:", error);
@@ -144,13 +146,36 @@ export async function getChatByBusinessMan(businessId: string) {
 // get messages
 export async function getMessages(data: any, businessId?: string) {
   try {
-    const response = await api.post(`/message/get-messages?businessId=${businessId}`, data);
+    const response = await api.post(
+      `/message/get-messages?${businessId ? `businessId=${businessId}` : ""}`,
+      data,
+    );
+    console.log("this is api response get-all message", response)
     return response.data;
   } catch (error) {
     console.error("Error fetching messages:", error);
     return error;
   }
 }
+
+// export async function getMessages(
+//   data: { chatId: string; userId: string },
+//   businessId?: string
+// ) {
+//   try {
+//     const response = await api.post("/message/get-messages", {
+//       ...data,
+//       businessId,
+//     });
+
+//     console.log("this is api response get-all message", response)
+
+//     return response.data;
+//   } catch (error) {
+//     console.error("Error fetching messages:", error);
+//     throw error;
+//   }
+// }
 
 // Send message
 export async function sendMessage({ data }: any) {
@@ -318,7 +343,10 @@ export async function getAllInstrument() {
 }
 
 //get all instrument types
-export async function getInstrumentTypes(selectedInstrumentsGroup: string, selectedInstrumentsGroupMusic: string) {
+export async function getInstrumentTypes(
+  selectedInstrumentsGroup: string,
+  selectedInstrumentsGroupMusic: string,
+) {
   try {
     const response = await api.get(
       `/instrument-family?name=${selectedInstrumentsGroup || selectedInstrumentsGroupMusic}&`,
