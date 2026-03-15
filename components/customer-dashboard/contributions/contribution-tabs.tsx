@@ -207,7 +207,7 @@ export default function ContributionTabs() {
             </h3>
           </div>
           {myPhotos?.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
               {myPhotos?.map(
                 (photo: {
                   business: { name: string; logo: string; price: number };
@@ -217,7 +217,7 @@ export default function ContributionTabs() {
                     key={photo?.business.name}
                     className="p-4 space-y-4 border shadow-md rounded-md"
                   >
-                    <div className="grid grid-cols-2 gap-2 items-center">
+                    <div className="grid grid-cols-6 gap-2 items-center">
                       {photo?.images?.map((image) => (
                         <div key={image?.url} className="relative">
                           <Image
@@ -225,15 +225,12 @@ export default function ContributionTabs() {
                             alt="Photo"
                             width={200}
                             height={200}
-                            className="w-full aspect-[5/4] rounded-lg object-contain"
+                            className="w-full aspect-[5/4] rounded-lg object-cover"
                           />
                           <div className="absolute right-2 top-2 flex gap-1 items-center">
                             <p className="bg-white text-black rounded-md px-4 py-1">
                               {image.status}
                             </p>
-                            <Button className="h-8 w-8 p-1 rounded-md bg-white text-black hover:bg-gray-100">
-                              <MoreVertical />
-                            </Button>
                           </div>
                         </div>
                       ))}
