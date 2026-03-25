@@ -1,14 +1,30 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { MoreVertical, Star } from "lucide-react";
+import { MoreVertical, Star, Edit, Trash2 } from "lucide-react";
 import BusinessCard from "@/components/shared/business-card";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getUserBusinesses, getUserPhotos, getUserReview } from "@/lib/api";
+import { useSession } from "next-auth/react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
+import EditReviewModal from "./edit-review-modal";
 
 export interface Review {
   _id: number;
@@ -40,24 +56,98 @@ interface Business {
   services: Service[];
 }
 
+// API functions
+const deleteReview = async ({
+  reviewId,
+  token,
+}: {
+  reviewId: number;
+  token: string;
+}) => {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/review/delete/${reviewId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to delete review");
+  }
+
+  return response.json();
+};
+
 export default function ContributionTabs() {
+  const session = useSession();
+  const token = session?.data?.user?.accessToken;
+  const queryClient = useQueryClient();
+
+  const [editingReview, setEditingReview] = useState<Review | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [reviewToDelete, setReviewToDelete] = useState<Review | null>(null);
+
   const { data: myReviews } = useQuery({
     queryKey: ["myReviews"],
     queryFn: getUserReview,
     select: (data) => data?.data,
+    enabled: !!token,
   });
 
   const { data: myPhotos } = useQuery({
     queryKey: ["myPhotos"],
     queryFn: getUserPhotos,
     select: (data) => data?.data,
+    enabled: !!token,
   });
 
   const { data: myBusinesses } = useQuery({
     queryKey: ["myBusinesses"],
     queryFn: getUserBusinesses,
     select: (data) => data?.data,
+    enabled: !!token,
   });
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: deleteReview,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["myReviews"] });
+      toast.success("Review deleted successfully");
+      setDeleteDialogOpen(false);
+      setReviewToDelete(null);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to delete review");
+    },
+  });
+
+  const handleEditClick = (review: Review) => {
+    setEditingReview(review);
+  };
+
+  const handleEditSuccess = () => {
+    // Invalidate and refetch reviews
+    queryClient.invalidateQueries({ queryKey: ["myReviews"] });
+    setEditingReview(null);
+  };
+
+  const handleDeleteClick = (review: Review) => {
+    setReviewToDelete(review);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!reviewToDelete || !token) return;
+
+    deleteMutation.mutate({
+      reviewId: reviewToDelete._id,
+      token,
+    });
+  };
 
   return (
     <div>
@@ -82,6 +172,7 @@ export default function ContributionTabs() {
             Businesses ({myBusinesses?.length})
           </TabsTrigger>
         </TabsList>
+
         <TabsContent value="reviews">
           <div className="py-4 flex justify-between items-center">
             <h3 className="text-lg font-semibold">
@@ -114,7 +205,6 @@ export default function ContributionTabs() {
                             <h3 className="text-lg font-semibold">
                               {review.user.name}
                             </h3>
-                            {/* <p className='text-base text-[#485150]'>{review.user.role}</p> */}
                           </div>
                         </div>
                         <div className="flex items-center gap-1 py-3">
@@ -142,7 +232,28 @@ export default function ContributionTabs() {
                         >
                           {review.status}
                         </p>
-                        <MoreVertical />
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => handleEditClick(review)}
+                            >
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteClick(review)}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                     <p className="text-base text-[#485150]">
@@ -199,6 +310,7 @@ export default function ContributionTabs() {
             </div>
           )}
         </TabsContent>
+
         <TabsContent value="photos">
           <div className="py-4 flex justify-between items-center">
             <h3 className="text-lg font-semibold mb-2">
@@ -263,6 +375,7 @@ export default function ContributionTabs() {
             </div>
           )}
         </TabsContent>
+
         <TabsContent value="businesses">
           <div className="py-4 flex justify-between items-center">
             <h3 className="text-lg font-semibold mb-2">
@@ -301,6 +414,45 @@ export default function ContributionTabs() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Edit Review Modal */}
+      <EditReviewModal
+        isOpen={!!editingReview}
+        setIsOpen={() => setEditingReview(null)}
+        review={editingReview}
+        onSuccess={handleEditSuccess}
+        token={token || ""}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Delete Review</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p>
+              Are you sure you want to delete this review? This action cannot be
+              undone.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDeleteConfirm}
+              disabled={deleteMutation.isPending}
+              variant="destructive"
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
