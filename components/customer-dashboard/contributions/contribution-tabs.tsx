@@ -319,7 +319,7 @@ export default function ContributionTabs() {
             </h3>
           </div>
           {myPhotos?.length > 0 ? (
-            <div>
+            <div className="grid grid-cols-4 gap-5">
               {myPhotos?.map(
                 (photo: {
                   business: { name: string; logo: string; price: number };
@@ -329,7 +329,7 @@ export default function ContributionTabs() {
                     key={photo?.business.name}
                     className="p-4 space-y-4 border shadow-md rounded-md"
                   >
-                    <div className="grid grid-cols-6 gap-2 items-center">
+                    <div>
                       {photo?.images?.map((image) => (
                         <div key={image?.url} className="relative">
                           <Image
