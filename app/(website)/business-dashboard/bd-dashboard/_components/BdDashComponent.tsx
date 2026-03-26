@@ -120,7 +120,7 @@ export default function BdDashComponent() {
             className={`px-4 py-2 rounded-md ${
               timeFilter === "day"
                 ? "bg-teal-500 hover:bg-teal-600 text-white"
-                : "text-gray-200 hover:bg-gray-100"
+                : "text-black bg-inherit"
             }`}
           >
             Day
@@ -131,7 +131,7 @@ export default function BdDashComponent() {
             className={`px-4 py-2 rounded-md ${
               timeFilter === "week"
                 ? "bg-teal-500 hover:bg-teal-600 text-white"
-                : "text-gray-200 hover:bg-gray-100"
+                : "text-black bg-inherit"
             }`}
           >
             Week
@@ -142,7 +142,7 @@ export default function BdDashComponent() {
             className={`px-4 py-2 rounded-md ${
               timeFilter === "month"
                 ? "bg-teal-500 hover:bg-teal-600 text-white"
-                : "text-gray-200 hover:bg-gray-100"
+                : "text-black bg-inherit"
             }`}
           >
             Month
