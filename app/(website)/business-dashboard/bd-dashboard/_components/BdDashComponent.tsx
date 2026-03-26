@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery } from "@tanstack/react-query";
@@ -7,7 +8,7 @@ import { getChatByBusinessMan, getMyReview } from "@/lib/api";
 import { useBusinessContext } from "@/lib/business-context";
 import Link from "next/link";
 import { ChevronRight, FileText, Loader, Star } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 
 interface Review {
@@ -28,6 +29,7 @@ interface AnalyticsData {
 
 export default function BdDashComponent() {
   const { selectedBusinessId } = useBusinessContext();
+  const [timeFilter, setTimeFilter] = useState<"day" | "week" | "month">("day");
   const session = useSession();
   const token = session?.data?.user?.accessToken;
 
@@ -47,10 +49,10 @@ export default function BdDashComponent() {
     isLoading: isAnalyticsLoading,
     refetch: refetchAnalytics,
   } = useQuery({
-    queryKey: ["analytics", selectedBusinessId],
+    queryKey: ["analytics", selectedBusinessId, timeFilter],
     queryFn: async () => {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/analytics/business-man/${selectedBusinessId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/analytics/business-man/${selectedBusinessId}?filter=${timeFilter}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -60,7 +62,7 @@ export default function BdDashComponent() {
       const result = await response.json();
       return result.data as AnalyticsData;
     },
-    enabled: !!token && !!selectedBusinessId,
+    enabled: !!selectedBusinessId,
   });
 
   const { data: allReview, isLoading: isReviewsLoading } = useQuery({
@@ -74,23 +76,26 @@ export default function BdDashComponent() {
       refetchAnalytics();
       refetchNewMessages();
     }
-  }, [selectedBusinessId, refetchAnalytics, refetchNewMessages]);
+  }, [selectedBusinessId, timeFilter, refetchAnalytics, refetchNewMessages]);
 
   // Prepare metrics data
   const metrics = [
     {
       name: "Reviews",
       value: analyticsData?.totalReviews || 0,
+      newCount: analyticsData?.newReviews || 0,
       bgColor: "bg-teal-500",
     },
     {
       name: "Photos",
       value: analyticsData?.totalPhotos || 0,
+      newCount: analyticsData?.newPhotos || 0,
       bgColor: "bg-yellow-500",
     },
     {
       name: "Saved",
-      value: 0, // You can add this to the analytics API if needed
+      value: 0,
+      newCount: 0,
       bgColor: "bg-purple-500",
     },
   ];
@@ -105,6 +110,43 @@ export default function BdDashComponent() {
             Monitor how your business is doing on Instrufx with important
             metrics
           </p>
+        </div>
+
+        {/* Time Period Selector */}
+        <div className="flex gap-1 rounded-lg">
+          <Button
+            size="sm"
+            onClick={() => setTimeFilter("day")}
+            className={`px-4 py-2 rounded-md ${
+              timeFilter === "day"
+                ? "bg-teal-500 hover:bg-teal-600 text-white"
+                : "text-gray-200 hover:bg-gray-100"
+            }`}
+          >
+            Day
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => setTimeFilter("week")}
+            className={`px-4 py-2 rounded-md ${
+              timeFilter === "week"
+                ? "bg-teal-500 hover:bg-teal-600 text-white"
+                : "text-gray-200 hover:bg-gray-100"
+            }`}
+          >
+            Week
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => setTimeFilter("month")}
+            className={`px-4 py-2 rounded-md ${
+              timeFilter === "month"
+                ? "bg-teal-500 hover:bg-teal-600 text-white"
+                : "text-gray-200 hover:bg-gray-100"
+            }`}
+          >
+            Month
+          </Button>
         </div>
       </div>
 
@@ -129,14 +171,10 @@ export default function BdDashComponent() {
                         metric.value
                       )}
                     </p>
-                    {metric.name === "Reviews" && analyticsData && (
+                    {(metric.name === "Reviews" ||
+                      metric.name === "Photos") && (
                       <p className="text-white/80 text-xs">
-                        {analyticsData.newReviews} new this period
-                      </p>
-                    )}
-                    {metric.name === "Photos" && analyticsData && (
-                      <p className="text-white/80 text-xs">
-                        {analyticsData.newPhotos} new this period
+                        +{metric.newCount} new this {timeFilter}
                       </p>
                     )}
                   </div>
