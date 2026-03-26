@@ -11,13 +11,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton"; // Add this import
+import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useBusinessContext } from "@/lib/business-context";
 import { getMyReview } from "@/lib/api";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 
 interface User {
   _id: string;
@@ -170,6 +171,8 @@ export default function ReviewsComponent() {
   const { selectedBusinessId } = useBusinessContext();
   const queryClient = useQueryClient();
   const [replyText, setReplyText] = useState<{ [key: string]: string }>({});
+  const [ratingFilter, setRatingFilter] = useState<string>("all");
+  const [sortFilter, setSortFilter] = useState<string>("latest");
   const session = useSession();
   const token = session?.data?.user?.accessToken;
 
@@ -177,6 +180,38 @@ export default function ReviewsComponent() {
     queryKey: ["reviews", selectedBusinessId],
     queryFn: () => getMyReview(selectedBusinessId as string),
   });
+
+  // Filter and sort reviews
+  const getFilteredAndSortedReviews = () => {
+    if (!data?.data) return [];
+
+    let filteredReviews = [...data.data];
+
+    // Apply rating filter
+    if (ratingFilter !== "all") {
+      const starValue = parseInt(ratingFilter);
+      filteredReviews = filteredReviews.filter(
+        (review) => Math.floor(review.rating) === starValue,
+      );
+    }
+
+    // Apply sorting
+    filteredReviews.sort((a, b) => {
+      if (sortFilter === "latest") {
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      } else {
+        return (
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      }
+    });
+
+    return filteredReviews;
+  };
+
+  const filteredReviews = getFilteredAndSortedReviews();
 
   // Reply mutation
   const replyMutation = useMutation({
@@ -307,18 +342,29 @@ export default function ReviewsComponent() {
 
         {/* Filter Dropdowns */}
         <div className="flex gap-3">
-          <Select defaultValue="all">
+          <Select
+            defaultValue="all"
+            value={ratingFilter}
+            onValueChange={setRatingFilter}
+          >
             <SelectTrigger className="w-32 text-sm">
               <SelectValue placeholder="All Reviews" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Reviews</SelectItem>
-              <SelectItem value="5star">5 Star</SelectItem>
-              <SelectItem value="4star">4 Star</SelectItem>
+              <SelectItem value="5">5 Star</SelectItem>
+              <SelectItem value="4">4 Star</SelectItem>
+              <SelectItem value="3">3 Star</SelectItem>
+              <SelectItem value="2">2 Star</SelectItem>
+              <SelectItem value="1">1 Star</SelectItem>
             </SelectContent>
           </Select>
 
-          <Select defaultValue="latest">
+          <Select
+            defaultValue="latest"
+            value={sortFilter}
+            onValueChange={setSortFilter}
+          >
             <SelectTrigger className="w-24 text-sm">
               <SelectValue placeholder="Latest" />
             </SelectTrigger>
@@ -374,8 +420,8 @@ export default function ReviewsComponent() {
 
       {/* Reviews List */}
       <div className="space-y-6">
-        {data?.data?.length ? (
-          data.data.map((review) => (
+        {filteredReviews.length ? (
+          filteredReviews.map((review) => (
             <Card
               key={review._id}
               className="border border-gray-200 overflow-hidden"
@@ -449,9 +495,11 @@ export default function ReviewsComponent() {
                     {review.image && review.image.length > 0 && (
                       <div className="flex gap-2 mt-3">
                         {review.image.map((img, index) => (
-                          <img
+                          <Image
                             key={index}
                             src={img}
+                            width={1000}
+                            height={1000}
                             alt={`Review image ${index + 1}`}
                             className="w-16 h-16 object-cover rounded-lg border border-gray-200"
                           />
