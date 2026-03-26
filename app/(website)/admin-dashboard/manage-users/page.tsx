@@ -253,7 +253,6 @@ export default function ManageUsersPage() {
               <SelectItem value="all">All</SelectItem>
               <SelectItem value="user">User</SelectItem>
               <SelectItem value="businessOwner">Business Owner</SelectItem>
-              <SelectItem value="businessMan">businessMan</SelectItem>
             </SelectContent>
           </Select>
         </div>

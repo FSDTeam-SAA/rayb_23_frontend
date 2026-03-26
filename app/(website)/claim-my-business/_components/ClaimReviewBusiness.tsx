@@ -40,13 +40,13 @@ interface Business {
 
 // Helper function to calculate average rating
 const calculateAverageRating = (reviews: Review[] = []) => {
-  if (!reviews || reviews.length === 0) return "0.0";
+  if (!reviews || reviews.length === 0) return null;
 
   // Only count approved reviews
   const approvedReviews = reviews.filter(
     (review) => review.status === "approved",
   );
-  if (approvedReviews.length === 0) return "0.0";
+  if (approvedReviews.length === 0) return null;
 
   const totalRating = approvedReviews.reduce((sum, review) => {
     return sum + review.rating;
@@ -224,81 +224,97 @@ const ClaimReviewBusiness = () => {
                       }
                     />
                   ) : (
-                    currentBusiness.map((business: Business) => (
-                      <div
-                        key={business?._id}
-                        className="bg-white rounded-lg shadow-[0px_2px_12px_0px_#003d3924] p-6"
-                      >
-                        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-5">
-                          {/* Profile Image */}
-                          <div className="flex-shrink-0 overflow-hidden rounded-lg w-full sm:w-auto">
-                            <Link href={`/search-result/${business?._id}`}>
-                              <Image
-                                src={
-                                  business?.businessInfo?.image?.[0] ||
-                                  "/placeholder.jpg"
-                                }
-                                alt="business.png"
-                                width={1000}
-                                height={1000}
-                                className="rounded-lg object-cover w-full sm:w-[200px] h-[200px] hover:scale-105 transition"
-                              />
-                            </Link>
-                          </div>
+                    currentBusiness.map((business: Business) => {
+                      const averageRating = calculateAverageRating(
+                        business?.review,
+                      );
 
-                          {/* Content */}
-                          <div className="flex-1 w-full">
-                            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                              <div>
-                                <Link href={`/search-result/${business?._id}`}>
-                                  <h3 className="text-lg font-semibold text-gray-900">
-                                    {business?.businessInfo?.name}
-                                  </h3>
-                                </Link>
+                      return (
+                        <div
+                          key={business?._id}
+                          className="bg-white rounded-lg shadow-[0px_2px_12px_0px_#003d3924] p-6"
+                        >
+                          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-5">
+                            {/* Profile Image */}
+                            <div className="flex-shrink-0 overflow-hidden rounded-lg w-full sm:w-auto">
+                              <Link href={`/search-result/${business?._id}`}>
+                                <Image
+                                  src={
+                                    business?.businessInfo?.image?.[0] ||
+                                    "/placeholder.jpg"
+                                  }
+                                  alt="business.png"
+                                  width={1000}
+                                  height={1000}
+                                  className="rounded-lg object-cover w-full sm:w-[200px] h-[200px] hover:scale-105 transition"
+                                />
+                              </Link>
+                            </div>
 
-                                {/* Dynamic Rating - Now calculates actual average */}
-                                <div className="flex items-center gap-1 my-3">
-                                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                  <span className="text-sm font-medium">
-                                    {calculateAverageRating(business?.review)}
-                                  </span>
+                            {/* Content */}
+                            <div className="flex-1 w-full">
+                              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                                <div>
+                                  <Link
+                                    href={`/search-result/${business?._id}`}
+                                  >
+                                    <h3 className="text-lg font-semibold text-gray-900">
+                                      {business?.businessInfo?.name}
+                                    </h3>
+                                  </Link>
+
+                                  {/* Dynamic Rating - Shows message when no reviews */}
+                                  <div className="flex items-center gap-1 my-3">
+                                    {!averageRating ? (
+                                      <span className="text-sm text-gray-500">
+                                        No reviews yet
+                                      </span>
+                                    ) : (
+                                      <>
+                                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                        <span className="text-sm font-medium">
+                                          {averageRating}
+                                        </span>
+                                      </>
+                                    )}
+                                  </div>
+
+                                  {/* Services */}
+                                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                                    {business?.instrumentInfo?.map(
+                                      (service, index) => (
+                                        <button
+                                          className="h-[48px] px-5 rounded-lg bg-[#F8F8F8]"
+                                          key={index}
+                                        >
+                                          {service?.serviceName}
+                                        </button>
+                                      ),
+                                    )}
+                                  </div>
                                 </div>
 
-                                {/* Services */}
-                                <div className="flex flex-wrap items-center gap-2 mb-2">
-                                  {business?.instrumentInfo?.map(
-                                    (service, index) => (
-                                      <button
-                                        className="h-[48px] px-5 rounded-lg bg-[#F8F8F8]"
-                                        key={index}
-                                      >
-                                        {service?.serviceName}
-                                      </button>
-                                    ),
-                                  )}
+                                {/* Action Button */}
+                                <div className="mt-4 lg:mt-0 w-full sm:w-auto">
+                                  <button
+                                    onClick={() => {
+                                      if (status === "unauthenticated") {
+                                        return setLoginModalOpen(true);
+                                      }
+                                      setIsOpen(true);
+                                      setBusinessID(business?._id);
+                                    }}
+                                    className="w-full sm:w-[180px] bg-[#e0f2f1] h-[48px] text-[#139a8e] px-5 rounded-lg"
+                                  >
+                                    Review Business
+                                  </button>
                                 </div>
-                              </div>
-
-                              {/* Action Button */}
-                              <div className="mt-4 lg:mt-0 w-full sm:w-auto">
-                                <button
-                                  onClick={() => {
-                                    if (status === "unauthenticated") {
-                                      return setLoginModalOpen(true);
-                                    }
-                                    setIsOpen(true);
-                                    setBusinessID(business?._id);
-                                  }}
-                                  className="w-full sm:w-[180px] bg-[#e0f2f1] h-[48px] text-[#139a8e] px-5 rounded-lg"
-                                >
-                                  Review Business
-                                </button>
                               </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </>
               )}
@@ -308,82 +324,98 @@ const ClaimReviewBusiness = () => {
                   {unClaimedBusiness.length === 0 ? (
                     <EmptyState message="No unclaimed businesses available at the moment." />
                   ) : (
-                    unClaimedBusiness.map((business: Business) => (
-                      <div
-                        key={business?._id}
-                        className="bg-white rounded-lg shadow-[0px_2px_12px_0px_#003d3924] p-6"
-                      >
-                        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-5">
-                          {/* Profile Image */}
-                          <div className="flex-shrink-0 overflow-hidden rounded-lg w-full sm:w-auto">
-                            <Link href={`/search-result/${business?._id}`}>
-                              <Image
-                                src={
-                                  business?.businessInfo?.image?.[0] ||
-                                  "/placeholder.jpg"
-                                }
-                                alt="business.png"
-                                width={1000}
-                                height={1000}
-                                className="rounded-lg object-cover w-full sm:w-[200px] h-[200px] hover:scale-105 transition"
-                              />
-                            </Link>
-                          </div>
+                    unClaimedBusiness.map((business: Business) => {
+                      const averageRating = calculateAverageRating(
+                        business?.review,
+                      );
 
-                          {/* Content */}
-                          <div className="flex-1 w-full">
-                            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                              <div>
-                                <Link href={`/search-result/${business?._id}`}>
-                                  <h3 className="text-lg font-semibold text-gray-900">
-                                    {business?.businessInfo?.name}
-                                  </h3>
-                                </Link>
+                      return (
+                        <div
+                          key={business?._id}
+                          className="bg-white rounded-lg shadow-[0px_2px_12px_0px_#003d3924] p-6"
+                        >
+                          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-5">
+                            {/* Profile Image */}
+                            <div className="flex-shrink-0 overflow-hidden rounded-lg w-full sm:w-auto">
+                              <Link href={`/search-result/${business?._id}`}>
+                                <Image
+                                  src={
+                                    business?.businessInfo?.image?.[0] ||
+                                    "/placeholder.jpg"
+                                  }
+                                  alt="business.png"
+                                  width={1000}
+                                  height={1000}
+                                  className="rounded-lg object-cover w-full sm:w-[200px] h-[200px] hover:scale-105 transition"
+                                />
+                              </Link>
+                            </div>
 
-                                {/* Dynamic Rating - For unclaimed businesses too */}
-                                <div className="flex items-center gap-1 my-3">
-                                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                  <span className="text-sm font-medium">
-                                    {calculateAverageRating(business?.review)}
-                                  </span>
+                            {/* Content */}
+                            <div className="flex-1 w-full">
+                              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                                <div>
+                                  <Link
+                                    href={`/search-result/${business?._id}`}
+                                  >
+                                    <h3 className="text-lg font-semibold text-gray-900">
+                                      {business?.businessInfo?.name}
+                                    </h3>
+                                  </Link>
+
+                                  {/* Dynamic Rating - Shows message when no reviews */}
+                                  <div className="flex items-center gap-1 my-3">
+                                    {!averageRating ? (
+                                      <span className="text-sm text-gray-500">
+                                        No reviews yet
+                                      </span>
+                                    ) : (
+                                      <>
+                                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                        <span className="text-sm font-medium">
+                                          {averageRating}
+                                        </span>
+                                      </>
+                                    )}
+                                  </div>
+
+                                  {/* Services */}
+                                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                                    {business?.instrumentInfo?.map(
+                                      (service, index) => (
+                                        <button
+                                          className="h-[48px] px-5 rounded-lg bg-[#F8F8F8]"
+                                          key={index}
+                                        >
+                                          {service?.serviceName}
+                                        </button>
+                                      ),
+                                    )}
+                                  </div>
                                 </div>
 
-                                {/* Services */}
-                                <div className="flex flex-wrap items-center gap-2 mb-2">
-                                  {business?.instrumentInfo?.map(
-                                    (service, index) => (
-                                      <button
-                                        className="h-[48px] px-5 rounded-lg bg-[#F8F8F8]"
-                                        key={index}
-                                      >
-                                        {service?.serviceName}
-                                      </button>
-                                    ),
-                                  )}
+                                {/* Action Button */}
+                                <div className="mt-4 lg:mt-0 w-full sm:w-auto">
+                                  <button
+                                    onClick={() => {
+                                      if (status === "unauthenticated") {
+                                        return setLoginModalOpen(true);
+                                      }
+                                      route.push(
+                                        `/claim-my-business/${business?._id}`,
+                                      );
+                                    }}
+                                    className="w-full sm:w-[180px] bg-[#e0f2f1] h-[48px] text-[#139a8e] px-5 rounded-lg"
+                                  >
+                                    Claim Business
+                                  </button>
                                 </div>
-                              </div>
-
-                              {/* Action Button */}
-                              <div className="mt-4 lg:mt-0 w-full sm:w-auto">
-                                <button
-                                  onClick={() => {
-                                    if (status === "unauthenticated") {
-                                      return setLoginModalOpen(true);
-                                    }
-                                    route.push(
-                                      `/claim-my-business/${business?._id}`,
-                                    );
-                                  }}
-                                  className="w-full sm:w-[180px] bg-[#e0f2f1] h-[48px] text-[#139a8e] px-5 rounded-lg"
-                                >
-                                  Claim Business
-                                </button>
                               </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </>
               )}

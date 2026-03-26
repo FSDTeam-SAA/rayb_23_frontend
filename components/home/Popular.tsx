@@ -13,6 +13,12 @@ import "swiper/css/pagination";
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+interface Review {
+  _id: string;
+  rating: number;
+  status: string;
+}
+
 interface BusinessItem {
   email: string;
   name: string;
@@ -25,11 +31,28 @@ interface Service {
 
 interface Business {
   _id: string;
-  review: string;
+  review: Review[];
   businessInfo: BusinessItem;
   services: Service[];
   images?: string[];
 }
+
+// Helper function to calculate average rating - same as in ClaimReviewBusiness
+const calculateAverageRating = (reviews: Review[] = []) => {
+  if (!reviews || reviews.length === 0) return null;
+
+  // Only count approved reviews
+  const approvedReviews = reviews.filter(
+    (review) => review.status === "approved",
+  );
+  if (approvedReviews.length === 0) return null;
+
+  const totalRating = approvedReviews.reduce((sum, review) => {
+    return sum + review.rating;
+  }, 0);
+
+  return (totalRating / approvedReviews.length).toFixed(1);
+};
 
 // Skeleton component
 const SkeletonCard = () => {
@@ -133,35 +156,45 @@ const Popular = () => {
               }}
               loop={true}
             >
-              {allBusiness?.slice(0, 12)?.map((business: Business) => (
-                <SwiperSlide key={business?._id}>
-                  <div 
-                    className="bg-white rounded-lg border border-gray-100 shadow-[0px_2px_12px_0px_#003D3914] p-6 h-[500px] cursor-pointer"
-                    onClick={() => handleCardClick(business._id)}
-                  >
-                    <div className="space-y-5 h-full">
-                      {/* Profile Image Slider with Arrows */}
-                      <div className="flex-shrink-0 overflow-hidden rounded-lg relative group">
-                        <Swiper
-                          modules={[Navigation, Autoplay]}
-                          navigation={{
-                            nextEl: `.next-${business?._id}`,
-                            prevEl: `.prev-${business?._id}`,
-                          }}
-                          autoplay={{
-                            delay: 4000,
-                            disableOnInteraction: false,
-                            pauseOnMouseEnter: true,
-                          }}
-                          loop={business?.images && business.images.length > 1}
-                          className="w-full h-[250px] rounded-lg"
-                        >
-                          {(business?.images || business?.businessInfo?.image || []).map(
-                            (img, index) => (
+              {allBusiness?.slice(0, 12)?.map((business: Business) => {
+                const averageRating = calculateAverageRating(business?.review);
+
+                return (
+                  <SwiperSlide key={business?._id}>
+                    <div
+                      className="bg-white rounded-lg border border-gray-100 shadow-[0px_2px_12px_0px_#003D3914] p-6 h-[500px] cursor-pointer"
+                      onClick={() => handleCardClick(business._id)}
+                    >
+                      <div className="space-y-5 h-full">
+                        {/* Profile Image Slider with Arrows */}
+                        <div className="flex-shrink-0 overflow-hidden rounded-lg relative group">
+                          <Swiper
+                            modules={[Navigation, Autoplay]}
+                            navigation={{
+                              nextEl: `.next-${business?._id}`,
+                              prevEl: `.prev-${business?._id}`,
+                            }}
+                            autoplay={{
+                              delay: 4000,
+                              disableOnInteraction: false,
+                              pauseOnMouseEnter: true,
+                            }}
+                            loop={
+                              business?.images && business.images.length > 1
+                            }
+                            className="w-full h-[250px] rounded-lg"
+                          >
+                            {(
+                              business?.images ||
+                              business?.businessInfo?.image ||
+                              []
+                            ).map((img, index) => (
                               <SwiperSlide key={index}>
-                                <div 
+                                <div
                                   className="w-full h-full cursor-pointer"
-                                  onClick={(e) => handleImageClick(e, business._id)}
+                                  onClick={(e) =>
+                                    handleImageClick(e, business._id)
+                                  }
                                 >
                                   <Image
                                     src={img}
@@ -174,110 +207,100 @@ const Popular = () => {
                                   />
                                 </div>
                               </SwiperSlide>
-                            )
-                          )}
-                        </Swiper>
+                            ))}
+                          </Swiper>
 
-                        {/* Custom Arrow Buttons - Always Visible */}
-                        {(business?.images || business?.businessInfo?.image || []).length > 1 && (
-                          <>
-                            <button
-                              className={`prev-${business?._id} absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full transition-all duration-200 opacity-100 z-10`}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <ChevronLeft className="h-4 w-4" />
-                            </button>
-                            <button
-                              className={`next-${business?._id} absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full transition-all duration-200 opacity-100 z-10`}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <ChevronRight className="h-4 w-4" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-
-                      {/* Content */}
-                      <div className="flex-1 flex flex-col">
-                        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                          <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-gray-900">
-                              {business?.businessInfo?.name}
-                            </h3>
-
-                            <div className="my-3 flex items-center gap-2">
-                              {!business?.review || business?.review?.length === 0 ? (
-                                <span className="text-sm text-gray-500">
-                                  No reviews
-                                </span>
-                              ) : business?.review?.length === 1 ? (
-                                <div className="flex items-center gap-1">
-                                  <Star className="fill-yellow-400 text-yellow-400 font-bold h-4 w-4" />
-                                  <span className="text-sm text-gray-700">
-                                    5.0
-                                  </span>
-                                  <span className="text-xs flex items-center gap-1">
-                                    <Image
-                                      src="/images/google.jpeg"
-                                      alt="google"
-                                      width={1000}
-                                      height={1000}
-                                      className="h-4 w-4"
-                                    />
-                                  </span>
-                                </div>
-                              ) : (
-                                <div className="flex items-center gap-1">
-                                  <Star className="fill-yellow-400 text-yellow-400 font-bold h-4 w-4" />
-                                  <span>{business?.review?.length}</span>
-                                  <span className="text-xs flex items-center gap-1">
-                                    <Image
-                                      src="/images/google.jpeg"
-                                      alt="google"
-                                      width={1000}
-                                      height={1000}
-                                      className="h-4 w-4"
-                                    />
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Services */}
-                            <div className="flex items-center gap-2">
-                              <div className="flex items-center gap-2 mb-2">
-                                {business?.services
-                                  ?.slice(0, 2)
-                                  ?.map((service, index) => (
-                                    <button
-                                      className="h-[52px] px-5 rounded-lg bg-[#F8F8F8]"
-                                      key={index}
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      {service?.newInstrumentName}
-                                    </button>
-                                  ))}
-                              </div>
-                            </div>
-
-                            <div>
-                              <button 
-                                className="text-primary mt-2 font-semibold"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleCardClick(business._id);
-                                }}
+                          {/* Custom Arrow Buttons - Always Visible */}
+                          {(
+                            business?.images ||
+                            business?.businessInfo?.image ||
+                            []
+                          ).length > 1 && (
+                            <>
+                              <button
+                                className={`prev-${business?._id} absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full transition-all duration-200 opacity-100 z-10`}
+                                onClick={(e) => e.stopPropagation()}
                               >
-                                See More
+                                <ChevronLeft className="h-4 w-4" />
                               </button>
+                              <button
+                                className={`next-${business?._id} absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full transition-all duration-200 opacity-100 z-10`}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <ChevronRight className="h-4 w-4" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 flex flex-col">
+                          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                            <div className="flex-1">
+                              <h3 className="text-lg font-semibold text-gray-900">
+                                {business?.businessInfo?.name}
+                              </h3>
+
+                              <div className="my-3 flex items-center gap-2">
+                                {!averageRating ? (
+                                  <span className="text-sm text-gray-500">
+                                    No reviews
+                                  </span>
+                                ) : (
+                                  <div className="flex items-center gap-1">
+                                    <Star className="fill-yellow-400 text-yellow-400 font-bold h-4 w-4" />
+                                    <span className="text-sm text-gray-700">
+                                      {averageRating}
+                                    </span>
+                                    <span className="text-xs flex items-center gap-1">
+                                      <Image
+                                        src="/images/google.jpeg"
+                                        alt="google"
+                                        width={1000}
+                                        height={1000}
+                                        className="h-4 w-4"
+                                      />
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Services */}
+                              <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 mb-2">
+                                  {business?.services
+                                    ?.slice(0, 2)
+                                    ?.map((service, index) => (
+                                      <button
+                                        className="h-[52px] px-5 rounded-lg bg-[#F8F8F8]"
+                                        key={index}
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        {service?.newInstrumentName}
+                                      </button>
+                                    ))}
+                                </div>
+                              </div>
+
+                              <div>
+                                <button
+                                  className="text-primary mt-2 font-semibold"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleCardClick(business._id);
+                                  }}
+                                >
+                                  See More
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </SwiperSlide>
-              ))}
+                  </SwiperSlide>
+                );
+              })}
             </Swiper>
           )}
         </div>
