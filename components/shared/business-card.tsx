@@ -5,6 +5,12 @@ import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
+interface Review {
+  _id: string;
+  rating: number;
+  status: string;
+}
+
 interface BusinessItem {
   email: string;
   name: string;
@@ -19,15 +25,36 @@ interface Business {
   _id: string;
   businessInfo: BusinessItem;
   services: Service[];
+  review: Review[];
 }
 
 interface BusinessCardProps {
   business: Business;
 }
 
+// Helper function to calculate average rating
+const calculateAverageRating = (reviews: Review[] = []) => {
+  if (!reviews || reviews.length === 0) return null;
+
+  // Only count approved reviews
+  const approvedReviews = reviews.filter(
+    (review) => review.status === "approved",
+  );
+  if (approvedReviews.length === 0) return null;
+
+  const totalRating = approvedReviews.reduce((sum, review) => {
+    return sum + review.rating;
+  }, 0);
+
+  return (totalRating / approvedReviews.length).toFixed(1);
+};
+
 export default function BusinessCard({ business }: BusinessCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const images = business?.businessInfo?.image || [];
+  
+  // Calculate average rating
+  const averageRating = calculateAverageRating(business?.review);
 
   const nextImage = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -114,10 +141,18 @@ export default function BusinessCard({ business }: BusinessCardProps) {
                   {business?.businessInfo?.name}
                 </h3>
 
-                {/* Rating */}
+                {/* Rating - Shows message when no reviews */}
                 <div className="flex items-center gap-1 my-3">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span className="text-sm font-medium">{"3.7"}</span>
+                  {!averageRating ? (
+                    <span className="text-sm text-gray-500">
+                      No reviews yet
+                    </span>
+                  ) : (
+                    <>
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <span className="text-sm font-medium">{averageRating}</span>
+                    </>
+                  )}
                 </div>
 
                 {/* Services */}
