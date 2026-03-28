@@ -98,7 +98,7 @@ export async function getUserPhotos() {
 // Get user businesses
 export async function getUserBusinesses() {
   try {
-    const response = await api.get(`/business/my-add-business`);
+    const response = await api.get(`/business/my-approved-business`);
     return response.data;
   } catch (error) {
     console.error("Error fetching user businesses:", error);

@@ -58,6 +58,7 @@ const defaultTime = {
 const AddBusiness = () => {
   const session = useSession();
   const isLoggedIn = session?.status;
+  const userEmail = session?.data?.user?.email;
   const pathName = usePathname();
 
   const { selectedBusinessId } = useBusinessContext();
@@ -534,6 +535,7 @@ const AddBusiness = () => {
       offerMusicLessons: selectedMusic.length > 0,
       status: "pending",
       isVerified: false,
+      email: userEmail || "",
     };
 
     formData.append("data", JSON.stringify(businessData));

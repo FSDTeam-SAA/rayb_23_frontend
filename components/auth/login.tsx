@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,19 +17,32 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Eye, EyeOff, Mail, Lock, Loader } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  Loader,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
 
 const signUpFormSchema = z.object({
-  email: z.string().email({ message: "Invalid email" }).transform((val) => val.toLowerCase()),
+  email: z
+    .string()
+    .email({ message: "Invalid email" })
+    .transform((val) => val.toLowerCase()),
   password: z
     .string()
     .min(8, { message: "Password must be at least 8 characters" }),
 });
+
+// API function to restore flag
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -35,6 +50,65 @@ export default function LoginForm() {
   const router = useRouter();
   const [suspended, setSuspended] = useState(false);
   const [deleted, setDeleted] = useState(false);
+  const [showRestoredMessage, setShowRestoredMessage] = useState(false);
+  const [showRestoreFlagButton, setShowRestoreFlagButton] = useState(false);
+  const { data: session, update } = useSession();
+  const token = session?.user?.accessToken;
+  const queryClient = useQueryClient();
+
+  // Check for justRestored flag from session
+  useEffect(() => {
+    if (session?.user?.justRestored === true) {
+      setShowRestoredMessage(true);
+      setShowRestoreFlagButton(false);
+    } else if (session?.user?.justRestored === false && session?.user?.id) {
+      // If justRestored is false but user is logged in, show the restore button
+      setShowRestoreFlagButton(true);
+    }
+  }, [session]);
+
+  const restoreFlag = async () => {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/auth/restore-flag`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to restore flag");
+    }
+
+    return response.json();
+  };
+
+  // Restore flag mutation
+  const restoreFlagMutation = useMutation({
+    mutationFn: restoreFlag,
+    onSuccess: () => {
+      toast.success("Restore flag cleared successfully!");
+
+      update({
+        ...session,
+        user: {
+          ...session?.user,
+          justRestored: false,
+        },
+      });
+      // Invalidate and refetch queries if needed
+      queryClient.invalidateQueries({ queryKey: ["userData"] });
+      setShowRestoreFlagButton(false);
+      router.push("/");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to restore flag. Please try again.");
+    },
+  });
 
   const signUpForm = useForm<z.infer<typeof signUpFormSchema>>({
     resolver: zodResolver(signUpFormSchema),
@@ -68,13 +142,27 @@ export default function LoginForm() {
         redirect: false,
       });
 
+      console.log("res: ", res);
+
       if (res?.ok) {
-        // reset attempts only for this email
         attemptsObj[email] = 0;
         localStorage.setItem("failedAttempts", JSON.stringify(attemptsObj));
 
-        router.push("/");
-        router.refresh();
+        // Get the session manually
+        const sessionRes = await fetch("/api/auth/session");
+        const sessionData = await sessionRes.json();
+
+        console.log("Session data:", sessionData);
+
+        if (sessionData?.user?.justRestored === true) {
+          // Show restored message without any redirect
+          setShowRestoredMessage(true);
+          setIsLoading(false);
+          return;
+        }
+
+        // Normal login - redirect to home
+        window.location.href = "/";
         return;
       }
 
@@ -95,13 +183,13 @@ export default function LoginForm() {
         } else {
           if (
             res?.error?.includes(
-              "Your account is suspended. Please contact support."
+              "Your account is suspended. Please contact support.",
             )
           ) {
             setSuspended(true);
           } else if (
             res?.error?.includes(
-              "Your account is deleted. Please contact support."
+              "Your account is deleted. Please contact support.",
             )
           ) {
             setDeleted(true);
@@ -123,6 +211,11 @@ export default function LoginForm() {
     }
   };
 
+  // Handle navigation to home
+  const handleGoToHome = () => {
+    window.location.href = "/";
+  };
+
   if (suspended) {
     return (
       <section className="lg:py-20 py-10 flex justify-center items-center">
@@ -130,9 +223,9 @@ export default function LoginForm() {
           <div className="text-center space-y-4 lg:pb-10">
             <h2 className="lg:text-3xl font-bold">Limited Access</h2>
             <p className="text-[#485150] lg:text-base">
-              We’ve temporarily limited your access due to a violation of our
-              community guidelines. If you believe this was a mistake, please
-              contact support for clarification.
+              We&apos;ve temporarily limited your access due to a violation of
+              our community guidelines. If you believe this was a mistake,
+              please contact support for clarification.
             </p>
             <Image
               src="/images/suspended.png"
@@ -152,6 +245,69 @@ export default function LoginForm() {
     );
   }
 
+  if (showRestoredMessage) {
+    return (
+      <section className="lg:py-20 py-10 flex justify-center items-center">
+        <div className="max-w-2xl mx-auto w-full px-4">
+          <div className="text-center space-y-6 lg:pb-10">
+            <h2 className="lg:text-3xl font-bold">Access Restored</h2>
+            <p className="text-[#485150] lg:text-base">
+              We&apos;ve reviewed your profile and restored your access. Thanks
+              for working with us to keep the community respectful and helpful.
+            </p>
+            <div>
+              <Image
+                src={"/right-sign.png"}
+                alt="img.png"
+                width={1000}
+                height={1000}
+                className="w-40 h-40 mx-auto"
+              />
+            </div>
+            <Button
+              variant="default"
+              className="w-full text-lg"
+              onClick={handleGoToHome}
+            >
+              Go to Home
+            </Button>
+          </div>
+
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="text-blue-600 w-5 h-5" />
+                <p className="text-sm text-blue-800">
+                  Your account has been restored. Clear the restore flag to
+                  continue.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => restoreFlagMutation.mutate()}
+                disabled={restoreFlagMutation.isPending}
+                className="bg-white hover:bg-blue-50"
+              >
+                {restoreFlagMutation.isPending ? (
+                  <>
+                    <Loader className="mr-2 h-4 w-4 animate-spin" />
+                    Clearing...
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="mr-2 h-4 w-4 text-red-500" />
+                    Clear Restore Flag
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="lg:py-20 py-10 flex justify-center items-center">
       <div className="max-w-3xl mx-auto w-full px-4">
@@ -161,6 +317,7 @@ export default function LoginForm() {
             Please login to enjoy all features of instrufix.
           </p>
         </div>
+
         <Form {...signUpForm}>
           <form
             onSubmit={signUpForm.handleSubmit(onSubmit)}

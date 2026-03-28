@@ -50,10 +50,17 @@ interface Service {
   newInstrumentName: string;
 }
 
+interface ReviewType {
+  _id: string;
+  rating: number;
+  status: string;
+}
+
 interface Business {
   _id: string;
   businessInfo: BusinessItem;
   services: Service[];
+  review: ReviewType[]; // Add the review property
 }
 
 // API functions
@@ -65,7 +72,7 @@ const deleteReview = async ({
   token: string;
 }) => {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/review/delete/${reviewId}`,
+    `${process.env.NEXT_PUBLIC_API_URL}/review/delete-Review/${reviewId}`,
     {
       method: "DELETE",
       headers: {

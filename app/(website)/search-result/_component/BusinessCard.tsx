@@ -5,6 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
+interface Review {
+  _id: string;
+  rating: number;
+  status: string;
+}
+
 interface BusinessItem {
   email: string;
   name: string;
@@ -26,10 +32,27 @@ interface Service {
 interface Business {
   _id: string;
   businessInfo: BusinessItem;
-  review?: string;
+  review: Review[];
   services: Service[];
   images?: string[];
 }
+
+// Helper function to calculate average rating
+const calculateAverageRating = (reviews: Review[] = []) => {
+  if (!reviews || reviews.length === 0) return null;
+
+  // Only count approved reviews
+  const approvedReviews = reviews.filter(
+    (review) => review.status === "approved",
+  );
+  if (approvedReviews.length === 0) return null;
+
+  const totalRating = approvedReviews.reduce((sum, review) => {
+    return sum + review.rating;
+  }, 0);
+
+  return (totalRating / approvedReviews.length).toFixed(1);
+};
 
 const BusinessCard = ({ business }: { business: Business }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -50,6 +73,9 @@ const BusinessCard = ({ business }: { business: Business }) => {
   const goToImage = (index: number) => {
     setCurrentImageIndex(index);
   };
+
+  // Calculate average rating
+  const averageRating = calculateAverageRating(business?.review);
 
   // Price display function
   const getDisplayPrice = (service: Service) => {
@@ -72,19 +98,19 @@ const BusinessCard = ({ business }: { business: Business }) => {
   // Filter services based on search or serviceTag
   const filteredServices = business?.services?.filter((service) => {
     const serviceName = service?.newInstrumentName?.toLowerCase() || "";
-    
+
     // If there's a search term, filter by it
     if (search?.trim()) {
       return serviceName.includes(search.toLowerCase().trim());
     }
-    
+
     // If there's a serviceTag, filter by it
     if (serviceTag && serviceTag.length > 0) {
-      return serviceTag.some(tag => 
-        serviceName.includes(tag.label?.toLowerCase()?.trim())
+      return serviceTag.some((tag) =>
+        serviceName.includes(tag.label?.toLowerCase()?.trim()),
       );
     }
-    
+
     // If neither search nor serviceTag, return all services
     return true;
   });
@@ -98,7 +124,10 @@ const BusinessCard = ({ business }: { business: Business }) => {
               {/* Image Slider */}
               <div className="relative w-full sm:w-[200px] h-[160px] sm:h-[200px] rounded-lg overflow-hidden">
                 <Image
-                  src={business?.businessInfo?.image[currentImageIndex] || "/placeholder-image.jpg"}
+                  src={
+                    business?.businessInfo?.image[currentImageIndex] ||
+                    "/placeholder-image.jpg"
+                  }
                   alt={business?.businessInfo?.name || "Business image"}
                   width={200}
                   height={200}
@@ -169,27 +198,14 @@ const BusinessCard = ({ business }: { business: Business }) => {
                   </h3>
 
                   <div className="my-3 flex items-center gap-2">
-                    {business?.review?.length === 0 ? (
+                    {!averageRating ? (
                       <span className="text-sm text-gray-500">No reviews</span>
-                    ) : business?.review?.length === 1 ? (
-                      <div className="flex items-center gap-1">
-                        {/* Single 5-star */}
-                        <Star className="fill-yellow-400 text-yellow-400 font-bold h-4 w-4" />
-                        <span className="text-sm text-gray-700">5.0</span>
-                        <span className="text-xs flex items-center gap-1">
-                          <Image
-                            src="/images/google.jpeg"
-                            alt="google"
-                            width={1000}
-                            height={1000}
-                            className="h-4 w-4"
-                          />
-                        </span>
-                      </div>
                     ) : (
                       <div className="flex items-center gap-1">
                         <Star className="fill-yellow-400 text-yellow-400 font-bold h-4 w-4" />
-                        <span>{business?.review?.length}</span>
+                        <span className="text-sm text-gray-700">
+                          {averageRating}
+                        </span>
                         <span className="text-xs flex items-center gap-1">
                           <Image
                             src="/images/google.jpeg"
