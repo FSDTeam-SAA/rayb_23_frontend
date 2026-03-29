@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useQuery } from "@tanstack/react-query";
 import React from "react";
@@ -9,6 +10,12 @@ import Pagination from "./Pagination";
 import AddBusinessSection from "@/components/shared/AddBusinessSection";
 import { useFilterStore } from "@/zustand/stores/search-store";
 import { useSearchStore } from "@/components/home/states/useSearchStore";
+
+interface Review {
+  _id: string;
+  rating: number;
+  status: string;
+}
 
 interface BusinessItem {
   email: string;
@@ -31,9 +38,11 @@ interface Service {
 interface Business {
   _id: string;
   businessInfo: BusinessItem;
-  review?: string;
+  review: Review[]; // Changed from string | undefined to Review[]
   services: Service[];
+  images?: string[]; // Add this if your business data includes images
 }
+
 const BusinessInfo = () => {
   const [page, setPage] = React.useState(1);
   const limit = 5;
@@ -103,6 +112,16 @@ const BusinessInfo = () => {
 
       const res = await fetch(url);
       const data = await res.json();
+
+      // Ensure review is always an array
+      if (data.data) {
+        data.data = data.data.map((business: any) => ({
+          ...business,
+          review: business.review || [], // Convert undefined or null to empty array
+          images: business.images || business.businessInfo?.image || [], // Ensure images array exists
+        }));
+      }
+
       return data;
     },
   });
