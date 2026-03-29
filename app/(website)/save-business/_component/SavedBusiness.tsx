@@ -28,7 +28,11 @@ interface SavedBusiness {
       selectedInstrumentsGroup: string;
       instrumentFamily: string;
     }>;
-    // Other properties from your data structure
+    review?: Array<{
+      _id: string;
+      rating: number;
+      status: string;
+    }>;
   };
 }
 
@@ -49,7 +53,7 @@ const SavedBusiness = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -91,19 +95,19 @@ const SavedBusiness = () => {
       <h1 className="text-2xl font-bold mb-6">Your Saved Businesses</h1>
       <div className="space-y-6">
         {data.data.map((item: SavedBusiness) => {
-          // Transform the data to match BusinessCard props
           const business = {
             _id: item.savedBusiness._id,
             businessInfo: item.savedBusiness.businessInfo,
             services: item.savedBusiness.services,
+            review: item.savedBusiness.review || [],
             instrumentInfo: item.savedBusiness.services.map((service) => ({
               newInstrumentName: service.selectedInstrumentsGroup,
               price:
                 service.pricingType === "exact"
                   ? service.price
                   : service.pricingType === "range"
-                  ? `${service.minPrice}-${service.maxPrice}`
-                  : `${service.price}/hr`,
+                    ? `${service.minPrice}-${service.maxPrice}`
+                    : `${service.price}/hr`,
             })),
           };
 
