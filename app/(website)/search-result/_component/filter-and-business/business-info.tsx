@@ -104,7 +104,7 @@ const BusinessInfo = () => {
         instrumentTag[0]?.label || ""
       }&newInstrumentName=${
         serviceTag[0]?.label || ""
-      }&minPrice=${minPriceRange}&maxPrice=${maxPriceRange}&openNow=${open}&sort=${sort}&search=${search}&search=${location}`;
+      }&minPrice=${minPriceRange}&maxPrice=${maxPriceRange}&openNow=${open}&sort=${sort}&search=${search}&searchLocation=${location}`;
 
       const url = `${baseUrl}${filterParams}${
         offersParams ? `&${offersParams}` : ""

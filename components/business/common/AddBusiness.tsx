@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import React, { useEffect, useState } from "react";
 import BusinessHours from "../BusinessHours";
@@ -36,7 +37,7 @@ interface ServiceType {
   selectedInstrumentsGroupMusic?: string;
 }
 
-type OptionKey = "buy" | "sell" | "trade" | "rent";
+type OptionKey = "buy" | "sell" | "trade" | "rent" | "music";
 
 const daysOfWeek = [
   "Monday",
@@ -162,8 +163,6 @@ const AddBusiness = () => {
   });
 
   // buy / cell/ trade / rent related state
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedOptions, setSelectedOptions] = useState<
     Record<OptionKey, boolean>
   >({
@@ -171,13 +170,14 @@ const AddBusiness = () => {
     sell: false,
     trade: false,
     rent: false,
+    music: false,
   });
 
   //business hour
   const [businessHours, setBusinessHours] = React.useState(
     daysOfWeek.map((day) => ({
       day,
-      enabled: false, // default to false
+      enabled: false,
       ...defaultTime,
     })),
   );
@@ -199,13 +199,12 @@ const AddBusiness = () => {
 
   //all services here
   const allServices = singleBusiness?.services;
-
   const musicLessons = singleBusiness?.musicLessons;
-
   const businessHoursEnables = singleBusiness?.businessHours;
 
   //business information related
   const [images, setImages] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]); // ✅ NEW: Store actual File objects
   const [businessName, setBusinessName] = useState("");
   const [addressName, setAddressName] = useState("");
   const [description, setDescription] = useState("");
@@ -213,107 +212,29 @@ const AddBusiness = () => {
   const [email, setEmail] = useState("");
   const [website, setWebsite] = useState("");
 
-  // show all data initially
-  useEffect(() => {
-    if (
-      pathName === "/business-dashboard/profile" &&
-      singleBusiness?.businessInfo
-    ) {
-      //business info
-      setBusinessName(singleBusiness.businessInfo.name || "");
-      setAddressName(singleBusiness.businessInfo.address || "");
-      setDescription(singleBusiness.businessInfo.description || "");
-      setPhoneNumber(singleBusiness.businessInfo.phone || "");
-      setEmail(singleBusiness.businessInfo.email || "");
-      setWebsite(singleBusiness.businessInfo.website || "");
-      if (singleBusiness.businessInfo.image) {
-        setImages(singleBusiness.businessInfo.image);
-      }
+  // ✅ FIXED: Handle file change to accumulate files
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-      // Set selected instruments from services
-      const selectedGroups = allServices
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .map((item: any) => item?.selectedInstrumentsGroup)
-        .filter(Boolean);
+    // Convert FileList to array
+    const newFiles = Array.from(files);
 
-      setSelectedInstruments(selectedGroups);
+    // Create preview URLs for new images
+    const newImageUrls = newFiles.map((file) => URL.createObjectURL(file));
 
-      const selectedMusicGroups = musicLessons
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .map((item: any) => item?.selectedInstrumentsGroupMusic)
-        .filter(Boolean);
-      setSelectedInstrumentsMusic(selectedMusicGroups);
+    // ✅ Append new images to existing ones
+    setImages((prev) => [...prev, ...newImageUrls]);
 
-      if (businessHoursEnables && Array.isArray(businessHoursEnables)) {
-        const updatedHours = daysOfWeek.map((day) => {
-          const found = businessHoursEnables.find(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (item: any) => item.day === day,
-          );
-          return found
-            ? {
-                day: found.day,
-                enabled: found.enabled,
-                startTime: found.startTime || defaultTime.startTime,
-                startMeridiem: found.startMeridiem || defaultTime.startMeridiem,
-                endTime: found.endTime || defaultTime.endTime,
-                endMeridiem: found.endMeridiem || defaultTime.endMeridiem,
-              }
-            : {
-                day,
-                enabled: false,
-                ...defaultTime,
-              };
-        });
+    // ✅ Store actual file objects
+    setImageFiles((prev) => [...prev, ...newFiles]);
 
-        setBusinessHours(updatedHours);
-      }
+    // Clear any existing image error
+    setError((prev) => ({ ...prev, images: "" }));
 
-      if (singleBusiness) {
-        setSelectedOptions({
-          buy: singleBusiness?.buyInstruments || false,
-          sell: singleBusiness?.sellInstruments || false,
-          trade: singleBusiness?.tradeInstruments || false,
-          rent: singleBusiness?.rentInstruments || false,
-        });
-      }
-
-      // Set services for instrument pricing list
-      if (singleBusiness?.services?.length > 0) {
-        setSelected(singleBusiness.services);
-
-        // Extract all unique instrument group names from services
-        const instrumentGroups = singleBusiness.services.map(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (s: any) => s.selectedInstrumentsGroup,
-        );
-
-        // Prefill selected instruments
-        setSelectedInstruments(instrumentGroups);
-
-        // Set the first instrument group as selected for pricing list view
-        setSelectedInstrumentsGroup(instrumentGroups[0]);
-      }
-
-      if (singleBusiness?.musicLessons?.length > 0) {
-        setSelectedMusic(singleBusiness.musicLessons);
-
-        const musicGroups = singleBusiness.musicLessons.map(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (s: any) => s.selectedInstrumentsGroupMusic,
-        );
-
-        setSelectedInstrumentsMusic(musicGroups);
-        setSelectedInstrumentsGroupMusic(musicGroups[0]);
-      }
-    }
-  }, [
-    singleBusiness,
-    pathName,
-    allServices,
-    musicLessons,
-    businessHoursEnables,
-  ]);
+    // Reset input value to allow uploading the same files again
+    e.target.value = "";
+  };
 
   const handleUploadImage = () => {
     const input = document.getElementById("image_input");
@@ -322,21 +243,16 @@ const AddBusiness = () => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-
-    const imageURLs = Array.from(files).map((file) =>
-      URL.createObjectURL(file),
-    );
-
-    // Combine with existing images
-    setImages((prev) => [...prev, ...imageURLs]);
-    setError((prev) => ({ ...prev, images: "" }));
-  };
-
+  // ✅ FIXED: Remove image properly
   const handleRemoveImage = (index: number) => {
+    // Clean up object URL to prevent memory leaks
+    URL.revokeObjectURL(images[index]);
+
+    // Remove from preview
     setImages((prev) => prev.filter((_, i) => i !== index));
+
+    // Remove from file storage
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handelOkay = () => {
@@ -401,7 +317,7 @@ const AddBusiness = () => {
       newErrors.email = "Email is required";
     }
 
-    if (images.length === 0) {
+    if (imageFiles.length === 0) {
       newErrors.images = "At least one business photo is required";
     }
 
@@ -410,7 +326,66 @@ const AddBusiness = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  //post form data
+  // ✅ Helper function to prepare FormData with images
+  const prepareFormData = (additionalData: any = {}) => {
+    const formData = new FormData();
+
+    // ✅ Append all accumulated image files
+    imageFiles.forEach((file) => {
+      formData.append("image", file);
+    });
+
+    const businessData = {
+      businessInfo: {
+        name: businessName,
+        address: addressName,
+        description,
+        phone: phoneNumber,
+        email,
+        website,
+        image: images, // Store preview URLs for display
+      },
+      services: selected.map((service) => ({
+        newInstrumentName: service.newInstrumentName,
+        pricingType: service.pricingType,
+        price: service.price,
+        minPrice: service.minPrice,
+        maxPrice: service.maxPrice,
+        selectedInstrumentsGroup: service.selectedInstrumentsGroup,
+        instrumentFamily: service.instrumentFamily,
+      })),
+      musicLessons: selectedMusic.map((lesson) => ({
+        newInstrumentName: lesson.newInstrumentName,
+        pricingType: lesson.pricingType,
+        price: lesson.price,
+        minPrice: lesson.minPrice,
+        maxPrice: lesson.maxPrice,
+        selectedInstrumentsGroupMusic: lesson.selectedInstrumentsGroupMusic,
+      })),
+      businessHours: businessHours.map((hour) => ({
+        day: hour.day,
+        startTime: hour.startTime,
+        startMeridiem: hour.startMeridiem,
+        endTime: hour.endTime,
+        endMeridiem: hour.endMeridiem,
+        enabled: hour.enabled,
+      })),
+      buyInstruments: selectedOptions.buy,
+      sellInstruments: selectedOptions.sell,
+      tradeInstruments: selectedOptions?.trade,
+      rentInstruments: selectedOptions?.trade,
+      isMusicLessons: selectedOptions?.music,
+      offerMusicLessons: selectedMusic.length > 0,
+      status: "pending",
+      isVerified: false,
+      ...additionalData,
+    };
+
+    formData.append("data", JSON.stringify(businessData));
+    return formData;
+  };
+
+  //post form data - ✅ FIXED
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -421,62 +396,11 @@ const AddBusiness = () => {
     const isValid = validateForm();
     if (!isValid) return;
 
-    const formData = new FormData();
-    const imageInput = document.getElementById(
-      "image_input",
-    ) as HTMLInputElement;
-    const imageFiles = imageInput?.files ? Array.from(imageInput.files) : [];
-
-    imageFiles.forEach((file) => {
-      formData.append("image", file);
-    });
-
-    const businessData = {
-      businessInfo: {
-        name: businessName,
-        address: addressName,
-        description,
-        phone: phoneNumber,
-        email,
-        website,
-      },
-      services: selected.map((service) => ({
-        newInstrumentName: service.newInstrumentName,
-        pricingType: service.pricingType,
-        price: service.price,
-        minPrice: service.minPrice,
-        maxPrice: service.maxPrice,
-        selectedInstrumentsGroup: service.selectedInstrumentsGroup,
-        instrumentFamily: service.instrumentFamily,
-      })),
-      musicLessons: selectedMusic.map((lesson) => ({
-        newInstrumentName: lesson.newInstrumentName,
-        pricingType: lesson.pricingType,
-        price: lesson.price,
-        minPrice: lesson.minPrice,
-        maxPrice: lesson.maxPrice,
-        selectedInstrumentsGroupMusic: lesson.selectedInstrumentsGroupMusic,
-      })),
-      businessHours: businessHours.map((hour) => ({
-        day: hour.day, // Must match enum values exactly
-        startTime: hour.startTime,
-        startMeridiem: hour.startMeridiem,
-        endTime: hour.endTime,
-        endMeridiem: hour.endMeridiem,
-        enabled: hour.enabled,
-      })),
-      buyInstruments: selectedOptions.buy,
-      sellInstruments: selectedOptions.sell,
-      offerMusicLessons: selectedMusic.length > 0,
-      status: "pending",
-      isVerified: false,
-    };
-
-    formData.append("data", JSON.stringify(businessData));
-
+    const formData = prepareFormData();
     await addBusinessData(formData);
   };
 
+  // ✅ FIXED: Add a business submission
   const handleAddABusinessSubmit = async (
     e: React.FormEvent<HTMLFormElement>,
   ) => {
@@ -486,63 +410,11 @@ const AddBusiness = () => {
     const isValid = validateForm();
     if (!isValid) return;
 
-    const formData = new FormData();
-    const imageInput = document.getElementById(
-      "image_input",
-    ) as HTMLInputElement;
-    const imageFiles = imageInput?.files ? Array.from(imageInput.files) : [];
-
-    imageFiles.forEach((file) => {
-      formData.append("image", file);
-    });
-
-    const businessData = {
-      businessInfo: {
-        name: businessName,
-        address: addressName,
-        description,
-        phone: phoneNumber,
-        email,
-        website,
-      },
-      services: selected.map((service) => ({
-        newInstrumentName: service.newInstrumentName,
-        pricingType: service.pricingType,
-        price: service.price,
-        minPrice: service.minPrice,
-        maxPrice: service.maxPrice,
-        selectedInstrumentsGroup: service.selectedInstrumentsGroup,
-        instrumentFamily: service.instrumentFamily,
-      })),
-      musicLessons: selectedMusic.map((lesson) => ({
-        newInstrumentName: lesson.newInstrumentName,
-        pricingType: lesson.pricingType,
-        price: lesson.price,
-        minPrice: lesson.minPrice,
-        maxPrice: lesson.maxPrice,
-        selectedInstrumentsGroupMusic: lesson.selectedInstrumentsGroupMusic,
-      })),
-      businessHours: businessHours.map((hour) => ({
-        day: hour.day, // Must match enum values exactly
-        startTime: hour.startTime,
-        startMeridiem: hour.startMeridiem,
-        endTime: hour.endTime,
-        endMeridiem: hour.endMeridiem,
-        enabled: hour.enabled,
-      })),
-      buyInstruments: selectedOptions.buy,
-      sellInstruments: selectedOptions.sell,
-      offerMusicLessons: selectedMusic.length > 0,
-      status: "pending",
-      isVerified: false,
-      email: userEmail || "",
-    };
-
-    formData.append("data", JSON.stringify(businessData));
-
+    const formData = prepareFormData({ email: userEmail || "" });
     await addBusinessData(formData);
   };
 
+  // ✅ FIXED: Log out submission
   const handleLogOutSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     console.log("clicked when log out");
     e.preventDefault();
@@ -550,60 +422,7 @@ const AddBusiness = () => {
     const isValid = validateForm();
     if (!isValid) return;
 
-    const formData = new FormData();
-    const imageInput = document.getElementById(
-      "image_input",
-    ) as HTMLInputElement;
-    const imageFiles = imageInput?.files ? Array.from(imageInput.files) : [];
-
-    imageFiles.forEach((file) => {
-      formData.append("image", file);
-    });
-
-    const businessData = {
-      businessInfo: {
-        name: businessName,
-        address: addressName,
-        description,
-        phone: phoneNumber,
-        email,
-        website,
-      },
-      services: selected.map((service) => ({
-        newInstrumentName: service.newInstrumentName,
-        pricingType: service.pricingType,
-        price: service.price,
-        minPrice: service.minPrice,
-        maxPrice: service.maxPrice,
-        selectedInstrumentsGroup: service.selectedInstrumentsGroup,
-        instrumentFamily: service.instrumentFamily,
-      })),
-      musicLessons: selectedMusic.map((lesson) => ({
-        newInstrumentName: lesson.newInstrumentName,
-        pricingType: lesson.pricingType,
-        price: lesson.price,
-        minPrice: lesson.minPrice,
-        maxPrice: lesson.maxPrice,
-        selectedInstrumentsGroupMusic: lesson.selectedInstrumentsGroupMusic,
-      })),
-      businessHours: businessHours.map((hour) => ({
-        day: hour.day, // Must match enum values exactly
-        startTime: hour.startTime,
-        startMeridiem: hour.startMeridiem,
-        endTime: hour.endTime,
-        endMeridiem: hour.endMeridiem,
-        enabled: hour.enabled,
-      })),
-      email: logOutEmail,
-      buyInstruments: selectedOptions.buy,
-      sellInstruments: selectedOptions.sell,
-      offerMusicLessons: selectedMusic.length > 0,
-      status: "pending",
-      isVerified: false,
-    };
-
-    formData.append("data", JSON.stringify(businessData));
-
+    const formData = prepareFormData({ email: logOutEmail });
     await addBusinessData(formData);
   };
 
@@ -614,7 +433,7 @@ const AddBusiness = () => {
     setIsLogoutBusinessSuccessModalOpen(true);
   };
 
-  //update form data
+  //update form data - ✅ FIXED
   const { mutateAsync: updateBusinessData, isPending: isUpdating } =
     useMutation({
       mutationKey: ["update-business"],
@@ -641,6 +460,7 @@ const AddBusiness = () => {
       },
     });
 
+  // ✅ FIXED: Handle update with accumulated images
   const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -648,11 +468,7 @@ const AddBusiness = () => {
 
     const formData = new FormData();
 
-    const imageInput = document.getElementById(
-      "image_input",
-    ) as HTMLInputElement;
-    const imageFiles = imageInput?.files ? Array.from(imageInput.files) : [];
-
+    // ✅ Append all accumulated image files
     imageFiles.forEach((file) => {
       formData.append("image", file);
     });
@@ -665,7 +481,7 @@ const AddBusiness = () => {
         phone: phoneNumber,
         email,
         website,
-        image: images,
+        image: images, // Store preview URLs
       },
       services: selected.map((service) => ({
         newInstrumentName: service.newInstrumentName,
@@ -703,6 +519,111 @@ const AddBusiness = () => {
 
     await updateBusinessData({ id: selectedBusinessId, formData });
   };
+
+  // show all data initially
+  useEffect(() => {
+    if (
+      pathName === "/business-dashboard/profile" &&
+      singleBusiness?.businessInfo
+    ) {
+      //business info
+      setBusinessName(singleBusiness.businessInfo.name || "");
+      setAddressName(singleBusiness.businessInfo.address || "");
+      setDescription(singleBusiness.businessInfo.description || "");
+      setPhoneNumber(singleBusiness.businessInfo.phone || "");
+      setEmail(singleBusiness.businessInfo.email || "");
+      setWebsite(singleBusiness.businessInfo.website || "");
+      if (singleBusiness.businessInfo.image) {
+        setImages(singleBusiness.businessInfo.image);
+        // Note: For existing images, we don't have File objects, only URLs
+        // This is fine for display, but new uploads will be handled separately
+      }
+
+      // Set selected instruments from services
+      const selectedGroups = allServices
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((item: any) => item?.selectedInstrumentsGroup)
+        .filter(Boolean);
+
+      setSelectedInstruments(selectedGroups);
+
+      const selectedMusicGroups = musicLessons
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((item: any) => item?.selectedInstrumentsGroupMusic)
+        .filter(Boolean);
+      setSelectedInstrumentsMusic(selectedMusicGroups);
+
+      if (businessHoursEnables && Array.isArray(businessHoursEnables)) {
+        const updatedHours = daysOfWeek.map((day) => {
+          const found = businessHoursEnables.find(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (item: any) => item.day === day,
+          );
+          return found
+            ? {
+                day: found.day,
+                enabled: found.enabled,
+                startTime: found.startTime || defaultTime.startTime,
+                startMeridiem: found.startMeridiem || defaultTime.startMeridiem,
+                endTime: found.endTime || defaultTime.endTime,
+                endMeridiem: found.endMeridiem || defaultTime.endMeridiem,
+              }
+            : {
+                day,
+                enabled: false,
+                ...defaultTime,
+              };
+        });
+
+        setBusinessHours(updatedHours);
+      }
+
+      if (singleBusiness) {
+        setSelectedOptions({
+          buy: singleBusiness?.buyInstruments || false,
+          sell: singleBusiness?.sellInstruments || false,
+          trade: singleBusiness?.tradeInstruments || false,
+          rent: singleBusiness?.rentInstruments || false,
+          music: singleBusiness?.isMusicLessons || false,
+        });
+      }
+
+      // Set services for instrument pricing list
+      if (singleBusiness?.services?.length > 0) {
+        setSelected(singleBusiness.services);
+
+        // Extract all unique instrument group names from services
+        const instrumentGroups = singleBusiness.services.map(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (s: any) => s.selectedInstrumentsGroup,
+        );
+
+        // Prefill selected instruments
+        setSelectedInstruments(instrumentGroups);
+
+        // Set the first instrument group as selected for pricing list view
+        setSelectedInstrumentsGroup(instrumentGroups[0]);
+      }
+
+      if (singleBusiness?.musicLessons?.length > 0) {
+        setSelectedMusic(singleBusiness.musicLessons);
+
+        const musicGroups = singleBusiness.musicLessons.map(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (s: any) => s.selectedInstrumentsGroupMusic,
+        );
+
+        setSelectedInstrumentsMusic(musicGroups);
+        setSelectedInstrumentsGroupMusic(musicGroups[0]);
+      }
+    }
+  }, [
+    singleBusiness,
+    pathName,
+    allServices,
+    musicLessons,
+    businessHoursEnables,
+  ]);
 
   return (
     <div>

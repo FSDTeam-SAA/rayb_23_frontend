@@ -10,7 +10,7 @@ import InstrumentGroupsMusic from "./InstrumentGroupsMusic";
 import { toast } from "sonner";
 import ServiceModalMusic from "./modal/ServiceModalMusic";
 
-type OptionKey = "buy" | "sell" | "trade" | "rent";
+type OptionKey = "buy" | "sell" | "trade" | "rent" | "music";
 
 interface InstrumentType {
   _id: string;
@@ -118,7 +118,7 @@ const Service = ({
   // Helper function to remove a service
   const removeService = (serviceName: string) => {
     setSelected((prev) =>
-      prev.filter((item) => item.newInstrumentName !== serviceName)
+      prev.filter((item) => item.newInstrumentName !== serviceName),
     );
   };
 
@@ -162,8 +162,8 @@ const Service = ({
 
                       const foundFamily = allInstrument.find((group) =>
                         group.instrumentTypes.some(
-                          (instrument) => instrument.type === service
-                        )
+                          (instrument) => instrument.type === service,
+                        ),
                       )?.instrumentFamily;
 
                       if (foundFamily) {
@@ -262,7 +262,7 @@ const Service = ({
                         )}
                       </div>
                     </div>
-                  )
+                  ),
               )}
           </div>
 
@@ -336,8 +336,8 @@ const Service = ({
 
                             const foundFamily = allInstrument.find((group) =>
                               group.instrumentTypes.some(
-                                (instrument) => instrument.type === service
-                              )
+                                (instrument) => instrument.type === service,
+                              ),
                             )?.instrumentFamily;
 
                             if (foundFamily) {
@@ -377,7 +377,7 @@ const Service = ({
                             selectedMusic.find(
                               (lesson) =>
                                 lesson.selectedInstrumentsGroupMusic ===
-                                selectedInstrumentsGroupMusic
+                                selectedInstrumentsGroupMusic,
                             )?.price || ""
                           }
                           onChange={(e) => {
@@ -385,7 +385,7 @@ const Service = ({
                             const existingLessonIndex = selectedMusic.findIndex(
                               (lesson) =>
                                 lesson.selectedInstrumentsGroupMusic ===
-                                selectedInstrumentsGroupMusic
+                                selectedInstrumentsGroupMusic,
                             );
 
                             if (existingLessonIndex >= 0) {

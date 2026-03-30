@@ -1,4 +1,4 @@
-type OptionKey = "buy" | "sell" | "trade" | "rent";
+type OptionKey = "buy" | "sell" | "trade" | "rent" | "music";
 
 type BuySellGroupProps = {
   selectedOptions: Record<OptionKey, boolean>;
@@ -9,8 +9,9 @@ type BuySellGroupProps = {
 
 const BuySellGroup: React.FC<BuySellGroupProps> = ({
   setSelectedOptions,
-  selectedOptions
+  selectedOptions,
 }) => {
+  console.log("selectedOptions", selectedOptions);
 
   const options = [
     {
@@ -36,6 +37,12 @@ const BuySellGroup: React.FC<BuySellGroupProps> = ({
       label: "Rent Instruments",
       description:
         "If the business allows the customers to rent the instruments, select this service.",
+    },
+    {
+      id: "music",
+      label: "Music Lessons",
+      description:
+        "If the business offers music lessons or training sessions to customers, select this service.",
     },
   ];
 
