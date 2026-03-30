@@ -36,7 +36,7 @@ interface ServiceType {
   selectedInstrumentsGroupMusic?: string;
 }
 
-type OptionKey = "buy" | "sell" | "trade" | "rent";
+type OptionKey = "buy" | "sell" | "trade" | "rent" | "music";
 
 const daysOfWeek = [
   "Monday",
@@ -171,6 +171,7 @@ const AddBusiness = () => {
     sell: false,
     trade: false,
     rent: false,
+    music: false,
   });
 
   //business hour
@@ -275,6 +276,7 @@ const AddBusiness = () => {
           sell: singleBusiness?.sellInstruments || false,
           trade: singleBusiness?.tradeInstruments || false,
           rent: singleBusiness?.rentInstruments || false,
+          music: singleBusiness?.isMusicLessons || false,
         });
       }
 
@@ -467,6 +469,9 @@ const AddBusiness = () => {
       })),
       buyInstruments: selectedOptions.buy,
       sellInstruments: selectedOptions.sell,
+      tradeInstruments: selectedOptions?.trade,
+      rentInstruments: selectedOptions?.trade,
+      isMusicLessons: selectedOptions?.music,
       offerMusicLessons: selectedMusic.length > 0,
       status: "pending",
       isVerified: false,
@@ -532,6 +537,9 @@ const AddBusiness = () => {
       })),
       buyInstruments: selectedOptions.buy,
       sellInstruments: selectedOptions.sell,
+      tradeInstruments: selectedOptions?.trade,
+      rentInstruments: selectedOptions?.trade,
+      isMusicLessons: selectedOptions?.music,
       offerMusicLessons: selectedMusic.length > 0,
       status: "pending",
       isVerified: false,
@@ -597,6 +605,9 @@ const AddBusiness = () => {
       email: logOutEmail,
       buyInstruments: selectedOptions.buy,
       sellInstruments: selectedOptions.sell,
+      tradeInstruments: selectedOptions?.trade,
+      rentInstruments: selectedOptions?.trade,
+      isMusicLessons: selectedOptions?.music,
       offerMusicLessons: selectedMusic.length > 0,
       status: "pending",
       isVerified: false,
