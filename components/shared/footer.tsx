@@ -13,7 +13,11 @@ export default function Footer() {
   const role = session?.data?.user?.userType;
 
   useEffect(() => {
-    if (status === "authenticated" && pathName === "/add-a-business" && role === "businessMan") {
+    if (
+      status === "authenticated" &&
+      pathName === "/add-a-business" &&
+      role === "businessMan"
+    ) {
       router.push("/add-my-business");
     }
   }, [status, pathName, router, role]);
@@ -73,9 +77,13 @@ export default function Footer() {
 
         <div className=" pt-10 flex justify-between items-center">
           <div className="flex gap-2 items-center">
-            <h1 className=" underline">Terms of Service</h1>
+            <Link href={`/terms-service`}>
+              <h1 className=" underline">Terms of Service</h1>
+            </Link>
             <h1>|</h1>
-            <h1 className="underline">Privacy Policy</h1>
+            <Link href={`/privacy-policy`}>
+              <h1 className="underline">Privacy Policy</h1>
+            </Link>
           </div>
 
           <div className="flex items-center gap-5">
