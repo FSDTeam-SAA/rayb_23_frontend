@@ -38,9 +38,9 @@ interface Service {
 interface Business {
   _id: string;
   businessInfo: BusinessItem;
-  review: Review[]; // Changed from string | undefined to Review[]
+  review: Review[];
   services: Service[];
-  images?: string[]; // Add this if your business data includes images
+  images?: string[];
 }
 
 const BusinessInfo = () => {
@@ -62,6 +62,7 @@ const BusinessInfo = () => {
   const { location } = useSearchStore();
 
   const { data: allBusiness = {}, isLoading } = useQuery({
+    // IMPORTANT: Add location to queryKey so it triggers refetch when location changes
     queryKey: [
       "get-all-business",
       page,
@@ -74,8 +75,11 @@ const BusinessInfo = () => {
       open,
       sort,
       search,
+      location, // <<<<<<<<<< ADD THIS - this is the fix!
     ],
     queryFn: async () => {
+      console.log("API Call with search:", search, "location:", location); // Debug log
+
       const offersParams = offersTag
         .map((tag) => {
           switch (tag.label) {
@@ -110,6 +114,8 @@ const BusinessInfo = () => {
         offersParams ? `&${offersParams}` : ""
       }`;
 
+      console.log("API URL:", url); // Debug log
+
       const res = await fetch(url);
       const data = await res.json();
 
@@ -117,8 +123,8 @@ const BusinessInfo = () => {
       if (data.data) {
         data.data = data.data.map((business: any) => ({
           ...business,
-          review: business.review || [], // Convert undefined or null to empty array
-          images: business.images || business.businessInfo?.image || [], // Ensure images array exists
+          review: business.review || [],
+          images: business.images || business.businessInfo?.image || [],
         }));
       }
 
