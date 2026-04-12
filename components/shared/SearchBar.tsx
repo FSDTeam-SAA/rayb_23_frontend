@@ -28,23 +28,32 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
   const { search, setSearch } = useFilterStore();
   const { location, setLocation } = useSearchStore();
   const [searchQuery, setSearchQuery] = useState<string>(search);
+  const [locationInputValue, setLocationInputValue] =
+    useState<string>(location);
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [isLoadingLocations, setIsLoadingLocations] = useState(false);
-  const [activeDropdown, setActiveDropdown] = useState<"search" | "location" | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
+  const locationInputRef = useRef<HTMLInputElement>(null);
+  const isSelectingRef = useRef(false); // Use ref instead of state to avoid re-renders
 
   // Update local state when store changes
   useEffect(() => {
     setSearchQuery(search);
   }, [search]);
 
+  useEffect(() => {
+    setLocationInputValue(location);
+  }, [location]);
+
   // Handle click outside to close dropdowns
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
         setShowLocationDropdown(false);
-        setActiveDropdown(null);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -53,12 +62,14 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
 
   // OpenStreetMap location suggestions
   useEffect(() => {
-    if (!location || location.length < 2) {
+    // Don't fetch if we're in the middle of selecting
+    if (isSelectingRef.current) {
+      return;
+    }
+
+    if (!locationInputValue || locationInputValue.length < 2) {
       setLocationSuggestions([]);
       setShowLocationDropdown(false);
-      if (activeDropdown === "location") {
-        setActiveDropdown(null);
-      }
       return;
     }
 
@@ -66,15 +77,16 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
       setIsLoadingLocations(true);
       try {
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(
-            location
-          )}&format=json&addressdetails=1&limit=10`
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+            locationInputValue,
+          )}&format=json&addressdetails=1&limit=10`,
         );
         const data: PlaceResult[] = await response.json();
 
         const formattedResults = data
           .map((place) => {
-            const city = place.address.city || place.address.town || place.address.village;
+            const city =
+              place.address.city || place.address.town || place.address.village;
             let state = place.address.state_code
               ? place.address.state_code.toUpperCase()
               : "";
@@ -91,9 +103,6 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
         const uniqueResults = Array.from(new Set(formattedResults));
         setLocationSuggestions(uniqueResults);
         setShowLocationDropdown(uniqueResults.length > 0);
-        if (uniqueResults.length > 0) {
-          setActiveDropdown("location");
-        }
       } catch (error) {
         console.error("Error fetching locations:", error);
         setLocationSuggestions([]);
@@ -104,30 +113,52 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
 
     const timeoutId = setTimeout(fetchLocations, 400);
     return () => clearTimeout(timeoutId);
-  }, [location, activeDropdown]);
+  }, [locationInputValue]);
 
   const handleLocationSelect = (selected: string) => {
-    setLocation(selected);
+    // Set selecting flag to true to prevent API calls
+    isSelectingRef.current = true;
+
+    // Update values
+    setLocationInputValue(selected);
     setShowLocationDropdown(false);
-    setActiveDropdown(null);
+    locationInputRef.current?.blur();
+
+    console.log("Location selected, value updated to:", selected);
+
+    // Reset the flag after 1 second
+    setTimeout(() => {
+      isSelectingRef.current = false;
+    }, 1000);
   };
 
   const handleSearch = () => {
-    if (searchQuery.trim() || location.trim()) {
-      // উভয় সার্চ টার্ম এবং লোকেশন স্টোরে সংরক্ষণ করুন
-      setSearch(searchQuery.trim());
-      // লোকেশনটি সার্চ স্টোরে সংরক্ষণ করুন (যদি আপনার ফিল্টার স্টোরে লোকেশন ফিল্ড থাকে)
-      // অথবা URL-এ প্যারামিটার হিসেবে পাঠান
-      
-      // URL তৈরি করুন যেখানে সার্চ টার্ম এবং লোকেশন উভয়ই থাকবে
+    const finalSearchQuery = searchQuery.trim();
+    const finalLocation = locationInputValue.trim();
+
+    console.log("Search button clicked with:", {
+      finalSearchQuery,
+      finalLocation,
+    });
+
+    if (finalSearchQuery || finalLocation) {
+      // Update stores
+      setSearch(finalSearchQuery);
+      setLocation(finalLocation);
+
+      // Create URL with search parameters
       const searchParams = new URLSearchParams();
-      if (searchQuery.trim()) {
-        searchParams.append('q', searchQuery.trim());
+      if (finalSearchQuery) {
+        searchParams.append("q", finalSearchQuery);
       }
-      if (location.trim()) {
-        searchParams.append('location', location.trim());
+      if (finalLocation) {
+        searchParams.append("location", finalLocation);
       }
-      
+
+      // Close dropdown if open
+      setShowLocationDropdown(false);
+
+      // Navigate to search results page
       router.push(`/search-result?${searchParams.toString()}`);
       onResultClick?.();
     }
@@ -140,23 +171,43 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
   const clearSearch = () => {
     setSearchQuery("");
     setSearch("");
-    setActiveDropdown(null);
   };
 
   const clearLocation = () => {
+    setLocationInputValue("");
     setLocation("");
+    setLocationSuggestions([]);
     setShowLocationDropdown(false);
-    setActiveDropdown(null);
+    isSelectingRef.current = false;
+    locationInputRef.current?.focus();
   };
 
   const handleLocationFocus = () => {
-    if (locationSuggestions.length > 0) {
+    // Only show dropdown if there are suggestions and input is not empty and not selecting
+    if (
+      !isSelectingRef.current &&
+      locationSuggestions.length > 0 &&
+      locationInputValue.length >= 2
+    ) {
       setShowLocationDropdown(true);
-      setActiveDropdown("location");
     }
   };
 
-  const shouldShowLocationDropdown = showLocationDropdown && activeDropdown === "location";
+  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setLocationInputValue(value);
+    // Show dropdown only when typing (not after selection)
+    if (!isSelectingRef.current && value.length >= 2) {
+      setShowLocationDropdown(true);
+    } else {
+      setShowLocationDropdown(false);
+    }
+  };
+
+  const shouldShowLocationDropdown =
+    showLocationDropdown &&
+    locationSuggestions.length > 0 &&
+    !isSelectingRef.current;
 
   // Styles
   const containerClass =
@@ -209,15 +260,16 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
           <div className="relative">
             <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-5 w-5" />
             <Input
+              ref={locationInputRef}
               type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
+              value={locationInputValue}
+              onChange={handleLocationChange}
               onKeyDown={handleKeyPress}
               onFocus={handleLocationFocus}
               placeholder="Location"
               className={locationInputClass}
             />
-            {location && (
+            {locationInputValue && (
               <button
                 onClick={clearLocation}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
@@ -239,12 +291,12 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
                   {locationSuggestions.map((item, index) => (
                     <li
                       key={index}
-                      className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer"
+                      className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer transition-colors"
                       onClick={() => handleLocationSelect(item)}
                     >
                       <div className="p-3 flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-gray-500" />
-                        <span>{item}</span>
+                        <MapPin className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                        <span className="text-sm">{item}</span>
                       </div>
                     </li>
                   ))}
