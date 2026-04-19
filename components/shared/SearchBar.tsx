@@ -35,7 +35,7 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
   const [isLoadingLocations, setIsLoadingLocations] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const locationInputRef = useRef<HTMLInputElement>(null);
-  const isSelectingRef = useRef(false); // Use ref instead of state to avoid re-renders
+  const userTypingRef = useRef(false); // True only while the user is actively typing in the location input
 
   // Update local state when store changes
   useEffect(() => {
@@ -60,10 +60,9 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // OpenStreetMap location suggestions
+  // OpenStreetMap location suggestions — only fetch while the user is actively typing
   useEffect(() => {
-    // Don't fetch if we're in the middle of selecting
-    if (isSelectingRef.current) {
+    if (!userTypingRef.current) {
       return;
     }
 
@@ -102,7 +101,9 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
 
         const uniqueResults = Array.from(new Set(formattedResults));
         setLocationSuggestions(uniqueResults);
-        setShowLocationDropdown(uniqueResults.length > 0);
+        if (userTypingRef.current) {
+          setShowLocationDropdown(uniqueResults.length > 0);
+        }
       } catch (error) {
         console.error("Error fetching locations:", error);
         setLocationSuggestions([]);
@@ -116,20 +117,12 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
   }, [locationInputValue]);
 
   const handleLocationSelect = (selected: string) => {
-    // Set selecting flag to true to prevent API calls
-    isSelectingRef.current = true;
-
-    // Update values
+    // User has picked a suggestion — stop treating subsequent value changes as typing
+    userTypingRef.current = false;
     setLocationInputValue(selected);
+    setLocationSuggestions([]);
     setShowLocationDropdown(false);
     locationInputRef.current?.blur();
-
-    console.log("Location selected, value updated to:", selected);
-
-    // Reset the flag after 1 second
-    setTimeout(() => {
-      isSelectingRef.current = false;
-    }, 1000);
   };
 
   const handleSearch = () => {
@@ -142,6 +135,9 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
     });
 
     if (finalSearchQuery || finalLocation) {
+      // Searching is a terminal action — don't treat resulting value changes as typing
+      userTypingRef.current = false;
+
       // Update stores
       setSearch(finalSearchQuery);
       setLocation(finalLocation);
@@ -174,18 +170,18 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
   };
 
   const clearLocation = () => {
+    userTypingRef.current = false;
     setLocationInputValue("");
     setLocation("");
     setLocationSuggestions([]);
     setShowLocationDropdown(false);
-    isSelectingRef.current = false;
     locationInputRef.current?.focus();
   };
 
   const handleLocationFocus = () => {
-    // Only show dropdown if there are suggestions and input is not empty and not selecting
+    // Only reopen the dropdown on focus if the user was mid-typing with live suggestions
     if (
-      !isSelectingRef.current &&
+      userTypingRef.current &&
       locationSuggestions.length > 0 &&
       locationInputValue.length >= 2
     ) {
@@ -195,19 +191,15 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
 
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
+    userTypingRef.current = true;
     setLocationInputValue(value);
-    // Show dropdown only when typing (not after selection)
-    if (!isSelectingRef.current && value.length >= 2) {
-      setShowLocationDropdown(true);
-    } else {
+    if (value.length < 2) {
       setShowLocationDropdown(false);
     }
   };
 
   const shouldShowLocationDropdown =
-    showLocationDropdown &&
-    locationSuggestions.length > 0 &&
-    !isSelectingRef.current;
+    showLocationDropdown && locationSuggestions.length > 0;
 
   // Styles
   const containerClass =
