@@ -882,11 +882,15 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
 
   console.log("singleBusiness", singleBusiness)
 
-  // Combine all images from businessInfo.image and images array
-  const allBusinessImages = [
-    ...singleBusiness.businessInfo.image,
-    ...(singleBusiness.images || []),
-  ];
+  // Combine all images from businessInfo.image and images array with deduplication
+  const allBusinessImages = useMemo(() => {
+    const combined = [
+      ...singleBusiness.businessInfo.image,
+      ...(singleBusiness.images || []),
+    ];
+    // Remove duplicates and empty strings
+    return Array.from(new Set(combined.filter((img) => img && img.trim() !== "")));
+  }, [singleBusiness.businessInfo.image, singleBusiness.images]);
 
   return (
     <div>
@@ -904,6 +908,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
         <BusinessGalleryModal
           isOpen={isGalleryModalOpen}
           onClose={() => setIsGalleryModalOpen(false)}
+          businessImages={allBusinessImages}
         />
 
         {/* Business Info */}

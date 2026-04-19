@@ -40,11 +40,13 @@ interface Picture {
 interface BusinessGalleryModalProps {
   isOpen: boolean;
   onClose: () => void;
+  businessImages?: string[];
 }
 
 const BusinessGalleryModal = ({
   isOpen,
   onClose,
+  businessImages = [],
 }: BusinessGalleryModalProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const { id } = useParams();
@@ -75,7 +77,7 @@ const BusinessGalleryModal = ({
     enabled: !!id,
   });
 
-  // Combine all images from both reviews and pictures
+  // Combine all images from business, reviews, and pictures
   const galleryItems = useMemo(() => {
     const items: Array<{
       imageUrl: string;
@@ -89,8 +91,22 @@ const BusinessGalleryModal = ({
       createdAt: string;
       reviewId?: string;
       feedback?: string;
-      source: "review" | "picture";
+      source: "business" | "review" | "picture";
     }> = [];
+
+    // Process business images (no user info needed)
+    if (businessImages && Array.isArray(businessImages)) {
+      businessImages.forEach((img) => {
+        if (img && img.trim() !== "") {
+          items.push({
+            imageUrl: img,
+            user: null,
+            createdAt: new Date().toISOString(),
+            source: "business",
+          });
+        }
+      });
+    }
 
     // Process reviews
     if (reviewsData && Array.isArray(reviewsData)) {
@@ -140,11 +156,36 @@ const BusinessGalleryModal = ({
     }
 
     // Sort by createdAt (newest first)
-    return items.sort(
+    const sorted = items.sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
-  }, [reviewsData, picturesData]);
+
+    // Remove duplicate images (same imageUrl) - keep the one with review info if it exists
+    const uniqueItems: typeof sorted = [];
+    const seenUrls = new Set<string>();
+
+    sorted.forEach((item) => {
+      if (!seenUrls.has(item.imageUrl)) {
+        seenUrls.add(item.imageUrl);
+        uniqueItems.push(item);
+      } else {
+        // If duplicate found, replace if current has more info (review with feedback)
+        const existingIndex = uniqueItems.findIndex(
+          (u) => u.imageUrl === item.imageUrl,
+        );
+        if (
+          item.source === "review" &&
+          item.feedback &&
+          uniqueItems[existingIndex].source !== "review"
+        ) {
+          uniqueItems[existingIndex] = item;
+        }
+      }
+    });
+
+    return uniqueItems;
+  }, [businessImages, reviewsData, picturesData]);
 
   console.log("galleryItems: ", galleryItems);
 
@@ -275,13 +316,6 @@ const BusinessGalleryModal = ({
                 {currentItem.feedback}
               </p>
             )}
-          </div>
-        )}
-
-        {/* No items message */}
-        {galleryItems.length === 0 && (
-          <div className="text-center py-4 text-gray-500">
-            No images available for this business.
           </div>
         )}
       </DialogContent>
