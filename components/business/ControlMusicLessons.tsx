@@ -1,11 +1,20 @@
 import React from "react";
 
+type OptionKey = "buy" | "sell" | "trade" | "rent" | "music";
+
 interface PropsTypes {
   value: string;
   setValue: (val: string) => void;
+  setSelectedOptions: React.Dispatch<
+    React.SetStateAction<Record<OptionKey, boolean>>
+  >;
 }
 
-const ControlMusicLessons = ({value, setValue} : PropsTypes) => {
+const ControlMusicLessons = ({
+  value,
+  setValue,
+  setSelectedOptions,
+}: PropsTypes) => {
   return (
     <div className="flex items-center space-x-4">
       <h1 className="text-xl font-semibold">Music Lessons</h1>
@@ -17,7 +26,10 @@ const ControlMusicLessons = ({value, setValue} : PropsTypes) => {
             name="musicLessons"
             value="yes"
             checked={value === "yes"}
-            onChange={() => setValue("yes")}
+            onChange={() => {
+              setValue("yes");
+              setSelectedOptions((prev) => ({ ...prev, music: true }));
+            }}
             className="accent-teal-600"
           />
           <span>Yes</span>
@@ -29,7 +41,10 @@ const ControlMusicLessons = ({value, setValue} : PropsTypes) => {
             name="musicLessons"
             value="no"
             checked={value === "no"}
-            onChange={() => setValue("no")}
+            onChange={() => {
+              setValue("no");
+              setSelectedOptions((prev) => ({ ...prev, music: false }));
+            }}
             className="accent-teal-600"
           />
           <span>No</span>

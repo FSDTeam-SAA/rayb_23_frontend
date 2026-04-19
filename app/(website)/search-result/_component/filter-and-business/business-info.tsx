@@ -75,7 +75,7 @@ const BusinessInfo = () => {
       open,
       sort,
       search,
-      location, // <<<<<<<<<< ADD THIS - this is the fix!
+      location, 
     ],
     queryFn: async () => {
       console.log("API Call with search:", search, "location:", location); // Debug log
@@ -92,7 +92,7 @@ const BusinessInfo = () => {
             case "Rental":
               return "rentalInstruments=true";
             case "Music Lessons":
-              return "offerMusicLessons=true";
+              return "isMusicLessons=true";
             default:
               return "";
           }

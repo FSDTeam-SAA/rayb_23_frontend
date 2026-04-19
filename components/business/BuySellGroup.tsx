@@ -7,13 +7,7 @@ type BuySellGroupProps = {
   >;
 };
 
-const BuySellGroup: React.FC<BuySellGroupProps> = ({
-  setSelectedOptions,
-  selectedOptions,
-}) => {
-  console.log("selectedOptions", selectedOptions);
-
-  const options = [
+export const options = [
     {
       id: "buy",
       label: "Buy Instruments",
@@ -39,6 +33,11 @@ const BuySellGroup: React.FC<BuySellGroupProps> = ({
         "If the business allows the customers to rent the instruments, select this service.",
     },
   ];
+
+const BuySellGroup: React.FC<BuySellGroupProps> = ({
+  setSelectedOptions,
+  selectedOptions,
+}) => {
 
   const toggleOption = (id: OptionKey) => {
     setSelectedOptions((prev) => ({

@@ -288,7 +288,11 @@ const Service = ({
 
         {/* Music Lessons */}
         <div>
-          <ControlMusicLessons value={value} setValue={setValue} />
+          <ControlMusicLessons
+            value={value}
+            setValue={setValue}
+            setSelectedOptions={setSelectedOptions}
+          />
 
           {/* add instrument for music lessons */}
           {value === "yes" && (
