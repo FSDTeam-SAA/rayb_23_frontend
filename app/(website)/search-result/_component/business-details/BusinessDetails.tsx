@@ -37,6 +37,7 @@ import ServiceType from "./service-type";
 import WorkingHours from "./working-hours";
 import ContactInfo from "./contact-info";
 import Location from "./location";
+import Link from "next/link";
 
 interface Reply {
   _id: string;
@@ -610,7 +611,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) {
       return "Today";
     } else if (diffDays === 1) {
@@ -725,7 +726,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
                     Business Responses
                   </h4>
                 </div>
-                
+
                 {review.reply.map((reply, index) => (
                   <div
                     key={reply._id}
@@ -735,8 +736,8 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
                       <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-medium text-teal-600">
-                            {reply.repliedBy === singleBusiness.userId 
-                              ? "Business Owner" 
+                            {reply.repliedBy === singleBusiness.userId
+                              ? "Business Owner"
                               : "Staff"}
                           </span>
                           <span className="text-xs text-gray-400">
@@ -746,7 +747,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
                       </div>
                       <p className="text-sm text-gray-700">{reply.text}</p>
                     </div>
-                    
+
                     {/* Add separator between multiple replies */}
                     {review.reply && index < review.reply.length - 1 && (
                       <div className="my-2 ml-2 w-0.5 h-4 bg-gray-200"></div>
@@ -792,40 +793,39 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
   //   },
   // });
 
-
   const { mutateAsync: chatCreation } = useMutation({
-  mutationKey: ["create-chat"],
-  mutationFn: async (data: { 
-    participants: { userId: string; role: string }[];
-    businessId?: string;
-  }) => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/chat/create`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+    mutationKey: ["create-chat"],
+    mutationFn: async (data: {
+      participants: { userId: string; role: string }[];
+      businessId?: string;
+    }) => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/chat/create`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(data),
           },
-          body: JSON.stringify(data),
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to create chat");
         }
-      );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create chat");
+        const result = await response.json();
+        console.log("✅ Server response:", result);
+        return result;
+      } catch (error) {
+        console.error("❌ Error creating chat:", error);
+        throw error;
       }
-
-      const result = await response.json();
-      console.log("✅ Server response:", result);
-      return result;
-    } catch (error) {
-      console.error("❌ Error creating chat:", error);
-      throw error;
-    }
-  },
-});
+    },
+  });
 
   const handleReview = () => {
     if (status === "unauthenticated") {
@@ -880,7 +880,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
     }
   };
 
-  console.log("singleBusiness", singleBusiness)
+  console.log("singleBusiness", singleBusiness);
 
   // Combine all images from businessInfo.image and images array with deduplication
   const allBusinessImages = useMemo(() => {
@@ -889,7 +889,9 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
       ...(singleBusiness.images || []),
     ];
     // Remove duplicates and empty strings
-    return Array.from(new Set(combined.filter((img) => img && img.trim() !== "")));
+    return Array.from(
+      new Set(combined.filter((img) => img && img.trim() !== "")),
+    );
   }, [singleBusiness.businessInfo.image, singleBusiness.images]);
 
   return (
@@ -940,7 +942,10 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
               {averageRating}
             </span>
             <span className="text-gray-500 flex items-center space-x-2 text-sm">
-              (<span>{singleBusiness.review.length} Reviews</span>
+              (
+              <Link href={"#rating-review"}>
+                <span>{singleBusiness.review.length} Reviews</span>
+              </Link>
               <span>
                 <Image
                   src="/images/google.jpeg"
@@ -1052,7 +1057,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
           />
 
           {/* Rating & Reviews */}
-          <div className="pt-6 lg:pt-8">
+          <section id="rating-review" className="pt-6 lg:pt-8">
             <h2 className="text-lg lg:text-xl font-semibold mb-4">
               Rating & Reviews
             </h2>
@@ -1157,7 +1162,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
                 ))}
               </div>
             )}
-          </div>
+          </section>
         </div>
 
         {/* Right Column - Made responsive */}
