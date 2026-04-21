@@ -3,11 +3,9 @@
 import React, {
   createContext,
   useContext,
-  useEffect,
   useState,
   ReactNode,
 } from "react";
-import { getMyBusinesses } from "./api";
 
 
 interface BusinessContextProps {
@@ -27,40 +25,9 @@ interface BusinessContextProviderProps {
 export function BusinessContextProvider({
   children,
 }: BusinessContextProviderProps): JSX.Element {
-  const [selectedBusinessId, setBusinessId] = useState<string | undefined>(
-    undefined
-  );
-
-  useEffect(() => {
-    const initialize = async () => {
-      const storedId = localStorage.getItem("selectedBusinessId");
-      if (storedId) {
-        setBusinessId(storedId);
-      } else {
-        try {
-          const businesses = await getMyBusinesses();
-          if (businesses.length > 0) {
-            const firstId = businesses[0]._id;
-            localStorage.setItem("selectedBusinessId", firstId);
-            setBusinessId(firstId);
-          }
-        } catch (error) {
-          console.error("Error initializing businesses:", error);
-        }
-      }
-    };
-
-    initialize();
-  }, []);
-
-  const setSelectedBusinessId = (id: string | undefined) => {
-    if (id) {
-      localStorage.setItem("selectedBusinessId", id);
-    } else {
-      localStorage.removeItem("selectedBusinessId");
-    }
-    setBusinessId(id);
-  };
+  const [selectedBusinessId, setSelectedBusinessId] = useState<
+    string | undefined
+  >(undefined);
 
   return (
     <BusinessContext.Provider

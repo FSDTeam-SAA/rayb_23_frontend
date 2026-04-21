@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useBusinessContext } from "@/lib/business-context";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 
 export default function BusinessDashboardLayout() {
@@ -35,6 +35,13 @@ export default function BusinessDashboardLayout() {
   });
 
   const { selectedBusinessId, setSelectedBusinessId } = useBusinessContext();
+
+  // Auto-select first business by default
+  useEffect(() => {
+    if (myBusinesses && myBusinesses.length > 0 && !selectedBusinessId) {
+      setSelectedBusinessId(myBusinesses[0]._id);
+    }
+  }, [myBusinesses, selectedBusinessId, setSelectedBusinessId]);
 
   return (
     <section className="border-b py-4">
@@ -79,21 +86,28 @@ export default function BusinessDashboardLayout() {
           <Select
             value={selectedBusinessId}
             onValueChange={(value) => setSelectedBusinessId(value)}
+            disabled={!myBusinesses || myBusinesses.length === 0}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select Business" />
             </SelectTrigger>
             <SelectContent>
-              {myBusinesses?.map(
-                (business: {
-                  _id: string;
-                  name: string;
-                  businessInfo: { name: string };
-                }) => (
-                  <SelectItem key={business._id} value={business._id}>
-                    {business.businessInfo.name}
-                  </SelectItem>
+              {myBusinesses && myBusinesses.length > 0 ? (
+                myBusinesses.map(
+                  (business: {
+                    _id: string;
+                    name: string;
+                    businessInfo: { name: string };
+                  }) => (
+                    <SelectItem key={business._id} value={business._id}>
+                      {business.businessInfo.name}
+                    </SelectItem>
+                  ),
                 )
+              ) : (
+                <div className="p-2 text-sm text-gray-500">
+                  No business added
+                </div>
               )}
             </SelectContent>
           </Select>
