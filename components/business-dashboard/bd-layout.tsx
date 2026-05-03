@@ -20,7 +20,6 @@ export default function BusinessDashboardLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const tabs = [
-    { name: "Add My Business", href: "/business-dashboard/add-my-business" },
     { name: "Profile", href: "/business-dashboard/profile" },
     { name: "Dashboard", href: "/business-dashboard/bd-dashboard" },
     { name: "Reviews", href: "/business-dashboard/reviews" },
