@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Paperclip, ArrowLeft } from "lucide-react";
+import { Send, ArrowLeft } from "lucide-react";
 
 export default function InboxPage() {
   const queryClient = useQueryClient();
@@ -57,7 +57,10 @@ export default function InboxPage() {
 
     // Join notification room immediately if already connected
     if (socket.connected) {
-      console.log("Socket already connected, joining notification room:", socket.id);
+      console.log(
+        "Socket already connected, joining notification room:",
+        socket.id,
+      );
       socket.emit("joinNotification", myUserId);
     }
 
@@ -135,15 +138,16 @@ export default function InboxPage() {
       userId: myUserId,
       chatId: chatId,
     };
-    
-    getMessages(params, selectedChat?.businessId?._id).then((res) => {
-      console.log("Loaded messages:", res.data?.length);
-      setLiveMessages(res.data || []);
-    }).catch(err => {
-      console.error("Error loading messages:", err);
-      setLiveMessages([]);
-    });
 
+    getMessages(params, selectedChat?.businessId?._id)
+      .then((res) => {
+        console.log("Loaded messages:", res.data?.length);
+        setLiveMessages(res.data || []);
+      })
+      .catch((err) => {
+        console.error("Error loading messages:", err);
+        setLiveMessages([]);
+      });
   }, [selectedChat, myUserId]);
 
   // Mutation removed as we use sockets now
@@ -151,7 +155,10 @@ export default function InboxPage() {
   const handleSend = () => {
     if (!newMessage.trim() || !myUserId || !selectedChat) return;
 
-    console.log("sending message via socket to business:", selectedChat.businessId);
+    console.log(
+      "sending message via socket to business:",
+      selectedChat.businessId,
+    );
 
     const socket = socketRef.current;
     if (socket) {
@@ -160,7 +167,7 @@ export default function InboxPage() {
         senderId: myUserId,
         receiverId: selectedChat.businessId.user,
         message: newMessage,
-        image: null
+        image: null,
       });
       setNewMessage("");
     } else {
@@ -168,7 +175,7 @@ export default function InboxPage() {
     }
   };
 
-  console.log("handel seleted", handleSend)
+  console.log("handel seleted", handleSend);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -314,19 +321,19 @@ export default function InboxPage() {
                   >
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
-                    <div className="flex items-center gap-5">
-                      <h2 className="text-lg font-medium text-gray-900 line-clamp-1 max-w-[200px]">
-                        {selectedChat?.businessId?.businessInfo?.name}
-                      </h2>
-                      <p className="text-sm text-gray-500 hidden sm:block">
-                        {selectedChat?.businessId?.businessInfo?.email}
-                      </p>
-                    </div>
+                  <div className="flex items-center gap-5">
+                    <h2 className="text-lg font-medium text-gray-900 line-clamp-1 max-w-[200px]">
+                      {selectedChat?.businessId?.businessInfo?.name}
+                    </h2>
+                    <p className="text-sm text-gray-500 hidden sm:block">
+                      {selectedChat?.businessId?.businessInfo?.email}
+                    </p>
                   </div>
-                  <Avatar className="h-12 w-12 mt-1">
-                    <AvatarImage
-                      src={selectedChat?.businessId?.businessInfo?.image[0]}
-                    />
+                </div>
+                <Avatar className="h-12 w-12 mt-1">
+                  <AvatarImage
+                    src={selectedChat?.businessId?.businessInfo?.image[0]}
+                  />
                   <AvatarFallback className="bg-gray-200 text-gray-600 text-xs">
                     {getInitials(
                       selectedChat?.senderId?.name ||
@@ -400,13 +407,6 @@ export default function InboxPage() {
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={handleKeyPress}
                   />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
-                  >
-                    <Paperclip className="h-4 w-4 text-gray-400" />
-                  </Button>
                 </div>
                 <Button
                   onClick={handleSend}

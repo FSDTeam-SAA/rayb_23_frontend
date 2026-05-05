@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Paperclip, ArrowLeft } from "lucide-react";
+import { Send, ArrowLeft } from "lucide-react";
 export interface Message {
   _id: string;
   senderId: string | { _id: string; name?: string; image?: string };
@@ -107,7 +107,7 @@ export default function InboxComponent({ config }: InboxComponentProps) {
             (m) =>
               m.tempId &&
               getSenderId(m.senderId) === getSenderId(msg.senderId) &&
-              m.message === msg.message
+              m.message === msg.message,
           );
 
           if (optimisticIndex !== -1) {
@@ -211,7 +211,7 @@ export default function InboxComponent({ config }: InboxComponentProps) {
         senderId: myUserId,
         receiverId: config.getReceiverId(selectedChat),
         message: newMessage,
-        image: null // TODO: Add image support
+        image: null, // TODO: Add image support
       });
     }
 
@@ -260,7 +260,7 @@ export default function InboxComponent({ config }: InboxComponentProps) {
     mutationFn: (messageId: string) =>
       fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/message/update-message-status/${messageId}`,
-        { method: "PUT" }
+        { method: "PUT" },
       ).then((res) => {
         if (!res.ok) {
           return res.text().then((text) => {
@@ -297,7 +297,7 @@ export default function InboxComponent({ config }: InboxComponentProps) {
     const scrollToBottom = () => {
       if (messagesScrollAreaRef.current) {
         const scrollContent = messagesScrollAreaRef.current.querySelector(
-          "[data-radix-scroll-area-viewport]"
+          "[data-radix-scroll-area-viewport]",
         ) as HTMLElement;
         if (scrollContent) {
           scrollContent.scrollTop = scrollContent.scrollHeight;
@@ -329,8 +329,9 @@ export default function InboxComponent({ config }: InboxComponentProps) {
     <div className="flex gap-5 h-[70vh] bg-white container">
       {/* Left Sidebar - Chat List */}
       <div
-        className={`w-full md:w-80 border-gray-200 flex flex-col ${showChatList ? "block" : "hidden md:flex"
-          }`}
+        className={`w-full md:w-80 border-gray-200 flex flex-col ${
+          showChatList ? "block" : "hidden md:flex"
+        }`}
       >
         <ScrollArea className="flex-1">
           <div className="divide-y divide-gray-100">
@@ -339,15 +340,16 @@ export default function InboxComponent({ config }: InboxComponentProps) {
                 .sort(
                   (a, b) =>
                     new Date(b.lastMessage?.date).getTime() -
-                    new Date(a.lastMessage?.date).getTime()
+                    new Date(a.lastMessage?.date).getTime(),
                 )
                 .map((chat: any) => (
                   <div
                     key={config.getChatId(chat)}
-                    className={`p-4 rounded-xl cursor-pointer hover:bg-[#F7F8F8] transition-colors ${config.getChatId(selectedChat) === config.getChatId(chat)
-                      ? "bg-[#F7F8F8]"
-                      : ""
-                      }`}
+                    className={`p-4 rounded-xl cursor-pointer hover:bg-[#F7F8F8] transition-colors ${
+                      config.getChatId(selectedChat) === config.getChatId(chat)
+                        ? "bg-[#F7F8F8]"
+                        : ""
+                    }`}
                     onClick={() => handleChatSelect(chat)}
                   >
                     <div className="flex items-center space-x-3">
@@ -407,8 +409,9 @@ export default function InboxComponent({ config }: InboxComponentProps) {
 
       {/* Right Chat Window */}
       <div
-        className={`flex-1 flex flex-col border rounded-lg ${showChatList ? "hidden md:flex" : "flex"
-          }`}
+        className={`flex-1 flex flex-col border rounded-lg ${
+          showChatList ? "hidden md:flex" : "flex"
+        }`}
       >
         {selectedChat ? (
           <>
@@ -460,8 +463,9 @@ export default function InboxComponent({ config }: InboxComponentProps) {
                   return (
                     <div
                       key={msg._id}
-                      className={`flex ${isMyMessage ? "justify-end" : "justify-start"
-                        }`}
+                      className={`flex ${
+                        isMyMessage ? "justify-end" : "justify-start"
+                      }`}
                     >
                       <div className="flex items-start space-x-2 max-w-xs lg:max-w-md">
                         {!isMyMessage && (
@@ -473,16 +477,17 @@ export default function InboxComponent({ config }: InboxComponentProps) {
                             />
                             <AvatarFallback className="bg-gray-200 text-gray-600 text-xs">
                               {getInitials(
-                                senderName || config.getChatName(selectedChat)
+                                senderName || config.getChatName(selectedChat),
                               )}
                             </AvatarFallback>
                           </Avatar>
                         )}
                         <div
-                          className={`px-4 py-2 rounded-2xl ${isMyMessage
-                            ? "bg-[#00998E] text-white rounded-br-md"
-                            : "bg-gray-100 text-gray-900 rounded-bl-md"
-                            }`}
+                          className={`px-4 py-2 rounded-2xl ${
+                            isMyMessage
+                              ? "bg-[#00998E] text-white rounded-br-md"
+                              : "bg-gray-100 text-gray-900 rounded-bl-md"
+                          }`}
                         >
                           <p className="text-sm">{msg?.message}</p>
                         </div>
@@ -512,13 +517,6 @@ export default function InboxComponent({ config }: InboxComponentProps) {
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={handleKeyPress}
                   />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
-                  >
-                    <Paperclip className="h-4 w-4 text-gray-400" />
-                  </Button>
                 </div>
                 <Button
                   onClick={handleSend}
