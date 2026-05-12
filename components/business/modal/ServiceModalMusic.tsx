@@ -131,10 +131,10 @@ const ServiceModalMusic: React.FC<ServiceModalProps> = ({
     let isValid = true;
 
     // Validate service name
-    // if (!newInstrumentName) {
-    //   newErrors.instrumentName = "Please select a service";
-    //   isValid = false;
-    // }
+    if (!newInstrumentName) {
+      newErrors.instrumentName = "Please select a service";
+      isValid = false;
+    }
 
     // Validate pricing based on type
     // if (pricingType === "exact" || pricingType === "hourly") {

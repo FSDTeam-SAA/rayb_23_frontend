@@ -53,7 +53,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
     queryFn: async () => {
       const res = await getInstrumentTypes(
         selectedInstrumentsGroup,
-        selectedInstrumentsGroupMusic
+        selectedInstrumentsGroupMusic,
       );
       return res?.data?.serviceType as string[];
     },
@@ -86,10 +86,14 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
   const handleMinPriceChange = (value: string) => {
     if (value === "" || validateNumber(value)) {
       setMinPrice(value);
-      
+
       // Validate if max price exists and is less than min price
       if (maxPrice && parseFloat(value) > parseFloat(maxPrice)) {
-        setErrors({ ...errors, minPrice: "Min price cannot be higher than max price", maxPrice: "Max price cannot be lower than min price" });
+        setErrors({
+          ...errors,
+          minPrice: "Min price cannot be higher than max price",
+          maxPrice: "Max price cannot be lower than min price",
+        });
       } else {
         setErrors({ ...errors, minPrice: "", maxPrice: "" });
       }
@@ -100,10 +104,14 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
   const handleMaxPriceChange = (value: string) => {
     if (value === "" || validateNumber(value)) {
       setMaxPrice(value);
-      
+
       // Validate if min price exists and is greater than max price
       if (minPrice && parseFloat(value) < parseFloat(minPrice)) {
-        setErrors({ ...errors, maxPrice: "Max price cannot be lower than min price", minPrice: "Min price cannot be higher than max price" });
+        setErrors({
+          ...errors,
+          maxPrice: "Max price cannot be lower than min price",
+          minPrice: "Min price cannot be higher than max price",
+        });
       } else {
         setErrors({ ...errors, maxPrice: "", minPrice: "" });
       }
@@ -122,10 +130,10 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
     let isValid = true;
 
     // Validate service name
-    // if (!newInstrumentName) {
-    //   newErrors.instrumentName = "Please select a service";
-    //   isValid = false;
-    // }
+    if (!newInstrumentName) {
+      newErrors.instrumentName = "Please select a service";
+      isValid = false;
+    }
 
     // Validate pricing based on type
     // if (pricingType === "exact" || pricingType === "hourly") {
@@ -251,7 +259,9 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none h-[48px] bg-gray-50"
                   />
                   {errors.minPrice && (
-                    <p className="text-red-500 text-xs mt-1">{errors.minPrice}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.minPrice}
+                    </p>
                   )}
                 </div>
                 <div className="w-1/2">
@@ -265,15 +275,19 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none h-[48px] bg-gray-50"
                   />
                   {errors.maxPrice && (
-                    <p className="text-red-500 text-xs mt-1">{errors.maxPrice}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.maxPrice}
+                    </p>
                   )}
                 </div>
               </div>
-              {minPrice && maxPrice && parseFloat(minPrice) > parseFloat(maxPrice) && (
-                <p className="text-red-500 text-xs mt-1">
-                  Minimum price cannot be higher than maximum price
-                </p>
-              )}
+              {minPrice &&
+                maxPrice &&
+                parseFloat(minPrice) > parseFloat(maxPrice) && (
+                  <p className="text-red-500 text-xs mt-1">
+                    Minimum price cannot be higher than maximum price
+                  </p>
+                )}
             </div>
           ) : (
             <div>
