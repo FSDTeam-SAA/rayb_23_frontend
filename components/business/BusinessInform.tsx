@@ -1,4 +1,4 @@
-import { ImageUp, MapPin } from "lucide-react";
+import { ImageUp, MapPin, X } from "lucide-react";
 import Image from "next/image";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { MdDelete } from "react-icons/md";
@@ -42,14 +42,7 @@ interface PlaceResult {
     state?: string;
     state_code?: string;
     country?: string;
-    postcode?: string;
-    country_code?: string;
-    county?: string;
-    road?: string;
-    house_number?: string;
   };
-  lat: string;
-  lon: string;
 }
 
 // Custom hook for phone number formatting
@@ -98,18 +91,17 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
   setError,
 }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [suggestions, setSuggestions] = useState<PlaceResult[]>([]);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [phoneError, setPhoneError] = useState<string>("");
 
   const addressInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout>();
-  const lastApiCallRef = useRef<string>(""); // Track last API call to prevent duplicate calls
 
   const { formatPhoneNumber, validatePhoneNumber } = usePhoneFormatter();
 
-  // Debounced API call function
+  // Fetch city suggestions from OpenStreetMap (Nominatim) - Same as LocationAutocomplete
   const fetchLocations = useCallback(async (query: string) => {
     if (!query || query.length < 2) {
       setSuggestions([]);
@@ -117,30 +109,42 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
       return;
     }
 
-    // Prevent duplicate API calls for same query
-    if (lastApiCallRef.current === query) {
-      return;
-    }
-
     setIsLoading(true);
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+        `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(
           query,
-        )}&format=json&addressdetails=1&limit=5&countrycodes=us,ca`, // Reduced limit to 5 for better performance
+        )}&format=json&addressdetails=1&limit=10`,
       );
       const data: PlaceResult[] = await response.json();
 
-      // Filter results that have at least city/town and state information
-      const filteredResults = data.filter(
-        (place) =>
-          (place.address.city || place.address.town || place.address.village) &&
-          place.address.state,
-      );
+      const formattedResults = data
+        .map((place) => {
+          const city =
+            place.address.city || place.address.town || place.address.village;
 
-      setSuggestions(filteredResults);
-      setShowSuggestions(filteredResults.length > 0);
-      lastApiCallRef.current = query; // Store the last query
+          // Try to get 2-letter state code (capitalized)
+          let state = place.address.state_code
+            ? place.address.state_code.toUpperCase()
+            : "";
+
+          // If no state_code, use first two letters of state name
+          if (!state && place.address.state) {
+            state = place.address.state.slice(0, 2).toUpperCase();
+          }
+
+          if (!city) return "";
+
+          // Combine city and short state
+          return state ? `${city}, ${state}` : city;
+        })
+        .filter((v) => v.trim() !== "");
+
+      // Remove duplicates
+      const uniqueResults = Array.from(new Set(formattedResults));
+
+      setSuggestions(uniqueResults);
+      setShowSuggestions(uniqueResults.length > 0);
     } catch (error) {
       console.error("Error fetching locations:", error);
       setSuggestions([]);
@@ -163,7 +167,7 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
       clearTimeout(timeoutRef.current);
     }
 
-    // Don't show suggestions if the value is too short or if it's the same as selected
+    // Don't show suggestions if the value is too short
     if (value.length < 2) {
       setSuggestions([]);
       setShowSuggestions(false);
@@ -173,7 +177,7 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
     // Set new timeout for API call
     timeoutRef.current = setTimeout(() => {
       fetchLocations(value);
-    }, 500); // Increased debounce time to 500ms
+    }, 400);
   };
 
   // Click outside handler
@@ -204,58 +208,25 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
     };
   }, []);
 
-  const formatAddress = (place: PlaceResult): string => {
-    const address = place.address;
-
-    const street = address.road
-      ? `${address.house_number ? address.house_number + " " : ""}${address.road}`
-      : "";
-    const city = address.city || address.town || address.village || "";
-    const state = address.state || "";
-    const postcode = address.postcode || "";
-    const country = address.country || "";
-
-    let formattedAddress = "";
-
-    if (street) {
-      formattedAddress += street + ", ";
-    }
-
-    if (city) {
-      formattedAddress += city + ", ";
-    }
-
-    if (state) {
-      formattedAddress += state + " ";
-    }
-
-    if (postcode) {
-      formattedAddress += postcode;
-    }
-
-    if (country && country !== "United States" && country !== "Canada") {
-      formattedAddress += ", " + country;
-    }
-
-    return formattedAddress.trim();
-  };
-
-  const handleLocationSelect = (place: PlaceResult) => {
-    const fullAddress = formatAddress(place);
-    setAddressName(fullAddress);
+  const handleLocationSelect = (selected: string) => {
+    setAddressName(selected);
     setShowSuggestions(false);
-    setSuggestions([]); // Clear suggestions
-    lastApiCallRef.current = fullAddress; // Update last API call to prevent refetch
+    setSuggestions([]);
   };
 
   const handleAddressFocus = () => {
-    // Only show if we have suggestions and input has value
     if (suggestions.length > 0 && addressName.length >= 2) {
       setShowSuggestions(true);
     }
   };
 
-  // Phone number handlers (unchanged)
+  const clearAddress = () => {
+    setAddressName("");
+    setShowSuggestions(false);
+    setSuggestions([]);
+  };
+
+  // Phone number handlers
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
 
@@ -326,7 +297,7 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
 
   return (
     <div>
-      {/* upload photos section - unchanged */}
+      {/* upload photos section */}
       <div className="mt-8">
         <label className="text-[24px] font-medium">Business Photos</label>
         <div className="flex gap-5 flex-wrap">
@@ -402,70 +373,63 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
               )}
             </div>
 
-            {/* Address with Autocomplete - Fixed */}
+            {/* Address with Autocomplete - Now exactly like LocationAutocomplete */}
             <div className="relative">
               <label className="block text-md font-medium text-gray-700">
                 Address
               </label>
               <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-5 w-5" />
                 <input
                   ref={addressInputRef}
                   type="text"
-                  placeholder="Business Address"
-                  className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 px-10 py-2 text-sm focus:outline-none h-[48px]"
+                  placeholder="Search city..."
+                  className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 pl-10 pr-10 py-2 text-sm focus:outline-none h-[48px]"
                   value={addressName}
                   onChange={handleAddressChange}
                   onFocus={handleAddressFocus}
                   autoComplete="off"
                 />
-                <MapPin
-                  className="absolute top-[50%] left-3 -translate-y-1/2 text-gray-400"
-                  size={18}
-                />
+                {addressName && (
+                  <button
+                    onClick={clearAddress}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    aria-label="Clear location"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                )}
               </div>
 
               {error && (
                 <p className="mt-1 text-red-500">{error?.addressName}</p>
               )}
 
-              {/* Suggestions Dropdown */}
+              {/* Suggestions Dropdown - Exactly like LocationAutocomplete */}
               {showSuggestions && (
                 <div
                   ref={suggestionsRef}
-                  className="absolute z-20 w-full bg-white rounded-md shadow-lg border border-gray-200 max-h-[300px] overflow-y-auto mt-1"
-                  onMouseDown={(e) => e.preventDefault()}
+                  className="absolute z-20 mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200 max-h-[300px] overflow-y-auto"
                 >
                   {isLoading ? (
-                    <div className="p-3 text-center text-gray-500">
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
-                        <span>Loading locations...</span>
-                      </div>
+                    <div className="p-4 text-center text-gray-500">
+                      Loading locations...
                     </div>
                   ) : suggestions.length === 0 ? (
-                    <div className="p-3 text-center text-gray-500">
+                    <div className="p-4 text-gray-500 text-center">
                       No locations found
                     </div>
                   ) : (
                     <ul>
-                      {suggestions.map((place, index) => (
+                      {suggestions.map((item, index) => (
                         <li
                           key={index}
-                          className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer transition-colors"
-                          onClick={() => handleLocationSelect(place)}
+                          className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer"
+                          onClick={() => handleLocationSelect(item)}
                         >
-                          <div className="p-3 flex items-start gap-2">
-                            <MapPin className="h-4 w-4 text-gray-500 mt-1 flex-shrink-0" />
-                            <div>
-                              <span className="text-sm font-medium block">
-                                {formatAddress(place)}
-                              </span>
-                              <span className="text-xs text-gray-500 mt-1 block">
-                                {place.display_name.length > 100
-                                  ? place.display_name.substring(0, 100) + "..."
-                                  : place.display_name}
-                              </span>
-                            </div>
+                          <div className="p-3 flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-gray-500" />
+                            <span>{item}</span>
                           </div>
                         </li>
                       ))}
@@ -476,7 +440,7 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
             </div>
           </div>
 
-          {/* Description - unchanged */}
+          {/* Description */}
           <div>
             <label className="block text-md font-medium text-gray-700">
               Description
