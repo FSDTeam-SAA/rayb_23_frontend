@@ -122,18 +122,34 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
     let isValid = true;
 
     // Validate service name
-    if (!newInstrumentName) {
-      newErrors.instrumentName = "Please select a service";
-      isValid = false;
-    }
+    // if (!newInstrumentName) {
+    //   newErrors.instrumentName = "Please select a service";
+    //   isValid = false;
+    // }
 
     // Validate pricing based on type
-    if (pricingType === "exact" || pricingType === "hourly") {
-      if (!price || !validateNumber(price)) {
-        newErrors.price = "Please enter a valid price";
-        isValid = false;
-      }
-    } else if (pricingType === "range") {
+    // if (pricingType === "exact" || pricingType === "hourly") {
+    //   if (!price || !validateNumber(price)) {
+    //     newErrors.price = "Please enter a valid price";
+    //     isValid = false;
+    //   }
+    // } else if (pricingType === "range") {
+    //   if (!minPrice || !validateNumber(minPrice)) {
+    //     newErrors.minPrice = "Please enter a valid minimum price";
+    //     isValid = false;
+    //   }
+    //   if (!maxPrice || !validateNumber(maxPrice)) {
+    //     newErrors.maxPrice = "Please enter a valid maximum price";
+    //     isValid = false;
+    //   }
+    //   if (minPrice && maxPrice && parseFloat(minPrice) > parseFloat(maxPrice)) {
+    //     newErrors.minPrice = "Min price cannot be higher than max price";
+    //     newErrors.maxPrice = "Max price cannot be lower than min price";
+    //     isValid = false;
+    //   }
+    // }
+
+    if (pricingType === "range") {
       if (!minPrice || !validateNumber(minPrice)) {
         newErrors.minPrice = "Please enter a valid minimum price";
         isValid = false;
