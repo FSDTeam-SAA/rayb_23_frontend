@@ -68,6 +68,8 @@ interface Review {
     reportMessage: string;
   };
   reply?: Reply[];
+  googleAuthorName: string;
+  googleAuthorPhoto: string;
 }
 
 interface BusinessProfileProps {
@@ -632,22 +634,33 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
     const [expanded, setExpanded] = useState(false);
     const needsTruncation = review.feedback.length > 150;
 
+    // Get reviewer name (prefer user name, fallback to googleAuthorName)
+    const reviewerName =
+      review.user?.name || review?.googleAuthorName || "Anonymous User";
+
+    // Get reviewer avatar (prefer user image, fallback to googleAuthorPhoto)
+    const reviewerAvatar = review.user?.imageLink || review?.googleAuthorPhoto;
+
+    // Get first letter for fallback avatar
+    const firstLetter =
+      reviewerName !== "Anonymous User" ? reviewerName[0]?.toUpperCase() : "U";
+
     return (
       <div className="border shadow-md rounded-lg p-4 border-gray-200 py-4 md:py-6">
         <div className="flex items-start gap-3 md:gap-4">
           <div className="flex-shrink-0">
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-teal-100 rounded-full flex items-center justify-center">
-              {review?.user?.imageLink ? (
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-teal-100 rounded-full flex items-center justify-center overflow-hidden">
+              {reviewerAvatar ? (
                 <Image
-                  src={review?.user?.imageLink || ""}
-                  alt="img.png"
+                  src={reviewerAvatar}
+                  alt={reviewerName}
                   width={1000}
                   height={1000}
                   className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover"
                 />
               ) : (
                 <span className="text-teal-800 font-semibold text-xs">
-                  {review.user?.name?.[0]?.toUpperCase() || "U"}
+                  {firstLetter}
                 </span>
               )}
             </div>
@@ -656,7 +669,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
           <div className="flex-1 min-w-0">
             <div className="mb-2">
               <h1 className="text-sm font-medium text-gray-900 mb-1 truncate">
-                {review.user?.name || "Anonymous User"}
+                {reviewerName}
               </h1>
               <div className="flex items-center">
                 {[1, 2, 3, 4, 5].map((star) => (
@@ -695,7 +708,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
             </p>
 
             {/* Review Images */}
-            {review.image.length > 0 && (
+            {review.image && review.image.length > 0 && (
               <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
                 {review.image.map((img, index) => (
                   <div
