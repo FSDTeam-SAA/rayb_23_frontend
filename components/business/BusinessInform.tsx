@@ -1,6 +1,6 @@
-import { ImageUp, MapPin, X } from "lucide-react";
+import { ImageUp, MapPin } from "lucide-react";
 import Image from "next/image";
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { MdDelete } from "react-icons/md";
 
 interface Error {
@@ -9,7 +9,6 @@ interface Error {
   description?: string;
   phoneNumber?: string;
   email?: string;
-  images?: string;
 }
 
 interface BusinessInformProps {
@@ -42,15 +41,26 @@ interface PlaceResult {
     state?: string;
     state_code?: string;
     country?: string;
+    postcode?: string;
+    country_code?: string;
+    county?: string;
+    road?: string;
+    house_number?: string;
   };
+  lat: string;
+  lon: string;
 }
 
 // Custom hook for phone number formatting
 const usePhoneFormatter = () => {
   const formatPhoneNumber = (value: string): string => {
+    // Remove all non-digit characters
     const cleaned = value.replace(/\D/g, "");
+
+    // Limit to 10 digits (US phone number)
     const limited = cleaned.slice(0, 10);
 
+    // Apply formatting based on length
     if (limited.length === 0) {
       return "";
     } else if (limited.length <= 3) {
@@ -91,156 +101,217 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
   setError,
 }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<PlaceResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [phoneError, setPhoneError] = useState<string>("");
-
   const addressInputRef = useRef<HTMLInputElement>(null);
-  const suggestionsRef = useRef<HTMLDivElement>(null);
-  const timeoutRef = useRef<NodeJS.Timeout>();
 
   const { formatPhoneNumber, validatePhoneNumber } = usePhoneFormatter();
 
-  // Fetch city suggestions from OpenStreetMap (Nominatim) - Same as LocationAutocomplete
-  const fetchLocations = useCallback(async (query: string) => {
-    if (!query || query.length < 2) {
+  // Fetch location suggestions from OpenStreetMap (Nominatim)
+  useEffect(() => {
+    if (!addressName || addressName.length < 2) {
       setSuggestions([]);
       setShowSuggestions(false);
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(
-          query,
-        )}&format=json&addressdetails=1&limit=10`,
-      );
-      const data: PlaceResult[] = await response.json();
+    const fetchLocations = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+            addressName,
+          )}&format=json&addressdetails=1&limit=15&countrycodes=us,ca`,
+        );
+        const data: PlaceResult[] = await response.json();
 
-      const formattedResults = data
-        .map((place) => {
-          const city =
-            place.address.city || place.address.town || place.address.village;
+        // Filter results that have at least city/town and state/state_code information
+        const filteredResults = data.filter(
+          (place) =>
+            (place.address.city ||
+              place.address.town ||
+              place.address.village) &&
+            (place.address.state || place.address.state_code),
+        );
 
-          // Try to get 2-letter state code (capitalized)
-          let state = place.address.state_code
-            ? place.address.state_code.toUpperCase()
-            : "";
+        setSuggestions(filteredResults);
+        setShowSuggestions(filteredResults.length > 0);
+      } catch (error) {
+        console.error("Error fetching locations:", error);
+        setSuggestions([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-          // If no state_code, use first two letters of state name
-          if (!state && place.address.state) {
-            state = place.address.state.slice(0, 2).toUpperCase();
-          }
+    const timeoutId = setTimeout(fetchLocations, 400);
+    return () => clearTimeout(timeoutId);
+  }, [addressName]);
 
-          if (!city) return "";
-
-          // Combine city and short state
-          return state ? `${city}, ${state}` : city;
-        })
-        .filter((v) => v.trim() !== "");
-
-      // Remove duplicates
-      const uniqueResults = Array.from(new Set(formattedResults));
-
-      setSuggestions(uniqueResults);
-      setShowSuggestions(uniqueResults.length > 0);
-    } catch (error) {
-      console.error("Error fetching locations:", error);
-      setSuggestions([]);
-    } finally {
-      setIsLoading(false);
+  // Validate phone number when it changes
+  useEffect(() => {
+    if (phoneNumber && phoneNumber.replace(/\D/g, "").length > 0) {
+      const isValid = validatePhoneNumber(phoneNumber);
+      if (!isValid && phoneNumber.replace(/\D/g, "").length === 10) {
+        setPhoneError("Please enter a valid 10-digit phone number");
+      } else {
+        setPhoneError("");
+      }
+    } else {
+      setPhoneError("");
     }
-  }, []);
+  }, [phoneNumber, validatePhoneNumber]);
 
-  // Handle input change with debounce
-  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setAddressName(value);
-
-    if (value.trim()) {
-      setError((prev) => ({ ...prev, addressName: "" }));
-    }
-
-    // Clear previous timeout
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-
-    // Don't show suggestions if the value is too short
-    if (value.length < 2) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-
-    // Set new timeout for API call
-    timeoutRef.current = setTimeout(() => {
-      fetchLocations(value);
-    }, 400);
+  // State name to abbreviation mapping
+  const stateAbbreviations: { [key: string]: string } = {
+    alabama: "AL",
+    alaska: "AK",
+    arizona: "AZ",
+    arkansas: "AR",
+    california: "CA",
+    colorado: "CO",
+    connecticut: "CT",
+    delaware: "DE",
+    florida: "FL",
+    georgia: "GA",
+    hawaii: "HI",
+    idaho: "ID",
+    illinois: "IL",
+    indiana: "IN",
+    iowa: "IA",
+    kansas: "KS",
+    kentucky: "KY",
+    louisiana: "LA",
+    maine: "ME",
+    maryland: "MD",
+    massachusetts: "MA",
+    michigan: "MI",
+    minnesota: "MN",
+    mississippi: "MS",
+    missouri: "MO",
+    montana: "MT",
+    nebraska: "NE",
+    nevada: "NV",
+    "new hampshire": "NH",
+    "new jersey": "NJ",
+    "new mexico": "NM",
+    "new york": "NY",
+    "north carolina": "NC",
+    "north dakota": "ND",
+    ohio: "OH",
+    oklahoma: "OK",
+    oregon: "OR",
+    pennsylvania: "PA",
+    "rhode island": "RI",
+    "south carolina": "SC",
+    "south dakota": "SD",
+    tennessee: "TN",
+    texas: "TX",
+    utah: "UT",
+    vermont: "VT",
+    virginia: "VA",
+    washington: "WA",
+    "west virginia": "WV",
+    wisconsin: "WI",
+    wyoming: "WY",
+    "british columbia": "BC",
+    alberta: "AB",
+    manitoba: "MB",
+    saskatchewan: "SK",
+    quebec: "QC",
+    "new brunswick": "NB",
+    "nova scotia": "NS",
+    "prince edward island": "PE",
+    newfoundland: "NL",
+    "northwest territories": "NT",
+    nunavut: "NU",
+    yukon: "YT",
   };
 
-  // Click outside handler
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        suggestionsRef.current &&
-        !suggestionsRef.current.contains(event.target as Node) &&
-        addressInputRef.current &&
-        !addressInputRef.current.contains(event.target as Node)
-      ) {
-        setShowSuggestions(false);
-      }
-    };
+  const getStateCode = (
+    state: string | undefined,
+    stateCode: string | undefined,
+  ): string => {
+    if (stateCode) return stateCode.toUpperCase();
+    if (state) {
+      const code = stateAbbreviations[state.toLowerCase()];
+      return code || state.toUpperCase();
+    }
+    return "";
+  };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+  const formatAddress = (place: PlaceResult): string => {
+    const address = place.address;
 
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
+    // Build address components
+    const street = address.road
+      ? `${address.house_number ? address.house_number + " " : ""}${address.road}`
+      : "";
+    const city = address.city || address.town || address.village || "";
+    const state = getStateCode(address.state, address.state_code);
+    const postcode = address.postcode || "";
+    const country = address.country || "";
 
-  const handleLocationSelect = (selected: string) => {
-    setAddressName(selected);
+    // Create formatted address
+    let formattedAddress = "";
+
+    if (street) {
+      formattedAddress += street + ", ";
+    }
+
+    if (city) {
+      formattedAddress += city + ", ";
+    }
+
+    if (state) {
+      formattedAddress += state + " ";
+    }
+
+    if (postcode) {
+      formattedAddress += postcode;
+    }
+
+    if (country && country !== "United States" && country !== "Canada") {
+      formattedAddress += ", " + country;
+    }
+
+    return formattedAddress.trim();
+  };
+
+  const handleLocationSelect = (place: PlaceResult) => {
+    const fullAddress = formatAddress(place);
+    setAddressName(fullAddress);
     setShowSuggestions(false);
-    setSuggestions([]);
   };
 
   const handleAddressFocus = () => {
-    if (suggestions.length > 0 && addressName.length >= 2) {
-      setShowSuggestions(true);
-    }
+    if (suggestions.length > 0) setShowSuggestions(true);
   };
 
-  const clearAddress = () => {
-    setAddressName("");
-    setShowSuggestions(false);
-    setSuggestions([]);
+  const handleAddressBlur = () => {
+    // Delay hiding suggestions to allow for click
+    setTimeout(() => setShowSuggestions(false), 200);
   };
 
-  // Phone number handlers
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
 
+    // Allow backspace to delete numbers including formatting characters
     if (input.length < phoneNumber.length) {
+      // If user is deleting, remove last digit but maintain formatting
       const cleanedCurrent = phoneNumber.replace(/\D/g, "");
       const cleanedNew = input.replace(/\D/g, "");
 
       if (cleanedNew.length < cleanedCurrent.length) {
+        // User deleted a digit, format the remaining digits
         const formatted = formatPhoneNumber(cleanedNew);
         setPhoneNumber(formatted);
         return;
       }
     }
 
+    // Format the phone number as user types
     const formatted = formatPhoneNumber(input);
     setPhoneNumber(formatted);
 
@@ -250,10 +321,7 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
   };
 
   const handlePhoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.ctrlKey || e.metaKey || e.key === "v" || e.key === "V") {
-      return;
-    }
-
+    // Allow only numbers, backspace, delete, tab, and arrow keys
     if (
       !/[\d]/.test(e.key) &&
       ![
@@ -281,26 +349,13 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
     }
   };
 
-  // Validate phone number when it changes
-  useEffect(() => {
-    if (phoneNumber && phoneNumber.replace(/\D/g, "").length > 0) {
-      const isValid = validatePhoneNumber(phoneNumber);
-      if (!isValid && phoneNumber.replace(/\D/g, "").length === 10) {
-        setPhoneError("Please enter a valid 10-digit phone number");
-      } else {
-        setPhoneError("");
-      }
-    } else {
-      setPhoneError("");
-    }
-  }, [phoneNumber, validatePhoneNumber]);
-
   return (
     <div>
-      {/* upload photos section */}
+      {/* upload photos */}
       <div className="mt-8">
         <label className="text-[24px] font-medium">Business Photos</label>
         <div className="flex gap-5 flex-wrap">
+          {/* Upload button */}
           <div className="w-[200px] h-[200px]">
             <input
               type="file"
@@ -320,6 +375,7 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
             </div>
           </div>
 
+          {/* Image previews */}
           {images.map((image, index) => (
             <div
               key={index}
@@ -339,10 +395,6 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
             </div>
           ))}
         </div>
-
-        {error?.images && (
-          <p className="mt-5 text-red-500 text-sm">{error.images}</p>
-        )}
       </div>
 
       {/* business details */}
@@ -363,6 +415,7 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
                 value={businessName}
                 onChange={(e) => {
                   setBusinessName(e.target.value);
+
                   if (e.target.value.trim()) {
                     setError((prev) => ({ ...prev, businessName: "" }));
                   }
@@ -373,63 +426,67 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
               )}
             </div>
 
-            {/* Address with Autocomplete - Now exactly like LocationAutocomplete */}
+            {/* Address with Autocomplete */}
             <div className="relative">
               <label className="block text-md font-medium text-gray-700">
                 Address
               </label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-5 w-5" />
                 <input
                   ref={addressInputRef}
                   type="text"
-                  placeholder="Search city..."
-                  className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 pl-10 pr-10 py-2 text-sm focus:outline-none h-[48px]"
+                  placeholder="488 San Mateo Ave, San Bruno, CA 94066"
+                  className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 px-10 py-2 text-sm focus:outline-none h-[48px]"
                   value={addressName}
-                  onChange={handleAddressChange}
+                  onChange={(e) => {
+                    setAddressName(e.target.value);
+
+                    if (e.target.value.trim()) {
+                      setError((prev) => ({ ...prev, addressName: "" }));
+                    }
+                  }}
                   onFocus={handleAddressFocus}
-                  autoComplete="off"
+                  onBlur={handleAddressBlur}
                 />
-                {addressName && (
-                  <button
-                    onClick={clearAddress}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    aria-label="Clear location"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                )}
+                <MapPin
+                  className="absolute top-[50%] left-3 -translate-y-1/2 text-gray-400"
+                  size={18}
+                />
               </div>
 
               {error && (
                 <p className="mt-1 text-red-500">{error?.addressName}</p>
               )}
 
-              {/* Suggestions Dropdown - Exactly like LocationAutocomplete */}
+              {/* Suggestions Dropdown */}
               {showSuggestions && (
-                <div
-                  ref={suggestionsRef}
-                  className="absolute z-20 mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200 max-h-[300px] overflow-y-auto"
-                >
+                <div className="absolute z-20 w-full bg-white rounded-md shadow-lg border border-gray-200 max-h-[300px] overflow-y-auto mt-1">
                   {isLoading ? (
-                    <div className="p-4 text-center text-gray-500">
+                    <div className="p-3 text-center text-gray-500">
                       Loading locations...
                     </div>
                   ) : suggestions.length === 0 ? (
-                    <div className="p-4 text-gray-500 text-center">
-                      No locations found
-                    </div>
+                    <div className="p-3 text-gray-500">No locations found</div>
                   ) : (
                     <ul>
-                      {suggestions.map((item, index) => (
+                      {suggestions.map((place, index) => (
                         <li
                           key={index}
                           className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer"
-                          onClick={() => handleLocationSelect(item)}
+                          onClick={() => handleLocationSelect(place)}
                         >
-                          <div className="p-3 flex items-center gap-2">
-                            <MapPin className="h-4 w-4 text-gray-500" />
-                            <span>{item}</span>
+                          <div className="p-3 flex items-start gap-2">
+                            <MapPin className="h-4 w-4 text-gray-500 mt-1 flex-shrink-0" />
+                            <div>
+                              <span className="text-sm font-medium block">
+                                {formatAddress(place)}
+                              </span>
+                              <span className="text-xs text-gray-500 mt-1 block">
+                                {place.display_name.length > 100
+                                  ? place.display_name.substring(0, 100) + "..."
+                                  : place.display_name}
+                              </span>
+                            </div>
                           </div>
                         </li>
                       ))}
@@ -452,11 +509,13 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
               value={description}
               onChange={(e) => {
                 setDescription(e.target.value);
+
                 if (e.target.value.trim()) {
                   setError((prev) => ({ ...prev, description: "" }));
                 }
               }}
             />
+
             {error && <p className="mt-1 text-red-500">{error?.description}</p>}
           </div>
 
@@ -468,7 +527,7 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
               </label>
               <input
                 type="tel"
-                placeholder="(xxx) xxx-xxxx"
+                placeholder="(650) 877-0805"
                 className={`mt-1 w-full rounded-md border bg-gray-50 px-4 py-2 text-sm focus:outline-none h-[48px] ${
                   phoneError
                     ? "border-red-500 focus:border-red-500"
@@ -478,13 +537,10 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
                 onChange={handlePhoneChange}
                 onKeyDown={handlePhoneKeyDown}
                 onPaste={handlePhonePaste}
-                maxLength={14}
+                maxLength={14} // (3) 3-4 = 14 characters
               />
               {error && (
                 <p className="mt-1 text-red-500">{error?.phoneNumber}</p>
-              )}
-              {phoneError && !error?.phoneNumber && (
-                <p className="mt-1 text-red-500 text-sm">{phoneError}</p>
               )}
             </div>
 
@@ -499,6 +555,7 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
+
                   if (e.target.value.trim()) {
                     setError((prev) => ({ ...prev, email: "" }));
                   }
