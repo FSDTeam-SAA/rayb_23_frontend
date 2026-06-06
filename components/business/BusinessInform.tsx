@@ -435,7 +435,7 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
                 <input
                   ref={addressInputRef}
                   type="text"
-                  placeholder="488 San Mateo Ave, San Bruno, CA 94066"
+                  placeholder="Business Address"
                   className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 px-10 py-2 text-sm focus:outline-none h-[48px]"
                   value={addressName}
                   onChange={(e) => {
@@ -527,7 +527,7 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
               </label>
               <input
                 type="tel"
-                placeholder="(650) 877-0805"
+                placeholder="(XXX) XXX-XXXX"
                 className={`mt-1 w-full rounded-md border bg-gray-50 px-4 py-2 text-sm focus:outline-none h-[48px] ${
                   phoneError
                     ? "border-red-500 focus:border-red-500"
