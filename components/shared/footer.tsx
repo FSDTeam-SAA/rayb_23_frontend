@@ -1,5 +1,4 @@
 "use client";
-import { Facebook, Instagram, Twitter } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -84,20 +83,6 @@ export default function Footer() {
             <Link href={`/privacy-policy`}>
               <h1 className="underline">Privacy Policy</h1>
             </Link>
-          </div>
-
-          <div className="flex items-center gap-5">
-            <div className="bg-white text-[#139a8e] p-2 rounded-full">
-              <Facebook />
-            </div>
-
-            <div className="bg-white text-[#139a8e] p-2 rounded-full">
-              <Instagram />
-            </div>
-
-            <div className="bg-white text-[#139a8e] p-2 rounded-full">
-              <Twitter />
-            </div>
           </div>
         </div>
       </div>
