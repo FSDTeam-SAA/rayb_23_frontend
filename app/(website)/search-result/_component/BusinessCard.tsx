@@ -3,12 +3,13 @@ import { useFilterStore } from "@/zustand/stores/search-store";
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 interface Review {
   _id: string;
   rating: number;
   status: string;
+  googleAuthorName?: string | null;
 }
 
 interface BusinessItem {
@@ -54,6 +55,20 @@ const calculateAverageRating = (reviews: Review[] = []) => {
   return (totalRating / approvedReviews.length).toFixed(1);
 };
 
+// Helper function to check if there are any Google reviews
+const hasGoogleReviews = (reviews: Review[] = []) => {
+  if (!reviews || reviews.length === 0) return false;
+
+  // Check if any review has a googleAuthorName that is not null, not undefined, and not empty string
+  return reviews.some((review) => {
+    return (
+      review.googleAuthorName &&
+      review.googleAuthorName !== null &&
+      review.googleAuthorName.trim() !== ""
+    );
+  });
+};
+
 const BusinessCard = ({ business }: { business: Business }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const images = business?.images || [];
@@ -61,6 +76,12 @@ const BusinessCard = ({ business }: { business: Business }) => {
   const { search, serviceTag } = useFilterStore();
 
   console.log("serviceTag: ", serviceTag);
+
+  // Check if business has Google reviews
+  const hasGoogleReview = useMemo(
+    () => hasGoogleReviews(business?.review),
+    [business?.review],
+  );
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % images.length);
@@ -206,15 +227,18 @@ const BusinessCard = ({ business }: { business: Business }) => {
                         <span className="text-sm text-gray-700">
                           {averageRating}
                         </span>
-                        <span className="text-xs flex items-center gap-1">
-                          <Image
-                            src="/images/google.jpeg"
-                            alt="google"
-                            width={1000}
-                            height={1000}
-                            className="h-4 w-4"
-                          />
-                        </span>
+                        {/* Show Google icon only if there is at least ONE Google review */}
+                        {hasGoogleReview && (
+                          <span className="text-xs flex items-center gap-1">
+                            <Image
+                              src="/images/google.jpeg"
+                              alt="google"
+                              width={1000}
+                              height={1000}
+                              className="h-4 w-4"
+                            />
+                          </span>
+                        )}
                       </div>
                     )}
                   </div>

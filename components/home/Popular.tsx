@@ -17,6 +17,7 @@ interface Review {
   _id: string;
   rating: number;
   status: string;
+  googleAuthorName?: string | null;
 }
 
 interface BusinessItem {
@@ -52,6 +53,20 @@ const calculateAverageRating = (reviews: Review[] = []) => {
   }, 0);
 
   return (totalRating / approvedReviews.length).toFixed(1);
+};
+
+// Helper function to check if there are any Google reviews (googleAuthorName exists and is not null)
+const hasGoogleReviews = (reviews: Review[] = []) => {
+  if (!reviews || reviews.length === 0) return false;
+
+  // Check if any review has a googleAuthorName that is not null, not undefined, and not empty string
+  return reviews.some((review) => {
+    return (
+      review.googleAuthorName &&
+      review.googleAuthorName !== null &&
+      review.googleAuthorName.trim() !== ""
+    );
+  });
 };
 
 // Skeleton component
@@ -158,6 +173,19 @@ const Popular = () => {
             >
               {allBusiness?.slice(0, 12)?.map((business: Business) => {
                 const averageRating = calculateAverageRating(business?.review);
+                const hasGoogleReview = hasGoogleReviews(business?.review);
+
+                // Debug log to check the value
+                console.log("Business:", business?.businessInfo?.name);
+                console.log("Has Google Review:", hasGoogleReview);
+                console.log(
+                  "Reviews:",
+                  business?.review?.map((r) => ({
+                    googleAuthorName: r.googleAuthorName,
+                    isGoogleReview:
+                      r.googleAuthorName && r.googleAuthorName !== null,
+                  })),
+                );
 
                 return (
                   <SwiperSlide key={business?._id}>
@@ -252,15 +280,18 @@ const Popular = () => {
                                     <span className="text-sm text-gray-700">
                                       {averageRating}
                                     </span>
-                                    <span className="text-xs flex items-center gap-1">
-                                      <Image
-                                        src="/images/google.jpeg"
-                                        alt="google"
-                                        width={1000}
-                                        height={1000}
-                                        className="h-4 w-4"
-                                      />
-                                    </span>
+                                    {/* Show Google icon ONLY if there is at least ONE Google review */}
+                                    {hasGoogleReview && (
+                                      <span className="text-xs flex items-center gap-1">
+                                        <Image
+                                          src="/images/google.jpeg"
+                                          alt="google"
+                                          width={1000}
+                                          height={1000}
+                                          className="h-4 w-4"
+                                        />
+                                      </span>
+                                    )}
                                   </div>
                                 )}
                               </div>

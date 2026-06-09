@@ -68,8 +68,8 @@ interface Review {
     reportMessage: string;
   };
   reply?: Reply[];
-  googleAuthorName: string;
-  googleAuthorPhoto: string;
+  googleAuthorName: string | null;
+  googleAuthorPhoto: string | null;
 }
 
 interface BusinessProfileProps {
@@ -133,6 +133,20 @@ interface ShareModalProps {
   businessName: string;
   businessId: string;
 }
+
+// Helper function to check if there are any Google reviews
+const hasGoogleReviews = (reviews: Review[] = []) => {
+  if (!reviews || reviews.length === 0) return false;
+
+  // Check if any review has a googleAuthorName that is not null, not undefined, and not empty string
+  return reviews.some((review) => {
+    return (
+      review.googleAuthorName &&
+      review.googleAuthorName !== null &&
+      review.googleAuthorName.trim() !== ""
+    );
+  });
+};
 
 const ShareModal = ({
   isOpen,
@@ -351,6 +365,12 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
   );
 
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
+
+  // Check if business has Google reviews
+  const hasGoogleReview = useMemo(
+    () => hasGoogleReviews(singleBusiness.review),
+    [singleBusiness.review],
+  );
 
   useEffect(() => {
     console.log("📍 Starting geocoding for address:", address);
@@ -775,37 +795,6 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
     );
   };
 
-  // const { mutateAsync: chatCreation } = useMutation({
-  //   mutationKey: ["create-chat"],
-  //   mutationFn: async (data: { participants: { userId: string; role: string }[] }) => {
-  //     try {
-  //       const response = await fetch(
-  //         `${process.env.NEXT_PUBLIC_API_URL}/chat/create`,
-  //         {
-  //           method: "POST",
-  //           headers: {
-  //             "Content-Type": "application/json",
-  //             Authorization: `Bearer ${token}`,
-  //           },
-  //           body: JSON.stringify(data),
-  //         },
-  //       );
-
-  //       if (!response.ok) {
-  //         const errorData = await response.json();
-  //         throw new Error(errorData.message || "Failed to create chat");
-  //       }
-
-  //       const result = await response.json();
-  //       console.log("✅ Server response:", result);
-  //       return result;
-  //     } catch (error) {
-  //       console.error("❌ Error creating chat:", error);
-  //       throw error;
-  //     }
-  //   },
-  // });
-
   const { mutateAsync: chatCreation } = useMutation({
     mutationKey: ["create-chat"],
     mutationFn: async (data: {
@@ -959,15 +948,18 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
               <Link href={"#rating-review"}>
                 <span>{singleBusiness.review.length} Reviews</span>
               </Link>
-              <span>
-                <Image
-                  src="/images/google.jpeg"
-                  alt="google"
-                  width={1000}
-                  height={1000}
-                  className="h-3 w-3 lg:h-4 lg:w-4"
-                />
-              </span>
+              {/* Show Google icon only if there is at least ONE Google review */}
+              {hasGoogleReview && (
+                <span>
+                  <Image
+                    src="/images/google.jpeg"
+                    alt="google"
+                    width={1000}
+                    height={1000}
+                    className="h-3 w-3 lg:h-4 lg:w-4"
+                  />
+                </span>
+              )}
               )
             </span>
           </div>
