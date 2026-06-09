@@ -40,7 +40,12 @@ const PrivacyPolicy = () => {
 
           {/* Effective Date */}
           <p className="text-sm text-gray-500 -mt-4">
-            Effective Date: April 5, 2026
+            Effective Date:{" "}
+            {new Date().toLocaleDateString("en-US", {
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            })}
           </p>
 
           <section>

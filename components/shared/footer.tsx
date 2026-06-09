@@ -28,9 +28,9 @@ export default function Footer() {
           <div className="col-span-2">
             <h1 className="font-bold text-2xl mb-3">Instrufix</h1>
             <p>
-              Find trusted instrument repair shops near you with ease. Whether
-              it’s a violin, guitar, or piano, we connect you to experts who’ll
-              bring your instrument back to life. Start your search today!
+              Find trusted instrument repair shops in the San Francisco Bay
+              Area. Whether it&apos;s a violin, guitar, or piano, we connect you
+              to experts who&apos;ll bring your instrument back to life.
             </p>
           </div>
 
