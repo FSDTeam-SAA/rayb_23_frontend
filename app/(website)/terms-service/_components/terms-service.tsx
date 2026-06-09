@@ -723,8 +723,7 @@ const TermsServices = () => {
                 </div>
               </div>
               <div className="text-sm text-gray-400 font-medium space-y-1">
-                <p>Instrufix Inc.</p>
-                <p>San Mateo County, California</p>
+                <p>San Francisco, California</p>
                 <p>www.instrufix.com</p>
                 <p className="pt-4 opacity-60 italic text-xs">
                   Instrufix | Page 9 of 17

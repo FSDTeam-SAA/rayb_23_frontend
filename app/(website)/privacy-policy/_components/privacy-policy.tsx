@@ -545,16 +545,10 @@ const PrivacyPolicy = () => {
                 </div>
               </div>
               <div className="text-sm text-gray-400 font-medium space-y-1">
-                <p>Instrufix Inc.</p>
-                <p>Founded in the San Francisco Bay Area, CA</p>
+                <p>San Francisco, California</p>
                 <p>www.instrufix.com</p>
                 <p className="pt-4 opacity-60">
                   © 2026 Instrufix. All rights reserved.
-                </p>
-                <p className="text-xs opacity-50 pt-2">
-                  This document does not constitute legal advice. As your
-                  platform grows, we recommend a review by a California-licensed
-                  attorney.
                 </p>
               </div>
             </div>
