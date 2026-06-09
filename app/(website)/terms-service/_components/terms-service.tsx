@@ -638,11 +638,7 @@ const TermsServices = () => {
               WITH ANY LISTED REPAIR SHOP — INCLUDING DAMAGE TO OR LOSS OF YOUR
               INSTRUMENT.
             </p>
-            <p className="text-sm font-mono leading-relaxed uppercase opacity-80">
-              BECAUSE INSTRUFIX DOES NOT PROCESS PAYMENTS OR PROVIDE ANY
-              SERVICES ITSELF, OUR TOTAL LIABILITY FOR ANY CLAIM IS LIMITED TO
-              $100 USD.
-            </p>
+
             <p className="text-xs text-gray-400 mt-4 italic normal-case">
               Some states do not allow certain liability exclusions, so portions
               of the above may not apply to you.
