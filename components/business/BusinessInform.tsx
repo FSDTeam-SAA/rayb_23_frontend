@@ -105,11 +105,16 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [phoneError, setPhoneError] = useState<string>("");
   const addressInputRef = useRef<HTMLInputElement>(null);
+  const isAddressTypingRef = useRef(false);
 
   const { formatPhoneNumber, validatePhoneNumber } = usePhoneFormatter();
 
   // Fetch location suggestions from OpenStreetMap (Nominatim)
   useEffect(() => {
+    if (!isAddressTypingRef.current) {
+      return;
+    }
+
     if (!addressName || addressName.length < 2) {
       setSuggestions([]);
       setShowSuggestions(false);
@@ -136,7 +141,9 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
         );
 
         setSuggestions(filteredResults);
-        setShowSuggestions(filteredResults.length > 0);
+        if (isAddressTypingRef.current) {
+          setShowSuggestions(filteredResults.length > 0);
+        }
       } catch (error) {
         console.error("Error fetching locations:", error);
         setSuggestions([]);
@@ -281,8 +288,11 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
 
   const handleLocationSelect = (place: PlaceResult) => {
     const fullAddress = formatAddress(place);
+    isAddressTypingRef.current = false;
     setAddressName(fullAddress);
+    setSuggestions([]);
     setShowSuggestions(false);
+    addressInputRef.current?.blur();
   };
 
   const handleAddressFocus = () => {
@@ -321,6 +331,10 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
   };
 
   const handlePhoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.ctrlKey || e.metaKey) {
+      return;
+    }
+
     // Allow only numbers, backspace, delete, tab, and arrow keys
     if (
       !/[\d]/.test(e.key) &&
@@ -346,6 +360,7 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
       e.preventDefault();
       const formatted = formatPhoneNumber(numbersOnly);
       setPhoneNumber(formatted);
+      setError((prev) => ({ ...prev, phoneNumber: "" }));
     }
   };
 
@@ -439,6 +454,7 @@ const BusinessInform: React.FC<BusinessInformProps> = ({
                   className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 px-10 py-2 text-sm focus:outline-none h-[48px]"
                   value={addressName}
                   onChange={(e) => {
+                    isAddressTypingRef.current = true;
                     setAddressName(e.target.value);
 
                     if (e.target.value.trim()) {

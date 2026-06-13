@@ -75,7 +75,7 @@ const BusinessInfo = () => {
       open,
       sort,
       search,
-      location, 
+      location,
     ],
     queryFn: async () => {
       console.log("API Call with search:", search, "location:", location); // Debug log
