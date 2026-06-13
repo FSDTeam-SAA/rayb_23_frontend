@@ -46,23 +46,24 @@ const Navbar = () => {
 
   // Filter only unread notifications for the count
   const unreadNotifications = notifications.filter(
-    (notification: any) => notification.isRead === false
+    (notification: any) => notification.isRead === false,
   );
   const notificationCount = unreadNotifications.length;
 
   // Check if search bar should be shown (show on all pages except landing page)
   const shouldShowSearchBar = pathname !== "/";
 
+  const handleLogoClick = () => {
+    window.location.href = `${window.location.origin}/`;
+  };
+
   return (
     <nav className="p-4 border-b sticky top-0 z-50 bg-white">
       <div className="container flex items-center justify-between gap-10 h-14">
         {/* Logo */}
-        <Link href={"/"}>
-          {" "}
-          <button>
-            <h1 className="font-bold text-3xl lg:text-5xl">Instrufix</h1>
-          </button>
-        </Link>
+        <button onClick={handleLogoClick}>
+          <h1 className="font-bold text-3xl lg:text-5xl">Instrufix</h1>
+        </button>
 
         {/* Search Bar (hidden on mobile, visible on desktop) */}
         {shouldShowSearchBar && <SearchBar variant="desktop" />}
@@ -88,8 +89,8 @@ const Navbar = () => {
                     session?.user?.userType === "user"
                       ? "/customer-dashboard/settings/notifications"
                       : session?.user?.userType === "businessMan"
-                      ? "/business-dashboard/settings/notifications"
-                      : "/admin-dashboard/settings/notifications"
+                        ? "/business-dashboard/settings/notifications"
+                        : "/admin-dashboard/settings/notifications"
                   }`}
                 >
                   <Bell className="h-5 w-5" />
@@ -241,8 +242,8 @@ const Navbar = () => {
                         session?.user?.userType === "user"
                           ? "/customer-dashboard/settings"
                           : session?.user?.userType === "businessMan"
-                          ? "/business-dashboard/settings/account"
-                          : "/"
+                            ? "/business-dashboard/settings/account"
+                            : "/"
                       }
                       className="flex gap-2 items-center p-2 rounded-lg hover:bg-gray-50"
                     >
@@ -338,10 +339,10 @@ const Navbar = () => {
                     session?.user?.userType === "admin"
                       ? "/admin-dashboard/messages"
                       : session?.user?.userType === "user"
-                      ? "/customer-dashboard/messages"
-                      : session?.user?.userType === "businessMan"
-                      ? "/business-dashboard/messages"
-                      : "/customer-dashboard/messages"
+                        ? "/customer-dashboard/messages"
+                        : session?.user?.userType === "businessMan"
+                          ? "/business-dashboard/messages"
+                          : "/customer-dashboard/messages"
                   }
                 >
                   <Inbox className="h-6 w-6" />
@@ -360,8 +361,8 @@ const Navbar = () => {
                     session?.user?.userType === "user"
                       ? "/customer-dashboard/settings/notifications"
                       : session?.user?.userType === "businessMan"
-                      ? "/business-dashboard/settings/notifications"
-                      : "/admin-dashboard/settings/notifications"
+                        ? "/business-dashboard/settings/notifications"
+                        : "/admin-dashboard/settings/notifications"
                   }`}
                 >
                   <Bell className="h-6 w-6" />
@@ -402,8 +403,8 @@ const Navbar = () => {
                         userData?.userType === "user"
                           ? "/customer-dashboard/profile"
                           : userData?.userType === "admin"
-                          ? "/admin-dashboard/settings"
-                          : "/business-dashboard/profile"
+                            ? "/admin-dashboard/settings"
+                            : "/business-dashboard/profile"
                       }
                       className="flex gap-2 items-center"
                     >
@@ -417,8 +418,8 @@ const Navbar = () => {
                         session?.user?.userType === "user"
                           ? "/customer-dashboard/settings"
                           : session?.user?.userType === "businessMan"
-                          ? "/business-dashboard/settings/account"
-                          : "/admin-dashboard/settings/account"
+                            ? "/business-dashboard/settings/account"
+                            : "/admin-dashboard/settings/account"
                       }
                       className="flex gap-2 items-center"
                     >
