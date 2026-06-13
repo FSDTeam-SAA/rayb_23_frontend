@@ -31,10 +31,9 @@ const SelectInstrument: React.FC<InstrumentFamilyProps> = ({
   const {
     setInstrumentTag,
     instrumentTag,
-    setSelectService,
     instrument,
-    setService,
   } = useFilterStore();
+  const instrumentGroupName = React.useId();
 
   const filteredInstrument = instrumentFamilies.filter(
     (item) => item.instrumentFamily === instrument
@@ -42,8 +41,6 @@ const SelectInstrument: React.FC<InstrumentFamilyProps> = ({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInstrumentTag(e.target.value);
-    setService(e.target.value);
-    setSelectService(true);
   };
 
   return (
@@ -81,7 +78,7 @@ const SelectInstrument: React.FC<InstrumentFamilyProps> = ({
                             (instrument) => instrument.label === type.type
                           )}
                           type="radio"
-                          name="instrument"
+                          name={`instrument-${instrumentGroupName}`}
                           value={type.type}
                           className="h-4 w-4 accent-primary"
                           onChange={handleInputChange}

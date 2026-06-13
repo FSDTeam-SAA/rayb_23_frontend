@@ -17,13 +17,11 @@ const InstrumentFamily: React.FC<InstrumentFamilyProps> = ({
   instrumentFamilies,
   isLoading,
 }) => {
-  const { setFamilyTag, familyTag, setSelectInstrument, setInstrument } =
-    useFilterStore();
+  const { setFamilyTag, familyTag } = useFilterStore();
+  const familyGroupName = React.useId();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFamilyTag(e.target.value);
-    setInstrument(e.target.value);
-    setSelectInstrument(true);
   };
 
   return (
@@ -55,7 +53,7 @@ const InstrumentFamily: React.FC<InstrumentFamilyProps> = ({
                   checked={familyTag.some(
                     (family) => family.label === item.instrumentFamily
                   )}
-                  name="family"
+                  name={`family-${familyGroupName}`}
                   type="radio"
                   className="h-4 w-4 accent-primary"
                   value={item.instrumentFamily}

@@ -77,31 +77,57 @@ export const useFilterStore = create<IFilterStore>((set) => ({
   setFamilyTag: (value) =>
     set(() => ({
       familyTag: [{ label: value }],
+      instrumentTag: [],
+      serviceTag: [],
+      offersTag: [],
+      selectInstrument: true,
+      selectService: false,
+      instrument: value,
+      service: "",
     })),
   removeFamilyTag: (value) =>
     set((state) => ({
       familyTag: state.familyTag.filter((t) => t.label !== value),
+      instrumentTag: [],
+      serviceTag: [],
+      offersTag: [],
+      selectInstrument: false,
+      selectService: false,
+      instrument: "",
+      service: "",
     })),
   setInstrumentTag: (value) =>
     set(() => ({
       instrumentTag: [{ label: value }],
+      serviceTag: [],
+      offersTag: [],
+      selectService: true,
+      service: value,
     })),
   removeInstrumentTag: (value) =>
     set((state) => ({
       instrumentTag: state.instrumentTag.filter((t) => t.label !== value),
+      serviceTag: [],
+      offersTag: [],
+      selectService: false,
+      service: "",
     })),
   setServiceTag: (value) =>
     set(() => ({
       serviceTag: [{ label: value }],
+      offersTag: [],
     })),
   removeServiceTag: (value) =>
     set((state) => ({
       serviceTag: state.serviceTag.filter((t) => t.label !== value),
+      offersTag: [],
     })),
   // Updated to support multiple offers tags
   setOffersTag: (value) =>
     set((state) => ({
-      offersTag: [...state.offersTag, { label: value }],
+      offersTag: state.offersTag.some((tag) => tag.label === value)
+        ? state.offersTag
+        : [...state.offersTag, { label: value }],
     })),
   removeOffersTag: (value) =>
     set((state) => ({

@@ -12,6 +12,7 @@ const TagsAndOpenNow = () => {
     removeServiceTag,
     offersTag,
     removeOffersTag,
+    open,
     setOpen,
   } = useFilterStore();
 
@@ -119,7 +120,8 @@ const TagsAndOpenNow = () => {
       <div className="flex items-center gap-2">
         <input
           type="checkbox"
-          onChange={() => setOpen(true)}
+          checked={open}
+          onChange={(e) => setOpen(e.target.checked)}
           className="border border-gray-500 h-4 w-4 accent-primary"
         />
         Open Now

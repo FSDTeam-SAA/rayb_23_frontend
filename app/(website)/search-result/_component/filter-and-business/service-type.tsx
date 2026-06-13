@@ -30,6 +30,7 @@ const ServiceType: React.FC<InstrumentFamilyProps> = ({
   isLoading,
 }) => {
   const { serviceTag, setServiceTag, service } = useFilterStore();
+  const serviceGroupName = React.useId();
 
   const filteredServices = instrumentFamilies
   .map((family) => ({
@@ -83,7 +84,7 @@ const ServiceType: React.FC<InstrumentFamilyProps> = ({
                                   (item) => item.label === service
                                 )}
                                 type="radio"
-                                name={`service`}
+                                name={`service-${serviceGroupName}`}
                                 value={service}
                                 className="h-4 w-4 accent-primary"
                                 onChange={handleInputChange}
