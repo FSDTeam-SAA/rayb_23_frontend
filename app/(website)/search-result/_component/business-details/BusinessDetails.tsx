@@ -221,7 +221,7 @@ const ImageSlider = ({
 }: {
   images: string[];
   businessName: string;
-  onImageClick: () => void;
+  onImageClick: (imageUrl: string) => void;
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -262,7 +262,7 @@ const ImageSlider = ({
     <div className="flex-shrink-0 relative group">
       <div
         className="relative rounded-lg overflow-hidden h-[140px] w-[140px] sm:h-[172px] sm:w-[172px] cursor-pointer"
-        onClick={onImageClick}
+        onClick={() => onImageClick(uniqueImages[currentImageIndex])}
       >
         <Image
           src={uniqueImages[currentImageIndex]}
@@ -339,6 +339,9 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
   });
 
   const [isGalleryModalOpen, setIsGalleryModalOpen] = useState(false);
+  const [selectedGalleryImage, setSelectedGalleryImage] = useState<
+    string | null
+  >(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -905,7 +908,10 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
           <ImageSlider
             images={allBusinessImages}
             businessName={singleBusiness.businessInfo.name}
-            onImageClick={() => setIsGalleryModalOpen(true)}
+            onImageClick={(imageUrl) => {
+              setSelectedGalleryImage(imageUrl);
+              setIsGalleryModalOpen(true);
+            }}
           />
         </div>
 
@@ -913,6 +919,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
           isOpen={isGalleryModalOpen}
           onClose={() => setIsGalleryModalOpen(false)}
           businessImages={allBusinessImages}
+          initialImageUrl={selectedGalleryImage}
         />
 
         {/* Business Info */}

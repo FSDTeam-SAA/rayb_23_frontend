@@ -1,7 +1,7 @@
 // components/business/BusinessGalleryModal.tsx
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
@@ -41,12 +41,14 @@ interface BusinessGalleryModalProps {
   isOpen: boolean;
   onClose: () => void;
   businessImages?: string[];
+  initialImageUrl?: string | null;
 }
 
 const BusinessGalleryModal = ({
   isOpen,
   onClose,
   businessImages = [],
+  initialImageUrl,
 }: BusinessGalleryModalProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const { id } = useParams();
@@ -188,6 +190,18 @@ const BusinessGalleryModal = ({
   }, [businessImages, reviewsData, picturesData]);
 
   console.log("galleryItems: ", galleryItems);
+
+  useEffect(() => {
+    if (!isOpen || !initialImageUrl || galleryItems.length === 0) return;
+
+    const initialIndex = galleryItems.findIndex(
+      (item) => item.imageUrl === initialImageUrl,
+    );
+
+    if (initialIndex !== -1) {
+      setCurrentIndex(initialIndex);
+    }
+  }, [galleryItems, initialImageUrl, isOpen]);
 
   const nextItem = () => {
     if (galleryItems.length > 0) {
