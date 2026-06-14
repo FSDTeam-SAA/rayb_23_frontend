@@ -51,8 +51,12 @@ const calculateAverageRating = (reviews: Review[] = []) => {
 
 export default function BusinessCard({ business }: BusinessCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showAllServices, setShowAllServices] = useState(false);
   const images = business?.businessInfo?.image || [];
-  
+  const services = business?.services || [];
+  const visibleServices = showAllServices ? services : services.slice(0, 2);
+  const hiddenServicesCount = Math.max(services.length - 2, 0);
+
   // Calculate average rating
   const averageRating = calculateAverageRating(business?.review);
 
@@ -74,8 +78,14 @@ export default function BusinessCard({ business }: BusinessCardProps) {
     setCurrentImageIndex(index);
   };
 
+  const toggleServices = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowAllServices((prev) => !prev);
+  };
+
   return (
-    <Link href={`/search-result/${business?._id}`}>
+    <Link href={`/search-result/${business?._id}`} className="block">
       <div className="bg-white rounded-lg border border-gray-100 shadow-lg p-6 h-full">
         <div className="flex flex-col gap-5 h-full">
           {/* Profile Image with Slider */}
@@ -158,14 +168,28 @@ export default function BusinessCard({ business }: BusinessCardProps) {
                 {/* Services */}
                 <div className="flex items-center gap-2">
                   <div className="flex flex-wrap items-center gap-2 mb-2">
-                    {business?.services?.map((service, index) => (
-                      <button
-                        className="h-[48px] px-5 rounded-lg bg-[#F8F8F8] text-sm transition-colors hover:bg-gray-200"
+                    {visibleServices.map((service, index) => (
+                      <span
+                        className="inline-flex h-[40px] max-w-full items-center rounded-lg bg-[#F8F8F8] px-4 text-sm transition-colors hover:bg-gray-200"
                         key={index}
+                        title={service?.newInstrumentName}
                       >
-                        {service?.newInstrumentName}
-                      </button>
+                        <span className="truncate">
+                          {service?.newInstrumentName}
+                        </span>
+                      </span>
                     ))}
+                    {hiddenServicesCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={toggleServices}
+                        className="inline-flex h-[40px] items-center rounded-lg bg-[#E0F2F1] px-4 text-sm font-medium text-[#00998E] transition-colors hover:bg-[#cce8e6]"
+                      >
+                        {showAllServices
+                          ? "See less"
+                          : `See more +${hiddenServicesCount}`}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

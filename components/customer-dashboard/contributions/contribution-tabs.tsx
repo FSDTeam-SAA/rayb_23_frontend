@@ -389,10 +389,14 @@ export default function ContributionTabs() {
               Businesses{" "}
               <span className="text-[#8D9A99]">({myBusinesses?.length})</span>
             </h3>
-            {myBusinesses?.length > 0 && <Button>Add a Business</Button>}
+            {myBusinesses?.length > 0 && (
+              <Link href="/add-a-business">
+                <Button>Add a Business</Button>
+              </Link>
+            )}
           </div>
           {myBusinesses?.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-3 lg:grid-cols-4">
               {myBusinesses.map((business: Business) => (
                 <BusinessCard key={business._id} business={business} />
               ))}
