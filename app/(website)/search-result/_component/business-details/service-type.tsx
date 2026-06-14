@@ -29,7 +29,7 @@ interface Business {
   musicLessons: MusicLesson[];
   buyInstruments: boolean;
   sellInstruments: boolean;
-  offerMusicLessons: boolean;
+  tradeInstruments: boolean;
   rentInstruments: boolean;
   businessInfo: {
     website: string;
@@ -62,12 +62,12 @@ const ServiceType: React.FC<ServiceTypeProps> = ({
       acc[family].push(lesson);
       return acc;
     },
-    {}
+    {},
   );
 
   const renderGroupedItems = (
     groupedData: Record<string, any[]>,
-    isLesson = false
+    isLesson = false,
   ) => (
     <div className="space-y-4">
       {Object.entries(groupedData).map(([family, items]) => {
@@ -80,7 +80,7 @@ const ServiceType: React.FC<ServiceTypeProps> = ({
             acc[key].push(item);
             return acc;
           },
-          {}
+          {},
         );
 
         return (
@@ -121,7 +121,7 @@ const ServiceType: React.FC<ServiceTypeProps> = ({
                       </>
                     )}
                   </div>
-                )
+                ),
               )}
             </div>
           </div>
@@ -195,9 +195,10 @@ const ServiceType: React.FC<ServiceTypeProps> = ({
             {singleBusiness.sellInstruments && (
               <span className="font-semibold">selling, </span>
             )}
-            {singleBusiness.offerMusicLessons && (
+            {singleBusiness.tradeInstruments && (
               <span className="font-semibold">trading, </span>
             )}
+            and{" "}
             {singleBusiness.rentInstruments && (
               <span className="font-semibold">rental </span>
             )}
