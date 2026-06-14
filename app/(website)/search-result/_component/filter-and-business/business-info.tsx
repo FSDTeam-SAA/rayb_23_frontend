@@ -60,6 +60,7 @@ const BusinessInfo = () => {
   } = useFilterStore();
 
   const { location } = useSearchStore();
+  const searchLocation = location || "";
 
   React.useEffect(() => {
     setPage(1);
@@ -73,7 +74,7 @@ const BusinessInfo = () => {
     open,
     sort,
     search,
-    location,
+    searchLocation,
   ]);
 
   const { data: allBusiness = {}, isLoading } = useQuery({
@@ -90,10 +91,10 @@ const BusinessInfo = () => {
       open,
       sort,
       search,
-      location,
+      searchLocation,
     ],
     queryFn: async () => {
-      console.log("API Call with search:", search, "location:", location); // Debug log
+      console.log("API Call with search:", search, "location:", searchLocation); // Debug log
 
       const offersParams = offersTag
         .map((tag) => {
@@ -127,7 +128,7 @@ const BusinessInfo = () => {
         openNow: String(open),
         sort,
         search,
-        searchLocation: location,
+        searchLocation,
         currentDay: now.toLocaleDateString("en-US", { weekday: "long" }),
         currentMinutes: String(now.getHours() * 60 + now.getMinutes()),
       });

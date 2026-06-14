@@ -28,8 +28,7 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
   const { search, setSearch } = useFilterStore();
   const { location, setLocation } = useSearchStore();
   const [searchQuery, setSearchQuery] = useState<string>(search);
-  const [locationInputValue, setLocationInputValue] =
-    useState<string>(location);
+  const [locationInputValue, setLocationInputValue] = useState<string>(location);
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [isLoadingLocations, setIsLoadingLocations] = useState(false);
@@ -128,36 +127,35 @@ const SearchBar = ({ variant = "desktop", onResultClick }: SearchBarProps) => {
   const handleSearch = () => {
     const finalSearchQuery = searchQuery.trim();
     const finalLocation = locationInputValue.trim();
+    const locationParam = finalLocation;
 
     console.log("Search button clicked with:", {
       finalSearchQuery,
       finalLocation,
     });
 
-    if (finalSearchQuery || finalLocation) {
-      // Searching is a terminal action — don't treat resulting value changes as typing
-      userTypingRef.current = false;
+    // Searching is a terminal action — don't treat resulting value changes as typing
+    userTypingRef.current = false;
 
-      // Update stores
-      setSearch(finalSearchQuery);
-      setLocation(finalLocation);
+    // Update stores
+    setSearch(finalSearchQuery);
+    setLocation(finalLocation);
 
-      // Create URL with search parameters
-      const searchParams = new URLSearchParams();
-      if (finalSearchQuery) {
-        searchParams.append("q", finalSearchQuery);
-      }
-      if (finalLocation) {
-        searchParams.append("location", finalLocation);
-      }
-
-      // Close dropdown if open
-      setShowLocationDropdown(false);
-
-      // Navigate to search results page
-      router.push(`/search-result?${searchParams.toString()}`);
-      onResultClick?.();
+    // Create URL with search parameters
+    const searchParams = new URLSearchParams();
+    if (finalSearchQuery) {
+      searchParams.append("q", finalSearchQuery);
     }
+    if (locationParam) {
+      searchParams.append("location", locationParam);
+    }
+
+    // Close dropdown if open
+    setShowLocationDropdown(false);
+
+    // Navigate to search results page
+    router.push(`/search-result?${searchParams.toString()}`);
+    onResultClick?.();
   };
 
   const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {

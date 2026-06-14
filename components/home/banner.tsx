@@ -12,17 +12,17 @@ export default function BannerHome() {
   const router = useRouter();
 
   const handleSearch = () => {
-    const searchLocation = location.trim() || "San Francisco, CA";
+    const locationParam = location.trim();
 
-    if (searchQuery.trim() || searchLocation) {
-      const queryParams = new URLSearchParams();
-      if (searchQuery.trim()) {
-        queryParams.append("q", searchQuery.trim());
-      }
-      queryParams.append("location", searchLocation);
-
-      router.push(`/search-result?${queryParams.toString()}`);
+    const queryParams = new URLSearchParams();
+    if (searchQuery.trim()) {
+      queryParams.append("q", searchQuery.trim());
     }
+    if (locationParam) {
+      queryParams.append("location", locationParam);
+    }
+
+    router.push(`/search-result?${queryParams.toString()}`);
   };
 
   return (

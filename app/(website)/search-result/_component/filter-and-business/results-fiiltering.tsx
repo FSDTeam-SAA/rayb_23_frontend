@@ -22,10 +22,13 @@ type ResultsFilteringProps = {
   } | null;
 };
 
-const ResultsFiltering = ({ allBusiness = { searchCount: 0 } }: ResultsFilteringProps) => {
+const ResultsFiltering = ({
+  allBusiness = { searchCount: 0 },
+}: ResultsFilteringProps) => {
   const { setSort, sort } = useFilterStore();
   const { location } = useSearchStore();
   const [hydrated, setHydrated] = useState(false);
+  const resultLocation = location ? `"${location}"` : "";
 
   useEffect(() => {
     setHydrated(true);
@@ -51,11 +54,10 @@ const ResultsFiltering = ({ allBusiness = { searchCount: 0 } }: ResultsFiltering
     <div className="flex items-center justify-between">
       <div>
         <h1 className="text-gray-500">
-          {allBusiness?.pagination?.total ?? allBusiness?.searchCount ?? 0} Results for
+          {allBusiness?.pagination?.total ?? allBusiness?.searchCount ?? 0}{" "}
+          Results for
         </h1>
-        <h1 className="text-xl font-bold">{`"${
-          location || "San Francisco, CA"
-        }"`}</h1>
+        <h1 className="text-xl font-bold">{resultLocation}</h1>
       </div>
 
       <div>

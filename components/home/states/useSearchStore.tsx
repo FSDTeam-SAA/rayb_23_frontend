@@ -6,10 +6,12 @@ interface ISearchStore {
   setLocation: (value: string) => void;
 }
 
+export const DEFAULT_LOCATION = "San Francisco, CA";
+
 export const useSearchStore = create<ISearchStore>()(
   persist(
     (set) => ({
-      location: "San Francisco, CA",
+      location: DEFAULT_LOCATION,
       setLocation: (value: string) => set({ location: value }),
     }),
     {

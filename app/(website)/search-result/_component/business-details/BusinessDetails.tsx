@@ -117,6 +117,7 @@ interface BusinessProfileProps {
     }>;
     buyInstruments: boolean;
     sellInstruments: boolean;
+    tradeInstruments: boolean;
     offerMusicLessons: boolean;
     rentInstruments: boolean;
     review: Review[];
@@ -579,6 +580,21 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
     return `${time} ${meridiem}`;
   };
 
+  const getTodayBusinessHours = () => {
+    const today = new Date().toLocaleDateString("en-US", { weekday: "long" });
+    const todayHours = singleBusiness.businessHours?.find(
+      (hour) => hour.day?.toLowerCase() === today.toLowerCase(),
+    );
+
+    if (!todayHours) return "Hours unavailable";
+    if (todayHours.enabled === false) return "Closed today";
+
+    return `${formatTime(
+      todayHours.startTime,
+      todayHours.startMeridiem,
+    )} - ${formatTime(todayHours.endTime, todayHours.endMeridiem)}`;
+  };
+
   const handleSaveBusiness = async () => {
     if (status === "unauthenticated") {
       return setIsLoginModalOpen(true);
@@ -985,8 +1001,7 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
             {singleBusiness.businessInfo.address}
           </div>
           <div className="text-gray-600 text-sm lg:text-base">
-            {singleBusiness.businessHours[0].startTime} AM -{" "}
-            {singleBusiness.businessHours[0].endTime} PM
+            {getTodayBusinessHours()}
           </div>
         </div>
 
