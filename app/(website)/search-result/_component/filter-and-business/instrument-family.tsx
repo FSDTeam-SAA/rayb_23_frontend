@@ -19,6 +19,10 @@ const InstrumentFamily: React.FC<InstrumentFamilyProps> = ({
 }) => {
   const { setFamilyTag, familyTag } = useFilterStore();
   const familyGroupName = React.useId();
+  const [showAll, setShowAll] = React.useState(false);
+  const visibleInstrumentFamilies = showAll
+    ? instrumentFamilies
+    : instrumentFamilies.slice(0, 6);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFamilyTag(e.target.value);
@@ -44,24 +48,36 @@ const InstrumentFamily: React.FC<InstrumentFamilyProps> = ({
               ))}
             </div>
           ) : (
-            instrumentFamilies.map((item, index) => (
-              <AccordionContent
-                key={index}
-                className="flex items-center gap-2 text-balance"
-              >
-                <input
-                  checked={familyTag.some(
-                    (family) => family.label === item.instrumentFamily
-                  )}
-                  name={`family-${familyGroupName}`}
-                  type="radio"
-                  className="h-4 w-4 accent-primary"
-                  value={item.instrumentFamily}
-                  onChange={handleInputChange}
-                />
-                <h1 className="text-base">{item?.instrumentFamily}</h1>
-              </AccordionContent>
-            ))
+            <>
+              {visibleInstrumentFamilies.map((item, index) => (
+                <AccordionContent
+                  key={index}
+                  className="flex items-center gap-2 text-balance"
+                >
+                  <input
+                    checked={familyTag.some(
+                      (family) => family.label === item.instrumentFamily
+                    )}
+                    name={`family-${familyGroupName}`}
+                    type="radio"
+                    className="h-4 w-4 accent-primary"
+                    value={item.instrumentFamily}
+                    onChange={handleInputChange}
+                  />
+                  <h1 className="text-base">{item?.instrumentFamily}</h1>
+                </AccordionContent>
+              ))}
+
+              {instrumentFamilies.length > 6 && (
+                <button
+                  type="button"
+                  className="pb-4 text-sm font-medium text-primary"
+                  onClick={() => setShowAll((current) => !current)}
+                >
+                  {showAll ? "See less" : "See more"}
+                </button>
+              )}
+            </>
           )}
         </AccordionItem>
       </Accordion>

@@ -28,12 +28,9 @@ const SelectInstrument: React.FC<InstrumentFamilyProps> = ({
   instrumentFamilies,
   isLoading,
 }) => {
-  const {
-    setInstrumentTag,
-    instrumentTag,
-    instrument,
-  } = useFilterStore();
+  const { setInstrumentTag, instrumentTag, instrument } = useFilterStore();
   const instrumentGroupName = React.useId();
+  const [showAll, setShowAll] = React.useState(false);
 
   const filteredInstrument = instrumentFamilies.filter(
     (item) => item.instrumentFamily === instrument
@@ -70,9 +67,15 @@ const SelectInstrument: React.FC<InstrumentFamilyProps> = ({
               >
                 {/* Instrument types */}
                 <div className="flex flex-col gap-4">
-                  {family.instrumentTypes.map((type) => (
+                  {(showAll
+                    ? family.instrumentTypes
+                    : family.instrumentTypes.slice(0, 6)
+                  ).map((type) => (
                     <div key={type._id} className="flex items-center gap-2">
-                      <label key={type._id} className="flex items-center gap-2">
+                      <label
+                        key={type._id}
+                        className="flex items-center gap-2"
+                      >
                         <input
                           checked={instrumentTag.some(
                             (instrument) => instrument.label === type.type
@@ -87,6 +90,16 @@ const SelectInstrument: React.FC<InstrumentFamilyProps> = ({
                       </label>
                     </div>
                   ))}
+
+                  {family.instrumentTypes.length > 6 && (
+                    <button
+                      type="button"
+                      className="self-start text-sm font-medium text-primary"
+                      onClick={() => setShowAll((current) => !current)}
+                    >
+                      {showAll ? "See less" : "See more"}
+                    </button>
+                  )}
                 </div>
               </AccordionContent>
             ))

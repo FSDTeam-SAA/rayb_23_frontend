@@ -61,6 +61,21 @@ const BusinessInfo = () => {
 
   const { location } = useSearchStore();
 
+  React.useEffect(() => {
+    setPage(1);
+  }, [
+    familyTag,
+    instrumentTag,
+    serviceTag,
+    offersTag,
+    minPriceRange,
+    maxPriceRange,
+    open,
+    sort,
+    search,
+    location,
+  ]);
+
   const { data: allBusiness = {}, isLoading } = useQuery({
     // IMPORTANT: Add location to queryKey so it triggers refetch when location changes
     queryKey: [
@@ -90,7 +105,7 @@ const BusinessInfo = () => {
             case "Trade":
               return "tradeInstruments=true";
             case "Rental":
-              return "rentalInstruments=true";
+              return "rentInstruments=true";
             case "Music Lessons":
               return "isMusicLessons=true";
             default:
@@ -100,17 +115,24 @@ const BusinessInfo = () => {
         .filter((param) => param !== "")
         .join("&");
 
-      const baseUrl = `${process.env.NEXT_PUBLIC_API_URL}/business?page=${page}&limit=${limit}`;
+      const now = new Date();
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: String(limit),
+        instrumentFamily: familyTag[0]?.label || "",
+        selectedInstrumentsGroup: instrumentTag[0]?.label || "",
+        newInstrumentName: serviceTag[0]?.label || "",
+        minPrice: minPriceRange,
+        maxPrice: maxPriceRange,
+        openNow: String(open),
+        sort,
+        search,
+        searchLocation: location,
+        currentDay: now.toLocaleDateString("en-US", { weekday: "long" }),
+        currentMinutes: String(now.getHours() * 60 + now.getMinutes()),
+      });
 
-      const filterParams = `&instrumentFamily=${
-        familyTag[0]?.label || ""
-      }&selectedInstrumentsGroup=${
-        instrumentTag[0]?.label || ""
-      }&newInstrumentName=${
-        serviceTag[0]?.label || ""
-      }&minPrice=${minPriceRange}&maxPrice=${maxPriceRange}&openNow=${open}&sort=${sort}&search=${search}&searchLocation=${location}`;
-
-      const url = `${baseUrl}${filterParams}${
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/business?${params.toString()}${
         offersParams ? `&${offersParams}` : ""
       }`;
 

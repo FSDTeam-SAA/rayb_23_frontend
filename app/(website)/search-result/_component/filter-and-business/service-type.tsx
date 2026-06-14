@@ -31,15 +31,16 @@ const ServiceType: React.FC<InstrumentFamilyProps> = ({
 }) => {
   const { serviceTag, setServiceTag, service } = useFilterStore();
   const serviceGroupName = React.useId();
+  const [showAll, setShowAll] = React.useState(false);
 
   const filteredServices = instrumentFamilies
-  .map((family) => ({
-    ...family,
-    instrumentTypes: family.instrumentTypes.filter(
-      (type) => type.type === service
-    ),
-  }))
-  .filter((family) => family.instrumentTypes.length > 0);
+    .map((family) => ({
+      ...family,
+      instrumentTypes: family.instrumentTypes.filter(
+        (type) => type.type === service
+      ),
+    }))
+    .filter((family) => family.instrumentTypes.length > 0);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setServiceTag(e.target.value);
@@ -77,7 +78,10 @@ const ServiceType: React.FC<InstrumentFamilyProps> = ({
                       {/* Service Types under this instrument */}
                       {type.serviceType.length > 0 && (
                         <div className="flex flex-col gap-4">
-                          {type.serviceType.map((service, i) => (
+                          {(showAll
+                            ? type.serviceType
+                            : type.serviceType.slice(0, 6)
+                          ).map((service, i) => (
                             <label key={i} className="flex items-center gap-2">
                               <input
                                 checked={serviceTag.some(
@@ -92,6 +96,16 @@ const ServiceType: React.FC<InstrumentFamilyProps> = ({
                               <span className="text-base">{service}</span>
                             </label>
                           ))}
+
+                          {type.serviceType.length > 6 && (
+                            <button
+                              type="button"
+                              className="self-start text-sm font-medium text-primary"
+                              onClick={() => setShowAll((current) => !current)}
+                            >
+                              {showAll ? "See less" : "See more"}
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>

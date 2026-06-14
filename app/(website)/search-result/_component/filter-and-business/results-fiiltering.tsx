@@ -15,12 +15,15 @@ import React, { useEffect, useState } from "react";
 type ResultsFilteringProps = {
   allBusiness?: {
     searchCount?: number;
+    pagination?: {
+      total?: number;
+    };
     [key: string]: unknown;
   } | null;
 };
 
 const ResultsFiltering = ({ allBusiness = { searchCount: 0 } }: ResultsFilteringProps) => {
-  const { setSort } = useFilterStore();
+  const { setSort, sort } = useFilterStore();
   const { location } = useSearchStore();
   const [hydrated, setHydrated] = useState(false);
 
@@ -48,7 +51,7 @@ const ResultsFiltering = ({ allBusiness = { searchCount: 0 } }: ResultsFiltering
     <div className="flex items-center justify-between">
       <div>
         <h1 className="text-gray-500">
-          {allBusiness?.searchCount} Results for
+          {allBusiness?.pagination?.total ?? allBusiness?.searchCount ?? 0} Results for
         </h1>
         <h1 className="text-xl font-bold">{`"${
           location || "San Francisco, CA"
@@ -58,7 +61,7 @@ const ResultsFiltering = ({ allBusiness = { searchCount: 0 } }: ResultsFiltering
       <div>
         <h1 className="text-gray-500">Sort by</h1>
         <Select
-          defaultValue="high-to-low"
+          value={sort || "high-to-low"}
           onValueChange={(value) => setSort(value)}
         >
           <SelectTrigger className="border-none focus:ring-offset-0 p-0 h-5 focus:ring-0 shadow-none justify-normal gap-2 focus:border-0">
