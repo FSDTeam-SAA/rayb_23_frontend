@@ -20,14 +20,21 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
-import { useQuery } from "@tanstack/react-query";
-import { getAllNotification, getUserProfile } from "@/lib/api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  getAllNotification,
+  getUserProfile,
+  markAllNotificationsAsRead,
+} from "@/lib/api";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { usePathname } from "next/navigation";
 import SearchBar from "./SearchBar";
+import { useEffect } from "react";
+import { initSocket } from "@/lib/socket";
 
 const Navbar = () => {
   const { data: session, status: sessionStatus } = useSession();
+  const queryClient = useQueryClient();
   const { data: userData } = useQuery({
     queryKey: ["userData", session?.user?.email],
     queryFn: getUserProfile,
@@ -42,6 +49,7 @@ const Navbar = () => {
       const res = await getAllNotification();
       return res?.notify || [];
     },
+    enabled: sessionStatus === "authenticated",
   });
 
   // Filter only unread notifications for the count
@@ -49,6 +57,55 @@ const Navbar = () => {
     (notification: any) => notification.isRead === false,
   );
   const notificationCount = unreadNotifications.length;
+
+  const markAllAsReadMutation = useMutation({
+    mutationFn: () =>
+      markAllNotificationsAsRead(
+        session?.user?.accessToken as string,
+        session?.user?.userType,
+      ),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["all-notifications"] });
+      const previousNotifications = queryClient.getQueryData([
+        "all-notifications",
+      ]);
+
+      queryClient.setQueryData<any[]>(["all-notifications"], (old = []) =>
+        old.map((notification) => ({ ...notification, isRead: true })),
+      );
+
+      return { previousNotifications };
+    },
+    onError: (_error, _variables, context) => {
+      queryClient.setQueryData(
+        ["all-notifications"],
+        context?.previousNotifications,
+      );
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-notifications"] });
+    },
+  });
+
+  const handleNotificationClick = () => {
+    if (notificationCount > 0 && !markAllAsReadMutation.isPending) {
+      markAllAsReadMutation.mutate();
+    }
+  };
+
+  useEffect(() => {
+    if (sessionStatus !== "authenticated" || !session?.user?.id) return;
+
+    const socket = initSocket();
+    socket.emit("joinNotification", session.user.id);
+    socket.on("new_notification", () => {
+      queryClient.invalidateQueries({ queryKey: ["all-notifications"] });
+    });
+
+    return () => {
+      socket.off("new_notification");
+    };
+  }, [queryClient, session?.user?.id, sessionStatus]);
 
   // Check if search bar should be shown (show on all pages except landing page)
   const shouldShowSearchBar = pathname !== "/";
@@ -85,6 +142,7 @@ const Navbar = () => {
             <div className="flex items-center gap-2">
               <div className="flex items-center justify-center h-10 w-10 bg-[#F7F8F8] rounded-full relative">
                 <Link
+                  onClick={handleNotificationClick}
                   href={`${
                     session?.user?.userType === "user"
                       ? "/customer-dashboard/settings/notifications"
@@ -357,6 +415,7 @@ const Navbar = () => {
               )}
               <div className="flex items-center justify-center h-12 w-12 bg-[#F7F8F8] rounded-full relative">
                 <Link
+                  onClick={handleNotificationClick}
                   href={`${
                     session?.user?.userType === "user"
                       ? "/customer-dashboard/settings/notifications"

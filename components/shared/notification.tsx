@@ -45,7 +45,7 @@ type Notification = {
   message: string;
   type: NotificationType;
   createdAt: string;
-  read?: boolean; // Optional field for read status
+  isRead: boolean;
 };
 
 type NotificationStyle = {
@@ -120,10 +120,11 @@ const Notifications = () => {
       // Update both query cache and live state
       queryClient.setQueryData<Notification[]>(
         ["all-notifications"],
-        (old = []) => old.map((n) => ({ ...n, read: true })),
+        (old = []) => old.map((n) => ({ ...n, isRead: true })),
       );
 
-      setLive((prev) => prev.map((n) => ({ ...n, read: true })));
+      setLive((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      queryClient.invalidateQueries({ queryKey: ["all-notifications"] });
 
       toast.success("All notifications marked as read");
     },
@@ -142,15 +143,18 @@ const Notifications = () => {
 
     socket.on("new_notification", (n: Notification) => {
       setLive((prev) => [n, ...prev]);
+      queryClient.invalidateQueries({ queryKey: ["all-notifications"] });
     });
 
     return () => {
       socket.off("new_notification");
-      socket.disconnect();
     };
-  }, [userId]);
+  }, [queryClient, userId]);
 
-  const notifications = [...live, ...allNotifications];
+  const notifications = [...live, ...allNotifications].filter(
+    (notification, index, list) =>
+      list.findIndex((item) => item._id === notification._id) === index,
+  );
 
   const deleteOne = async (id: string) => {
     try {
@@ -177,7 +181,7 @@ const Notifications = () => {
   };
 
   // Check if there are any unread notifications
-  const hasUnread = notifications.some((n) => !n.read);
+  const hasUnread = notifications.some((n) => !n.isRead);
 
   return (
     <div className="container mx-auto">
@@ -227,7 +231,7 @@ const Notifications = () => {
               <div
                 key={n._id}
                 className={`rounded-lg p-4 flex justify-between items-center ${style.bg} ${
-                  !n.read ? "border-l-4 border-teal-500" : ""
+                  !n.isRead ? "border-l-4 border-teal-500" : ""
                 }`}
               >
                 <div className="flex gap-3">
