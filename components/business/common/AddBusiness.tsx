@@ -29,9 +29,9 @@ interface Error {
 interface ServiceType {
   newInstrumentName: string;
   pricingType: string;
-  minPrice: string;
-  maxPrice: string;
-  price: string;
+  minPrice: string | null;
+  maxPrice: string | null;
+  price: string | null;
   selectedInstrumentsGroup?: string;
   instrumentFamily?: string;
   selectedInstrumentsGroupMusic?: string;
@@ -161,6 +161,61 @@ const AddBusiness = () => {
       return res?.data;
     },
   });
+
+  const getInstrumentFamilyByName = (instrumentName?: string) => {
+    if (!instrumentName) return "";
+
+    return (
+      allInstrument?.find((group: any) =>
+        group.instrumentTypes?.some(
+          (instrument: any) => instrument.type === instrumentName,
+        ),
+      )?.instrumentFamily || ""
+    );
+  };
+
+  const buildServicesPayload = () => {
+    const activeInstruments = new Set(selectedInstruments);
+    const servicesPayload: ServiceType[] = selected
+      .filter((service) => {
+        const group = service.selectedInstrumentsGroup;
+        return group && activeInstruments.has(group);
+      })
+      .map((service) => ({
+        ...service,
+        instrumentFamily:
+          service.instrumentFamily ||
+          getInstrumentFamilyByName(service.selectedInstrumentsGroup),
+      }));
+
+    selectedInstruments.forEach((instrument) => {
+      const hasServiceForInstrument = servicesPayload.some(
+        (service) => service.selectedInstrumentsGroup === instrument,
+      );
+
+      if (hasServiceForInstrument) return;
+
+      servicesPayload.push({
+        newInstrumentName: instrument,
+        pricingType: "",
+        price: null,
+        minPrice: null,
+        maxPrice: null,
+        selectedInstrumentsGroup: instrument,
+        instrumentFamily: getInstrumentFamilyByName(instrument),
+      });
+    });
+
+    return servicesPayload.map((service) => ({
+      newInstrumentName: service.newInstrumentName,
+      pricingType: service.pricingType,
+      price: service.price,
+      minPrice: service.minPrice,
+      maxPrice: service.maxPrice,
+      selectedInstrumentsGroup: service.selectedInstrumentsGroup,
+      instrumentFamily: service.instrumentFamily,
+    }));
+  };
 
   // buy / cell/ trade / rent related state
   const [selectedOptions, setSelectedOptions] = useState<
@@ -345,15 +400,7 @@ const AddBusiness = () => {
         website,
         image: images, // Store preview URLs for display
       },
-      services: selected.map((service) => ({
-        newInstrumentName: service.newInstrumentName,
-        pricingType: service.pricingType,
-        price: service.price,
-        minPrice: service.minPrice,
-        maxPrice: service.maxPrice,
-        selectedInstrumentsGroup: service.selectedInstrumentsGroup,
-        instrumentFamily: service.instrumentFamily,
-      })),
+      services: buildServicesPayload(),
       musicLessons: selectedMusic.map((lesson) => ({
         newInstrumentName: lesson.newInstrumentName,
         pricingType: lesson.pricingType,
@@ -483,15 +530,7 @@ const AddBusiness = () => {
         website,
         image: images, // Store preview URLs
       },
-      services: selected.map((service) => ({
-        newInstrumentName: service.newInstrumentName,
-        pricingType: service.pricingType,
-        price: service.price,
-        minPrice: service.minPrice,
-        maxPrice: service.maxPrice,
-        selectedInstrumentsGroup: service.selectedInstrumentsGroup,
-        instrumentFamily: service.instrumentFamily,
-      })),
+      services: buildServicesPayload(),
       musicLessons: selectedMusic.map((lesson) => ({
         newInstrumentName: lesson.newInstrumentName,
         pricingType: lesson.pricingType,

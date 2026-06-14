@@ -27,9 +27,9 @@ interface Instruments {
 interface Service {
   newInstrumentName: string;
   pricingType: string;
-  minPrice: string;
-  maxPrice: string;
-  price: string;
+  minPrice: string | null;
+  maxPrice: string | null;
+  price: string | null;
   selectedInstrumentsGroup?: string;
   selectedInstrumentsGroupMusic?: string;
 }
@@ -239,14 +239,14 @@ const Service = ({
                             <input
                               type="text"
                               placeholder="Min Price"
-                              value={select.minPrice}
+                              value={select.minPrice || ""}
                               disabled
                               className="w-1/2 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none h-[48px] bg-gray-50 disabled:cursor-not-allowed"
                             />
                             <input
                               type="text"
                               placeholder="Max Price"
-                              value={select.maxPrice}
+                              value={select.maxPrice || ""}
                               disabled
                               className="w-1/2 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none h-[48px] bg-gray-50 disabled:cursor-not-allowed"
                             />
@@ -255,7 +255,7 @@ const Service = ({
                           <input
                             type="text"
                             placeholder="$  Service Price"
-                            value={select.price}
+                            value={select.price || ""}
                             disabled
                             className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none h-[48px] bg-gray-50 disabled:cursor-not-allowed"
                           />
