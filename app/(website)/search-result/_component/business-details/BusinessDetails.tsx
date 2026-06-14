@@ -554,11 +554,22 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
   };
 
   const formatPrice = (service: any) => {
+    const hasPrice = (value: unknown) =>
+      value !== null &&
+      value !== undefined &&
+      value !== "" &&
+      !Number.isNaN(Number(value));
+
     if (service.pricingType === "exact") {
+      if (!hasPrice(service.price)) return "Contact for pricing";
       return `$${service.price}`;
     } else if (service.pricingType === "range") {
+      if (!hasPrice(service.minPrice) || !hasPrice(service.maxPrice)) {
+        return "Contact for pricing";
+      }
       return `$${service.minPrice} - $${service.maxPrice}`;
     } else if (service.pricingType === "hourly") {
+      if (!hasPrice(service.price)) return "Contact for pricing";
       return `$${service.price}/hr`;
     }
     return "Contact for pricing";
