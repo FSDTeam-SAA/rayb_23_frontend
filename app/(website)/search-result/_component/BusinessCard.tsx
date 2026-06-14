@@ -113,7 +113,6 @@ const BusinessCard = ({ business }: { business: Business }) => {
     } else if (service.minPrice && service.maxPrice) {
       return `$${service.minPrice} - $${service.maxPrice}`;
     }
-    return "Price not available";
   };
 
   // Filter services based on search or serviceTag
