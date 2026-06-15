@@ -24,24 +24,30 @@ const FilterInfo = () => {
     <div>
       <h1 className="text-2xl font-bold">Filters</h1>
 
-      <div className="mt-6 border-b">
-        <InstrumentFamily
-          instrumentFamilies={instrumentFamilies}
-          isLoading={isLoading}
-        />
-
-        {selectInstrument && (
-          <SelectInstrument
+      <div className="mt-6">
+        <div className="border-b border-gray-200 pb-2">
+          <InstrumentFamily
             instrumentFamilies={instrumentFamilies}
             isLoading={isLoading}
           />
+        </div>
+
+        {selectInstrument && (
+          <div className="border-b border-gray-200 py-2">
+            <SelectInstrument
+              instrumentFamilies={instrumentFamilies}
+              isLoading={isLoading}
+            />
+          </div>
         )}
 
         {selectService && (
-          <ServiceType
-            instrumentFamilies={instrumentFamilies}
-            isLoading={isLoading}
-          />
+          <div className="border-b border-gray-200 py-2">
+            <ServiceType
+              instrumentFamilies={instrumentFamilies}
+              isLoading={isLoading}
+            />
+          </div>
         )}
       </div>
 
