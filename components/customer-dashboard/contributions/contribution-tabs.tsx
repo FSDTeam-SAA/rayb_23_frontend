@@ -63,6 +63,14 @@ interface Business {
   review: ReviewType[]; // Add the review property
 }
 
+interface PhotoContribution {
+  business: {
+    _id: string;
+    businessInfo: BusinessItem;
+  };
+  images: { _id?: string; url: string; status: string }[];
+}
+
 // API functions
 const deleteReview = async ({
   reviewId,
@@ -327,36 +335,37 @@ export default function ContributionTabs() {
           </div>
           {myPhotos?.length > 0 ? (
             <div className="grid grid-cols-4 gap-5">
-              {myPhotos?.map(
-                (photo: {
-                  business: { name: string; logo: string; price: number };
-                  images: { url: string; status: string }[];
-                }) => (
-                  <div
-                    key={photo?.business.name}
-                    className="p-4 space-y-4 border shadow-md rounded-md"
-                  >
-                    <div>
-                      {photo?.images?.map((image) => (
-                        <div key={image?.url} className="relative">
-                          <Image
-                            src={image.url}
-                            alt="Photo"
-                            width={200}
-                            height={200}
-                            className="w-full aspect-[5/4] rounded-lg object-cover"
-                          />
-                          <div className="absolute right-2 top-2 flex gap-1 items-center">
-                            <p className="bg-white text-black rounded-md px-4 py-1">
-                              {image.status}
-                            </p>
-                          </div>
+              {myPhotos?.map((photo: PhotoContribution) => (
+                <div
+                  key={photo?.business?._id}
+                  className="p-4 space-y-4 border shadow-md rounded-md"
+                >
+                  <div>
+                    {photo?.images?.map((image) => (
+                      <div key={image?._id || image?.url} className="relative">
+                        <Image
+                          src={image.url}
+                          alt="Photo"
+                          width={200}
+                          height={200}
+                          className="w-full aspect-[5/4] rounded-lg object-cover"
+                        />
+                        <div className="absolute right-2 top-2 flex gap-1 items-center">
+                          <p className="bg-white text-black rounded-md px-4 py-1">
+                            {image.status}
+                          </p>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
                   </div>
-                ),
-              )}
+                  <div>
+                    <h4 className="font-semibold text-[#1D2020]">
+                      {photo?.business?.businessInfo?.name ||
+                        "Unknown Business"}
+                    </h4>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
             <div className="flex justify-between items-center bg-[#F7F8F8] p-6 rounded-md">

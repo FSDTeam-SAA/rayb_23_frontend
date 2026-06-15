@@ -69,6 +69,10 @@ const hasGoogleReviews = (reviews: Review[] = []) => {
   });
 };
 
+const truncateServiceName = (name = "") => {
+  return name.length > 17 ? `${name.slice(0, 16)}...` : name;
+};
+
 // Skeleton component
 const SkeletonCard = () => {
   return (
@@ -305,9 +309,12 @@ const Popular = () => {
                                       <button
                                         className="h-[52px] px-5 rounded-lg bg-[#F8F8F8]"
                                         key={index}
+                                        title={service?.newInstrumentName}
                                         onClick={(e) => e.stopPropagation()}
                                       >
-                                        {service?.newInstrumentName}
+                                        {truncateServiceName(
+                                          service?.newInstrumentName,
+                                        )}
                                       </button>
                                     ))}
                                 </div>
