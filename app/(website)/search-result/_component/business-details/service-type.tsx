@@ -24,8 +24,14 @@ interface MusicLesson {
   selectedInstrumentsGroupMusic: string;
 }
 
+interface SelectedInstrument {
+  instrumentName: string;
+  instrumentFamily: string;
+}
+
 interface Business {
   services: Service[];
+  selectedInstruments?: SelectedInstrument[];
   musicLessons: MusicLesson[];
   buyInstruments: boolean;
   sellInstruments: boolean;
@@ -130,12 +136,86 @@ const ServiceType: React.FC<ServiceTypeProps> = ({
     </div>
   );
 
+  const renderRepairItems = () => {
+    const groupedSelectedInstruments = (
+      singleBusiness.selectedInstruments || []
+    ).reduce((acc: Record<string, string[]>, item) => {
+      if (!acc[item.instrumentFamily]) acc[item.instrumentFamily] = [];
+      if (!acc[item.instrumentFamily].includes(item.instrumentName)) {
+        acc[item.instrumentFamily].push(item.instrumentName);
+      }
+      return acc;
+    }, {});
+
+    Object.entries(groupedServices).forEach(([family, services]) => {
+      if (!groupedSelectedInstruments[family]) {
+        groupedSelectedInstruments[family] = [];
+      }
+
+      services.forEach((service) => {
+        const instrument = service.selectedInstrumentsGroup;
+        if (!groupedSelectedInstruments[family].includes(instrument)) {
+          groupedSelectedInstruments[family].push(instrument);
+        }
+      });
+    });
+
+    return (
+      <div className="space-y-4">
+        {Object.entries(groupedSelectedInstruments).map(
+          ([family, instruments]) => (
+            <div key={family}>
+              <h4 className="font-medium text-primary text-xl mb-2">
+                {family}
+              </h4>
+
+              <div className="grid lg:grid-cols-2 gap-x-12">
+                {instruments.map((instrument) => {
+                  const services = (groupedServices[family] || []).filter(
+                    (service) =>
+                      service.selectedInstrumentsGroup === instrument,
+                  );
+
+                  return (
+                    <div key={instrument} className="mb-4">
+                      <div className="font-medium text-lg mt-2">
+                        {instrument}
+                      </div>
+
+                      {services.map((item, index) => (
+                        <div
+                          key={index}
+                          className="flex justify-between items-center py-1"
+                        >
+                          <div className="text-gray-700">
+                            {item.newInstrumentName}
+                          </div>
+                          <div className="font-medium text-sm text-gray-700">
+                            {formatPrice(item)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ),
+        )}
+      </div>
+    );
+  };
+
+  const hasRepairItems =
+    singleBusiness.services.length > 0 ||
+    (singleBusiness.selectedInstruments?.length || 0) > 0;
+
   return (
     <div className="pt-8 space-y-8 border-b border-gray-200 pb-10">
       <h2 className="text-xl font-semibold mb-4">Service Type</h2>
 
       {/* 🔧 Repair Services */}
-      {singleBusiness.services.length > 0 && (
+      {hasRepairItems && (
         <div className="shadow-[0px_2px_12px_0px_#003D3914] p-8 rounded-lg">
           <button
             onClick={() => toggleSection("repair")}
@@ -149,7 +229,7 @@ const ServiceType: React.FC<ServiceTypeProps> = ({
             )}
           </button>
 
-          {expandedSections.repair && renderGroupedItems(groupedServices)}
+          {expandedSections.repair && renderRepairItems()}
         </div>
       )}
 

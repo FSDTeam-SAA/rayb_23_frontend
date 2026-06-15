@@ -99,6 +99,10 @@ interface BusinessProfileProps {
       selectedInstrumentsGroup: string;
       instrumentFamily: string;
     }>;
+    selectedInstruments?: Array<{
+      instrumentName: string;
+      instrumentFamily: string;
+    }>;
     musicLessons: Array<{
       newInstrumentName: string;
       pricingType: string;

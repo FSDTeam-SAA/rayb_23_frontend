@@ -37,6 +37,11 @@ interface ServiceType {
   selectedInstrumentsGroupMusic?: string;
 }
 
+interface SelectedInstrumentPayload {
+  instrumentName: string;
+  instrumentFamily: string;
+}
+
 type OptionKey = "buy" | "sell" | "trade" | "rent" | "music";
 
 const daysOfWeek = [
@@ -188,24 +193,6 @@ const AddBusiness = () => {
           getInstrumentFamilyByName(service.selectedInstrumentsGroup),
       }));
 
-    selectedInstruments.forEach((instrument) => {
-      const hasServiceForInstrument = servicesPayload.some(
-        (service) => service.selectedInstrumentsGroup === instrument,
-      );
-
-      if (hasServiceForInstrument) return;
-
-      servicesPayload.push({
-        newInstrumentName: instrument,
-        pricingType: "",
-        price: null,
-        minPrice: null,
-        maxPrice: null,
-        selectedInstrumentsGroup: instrument,
-        instrumentFamily: getInstrumentFamilyByName(instrument),
-      });
-    });
-
     return servicesPayload.map((service) => ({
       newInstrumentName: service.newInstrumentName,
       pricingType: service.pricingType,
@@ -216,6 +203,12 @@ const AddBusiness = () => {
       instrumentFamily: service.instrumentFamily,
     }));
   };
+
+  const buildSelectedInstrumentsPayload = (): SelectedInstrumentPayload[] =>
+    selectedInstruments.map((instrument) => ({
+      instrumentName: instrument,
+      instrumentFamily: getInstrumentFamilyByName(instrument),
+    }));
 
   // buy / cell/ trade / rent related state
   const [selectedOptions, setSelectedOptions] = useState<
@@ -400,6 +393,7 @@ const AddBusiness = () => {
         website,
         image: images, // Store preview URLs for display
       },
+      selectedInstruments: buildSelectedInstrumentsPayload(),
       services: buildServicesPayload(),
       musicLessons: selectedMusic.map((lesson) => ({
         newInstrumentName: lesson.newInstrumentName,
@@ -530,6 +524,7 @@ const AddBusiness = () => {
         website,
         image: images, // Store preview URLs
       },
+      selectedInstruments: buildSelectedInstrumentsPayload(),
       services: buildServicesPayload(),
       musicLessons: selectedMusic.map((lesson) => ({
         newInstrumentName: lesson.newInstrumentName,
@@ -578,11 +573,17 @@ const AddBusiness = () => {
         // This is fine for display, but new uploads will be handled separately
       }
 
-      // Set selected instruments from services
-      const selectedGroups = allServices
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .map((item: any) => item?.selectedInstrumentsGroup)
-        .filter(Boolean);
+      // Set selected instruments from the dedicated field, with old data fallback.
+      const selectedGroups =
+        singleBusiness.selectedInstruments?.length > 0
+          ? singleBusiness.selectedInstruments
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              .map((item: any) => item?.instrumentName)
+              .filter(Boolean)
+          : allServices
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              .map((item: any) => item?.selectedInstrumentsGroup)
+              .filter(Boolean);
 
       setSelectedInstruments(selectedGroups);
 
@@ -637,8 +638,11 @@ const AddBusiness = () => {
           (s: any) => s.selectedInstrumentsGroup,
         );
 
-        // Prefill selected instruments
-        setSelectedInstruments(instrumentGroups);
+        // Prefill selected instruments for old businesses that do not have the
+        // dedicated selectedInstruments field yet.
+        if (!singleBusiness.selectedInstruments?.length) {
+          setSelectedInstruments(instrumentGroups);
+        }
 
         // Set the first instrument group as selected for pricing list view
         setSelectedInstrumentsGroup(instrumentGroups[0]);
