@@ -42,6 +42,23 @@ const signUpFormSchema = z.object({
     .min(8, { message: "Password must be at least 8 characters" }),
 });
 
+const getAuthErrorMessage = (message?: string | null) => {
+  if (!message) return "";
+
+  try {
+    return decodeURIComponent(message);
+  } catch {
+    return message;
+  }
+};
+
+const MAX_FAILED_ATTEMPTS = 4;
+
+const shouldTrackFailedAttempt = (message: string) =>
+  message.includes("Invalid password") ||
+  message.includes("Invalid credentials") ||
+  message.includes("User not found");
+
 // API function to restore flag
 
 export default function LoginForm() {
@@ -127,13 +144,6 @@ export default function LoginForm() {
 
     const attempts = attemptsObj[email] || 0;
 
-    // already locked out for this email
-    if (attempts >= 4) {
-      toast.error("Too many failed attempts. Please reset your password.");
-      router.push("/auth/forgot-password");
-      return;
-    }
-
     setIsLoading(true);
     try {
       const res = await signIn("credentials", {
@@ -167,36 +177,46 @@ export default function LoginForm() {
       }
 
       if (res?.ok === false) {
-        // increment attempts for this email
-        attemptsObj[email] = (attemptsObj[email] || 0) + 1;
-        localStorage.setItem("failedAttempts", JSON.stringify(attemptsObj));
+        const errorMessage = getAuthErrorMessage(res.error);
 
-        if (attemptsObj[email] >= 4) {
-          toast.error("Too many failed attempts. Please reset your password.");
-          router.push("/auth/forgot-password");
-          return;
-        }
-
-        if (res.error?.startsWith("VERIFY_EMAIL:")) {
-          const token = res.error.split(":")[1];
+        if (errorMessage.startsWith("VERIFY_EMAIL:")) {
+          const token = errorMessage.split(":")[1];
           router.push(`/auth/verify-email?token=${token}&type=login`);
         } else {
           if (
-            res?.error?.includes(
+            errorMessage.includes(
               "Your account is suspended. Please contact support.",
             )
           ) {
             setSuspended(true);
+            setDeleted(false);
           } else if (
-            res?.error?.includes(
+            errorMessage.includes(
               "Your account is deleted. Please contact support.",
             )
           ) {
             setDeleted(true);
-          } else {
-            toast.error(res.error || "Invalid credentials");
             setSuspended(false);
+          } else {
+            if (shouldTrackFailedAttempt(errorMessage)) {
+              attemptsObj[email] = attempts + 1;
+              localStorage.setItem(
+                "failedAttempts",
+                JSON.stringify(attemptsObj),
+              );
+
+              if (attemptsObj[email] >= MAX_FAILED_ATTEMPTS) {
+                toast.error(
+                  "Too many failed attempts. Please reset your password.",
+                );
+                router.push("/auth/forgot-password");
+                return;
+              }
+            }
+
+            toast.error(errorMessage || "Invalid credentials");
             setDeleted(false);
+            setSuspended(false);
           }
         }
       }
