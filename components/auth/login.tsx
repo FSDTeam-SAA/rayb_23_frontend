@@ -431,7 +431,7 @@ export default function LoginForm() {
               Your profile has been permanently deleted by our admin team. If
               you believe this action was taken in error or need more
               information, please reach out to{" "}
-              <a href="mailto:contact@instrufix.com" className="underline">
+              <a href="mailto:support@instrufix.com" className="underline">
                 support
               </a>
               .

@@ -67,7 +67,7 @@ export default function Footer() {
           <div>
             <h1 className="font-semibold text-lg mb-3">Contact</h1>
             <ul>
-              <Link href={"https://mail.google.com/mail/"} target="_blank">
+              <Link href={"mailto:contact@instrufix.com"} target="_blank">
                 <li className="hover:underline">contact@instrufix.com</li>
               </Link>
             </ul>

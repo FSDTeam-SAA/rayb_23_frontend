@@ -363,8 +363,12 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
   const userId = session?.data?.user?.id;
 
   const role = session?.data?.user?.userType;
+  const isBusinessAccount = role === "businessMan";
   const status = session?.status;
   const router = useRouter();
+  const customerFeatureTitle = isBusinessAccount
+    ? "As a business account, you cannot use this feature."
+    : undefined;
 
   const address = singleBusiness.businessInfo.address;
 
@@ -602,6 +606,11 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
   const handleSaveBusiness = async () => {
     if (status === "unauthenticated") {
       return setIsLoginModalOpen(true);
+    }
+
+    if (isBusinessAccount) {
+      toast.error("Business accounts cannot save businesses.");
+      return;
     }
 
     setIsSaving(true);
@@ -868,12 +877,22 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
       return setIsLoginModalOpen(true);
     }
 
+    if (isBusinessAccount) {
+      toast.error("Business accounts cannot write reviews.");
+      return;
+    }
+
     setIsOpen(true);
   };
 
   const handleAddPhoto = () => {
     if (status === "unauthenticated") {
       return setIsLoginModalOpen(true);
+    }
+
+    if (isBusinessAccount) {
+      toast.error("Business accounts cannot add photos.");
+      return;
     }
 
     setIsAddPhotoOpen(true);
@@ -1013,14 +1032,18 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-3 lg:gap-5 w-full lg:w-auto mt-4 lg:mt-0">
           <button
             onClick={handleReview}
-            className="bg-[#e0f2f1] hover:bg-[#139a8e] flex items-center justify-center gap-1 lg:gap-2 px-3 lg:px-5 py-2 lg:py-3 rounded-lg text-[#139a8e] hover:text-white font-semibold text-sm lg:text-base"
+            disabled={isBusinessAccount}
+            title={customerFeatureTitle}
+            className="bg-[#e0f2f1] hover:bg-[#139a8e] flex items-center justify-center gap-1 lg:gap-2 px-3 lg:px-5 py-2 lg:py-3 rounded-lg text-[#139a8e] hover:text-white font-semibold text-sm lg:text-base disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[#e0f2f1] disabled:hover:text-[#139a8e]"
           >
             <Star className="w-3 h-3 lg:w-4 lg:h-4" />
             <span className="truncate">Write a Review</span>
           </button>
           <button
             onClick={handleAddPhoto}
-            className="bg-[#e0f2f1] hover:bg-[#139a8e] flex items-center justify-center gap-1 lg:gap-2 px-3 lg:px-5 py-2 lg:py-3 rounded-lg text-[#139a8e] hover:text-white font-semibold text-sm lg:text-base"
+            disabled={isBusinessAccount}
+            title={customerFeatureTitle}
+            className="bg-[#e0f2f1] hover:bg-[#139a8e] flex items-center justify-center gap-1 lg:gap-2 px-3 lg:px-5 py-2 lg:py-3 rounded-lg text-[#139a8e] hover:text-white font-semibold text-sm lg:text-base disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[#e0f2f1] disabled:hover:text-[#139a8e]"
           >
             <LocateIcon className="w-3 h-3 lg:w-4 lg:h-4" />
             <span className="truncate">Add Photo</span>
@@ -1034,8 +1057,9 @@ const BusinessDetails: React.FC<BusinessProfileProps> = ({
           </button>
           <button
             onClick={handleSaveBusiness}
-            disabled={isSaving}
-            className="bg-[#e0f2f1] hover:bg-[#139a8e] flex items-center justify-center gap-1 lg:gap-2 px-3 lg:px-5 py-2 lg:py-3 rounded-lg text-[#139a8e] hover:text-white font-semibold text-sm lg:text-base disabled:opacity-50"
+            disabled={isSaving || isBusinessAccount}
+            title={customerFeatureTitle}
+            className="bg-[#e0f2f1] hover:bg-[#139a8e] flex items-center justify-center gap-1 lg:gap-2 px-3 lg:px-5 py-2 lg:py-3 rounded-lg text-[#139a8e] hover:text-white font-semibold text-sm lg:text-base disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[#e0f2f1] disabled:hover:text-[#139a8e]"
           >
             {isSaving ? (
               <Loader2 className="w-3 h-3 lg:w-4 lg:h-4 animate-spin" />
