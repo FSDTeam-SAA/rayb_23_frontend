@@ -49,12 +49,14 @@ export async function updateUserProfile(data: any) {
 
 // Deactivate account
 export async function deactivateAccount({
-  deactivedReason,
+  deactivateReason,
 }: {
-  deactivedReason: string;
+  deactivateReason: string;
 }) {
   try {
-    const response = await api.put(`/user/deactive-account`, deactivedReason);
+    const response = await api.put(`/user/deactive-account`, {
+      deactivateReason,
+    });
     return response.data;
   } catch (error) {
     console.error("Error deactivating account:", error);

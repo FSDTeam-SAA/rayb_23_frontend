@@ -13,7 +13,9 @@ import { useSession } from "next-auth/react";
 
 interface Review {
   _id: string;
-  user: { name: string; imageLink: string };
+  user: { name: string; imageLink: string | null } | null;
+  googleAuthorName?: string | null;
+  googleAuthorPhoto?: string | null;
   report: { isReport: boolean };
   createdAt: string;
   rating: number;
@@ -77,6 +79,19 @@ export default function BdDashComponent() {
       refetchNewMessages();
     }
   }, [selectedBusinessId, timeFilter, refetchAnalytics, refetchNewMessages]);
+
+  const getReviewerName = (review: Review) =>
+    review.user?.name || review.googleAuthorName || "Anonymous User";
+
+  const getReviewerImage = (review: Review) =>
+    review.user?.imageLink || review.googleAuthorPhoto || "";
+
+  const getReviewerInitials = (name: string) =>
+    name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
 
   // Prepare metrics data
   const metrics = [
@@ -203,20 +218,21 @@ export default function BdDashComponent() {
                 <Loader className="animate-spin h-7 w-7" />
               </div>
             ) : allReview?.data?.length ? (
-              allReview.data.map((review: Review) => (
-                <div
-                  key={review._id}
-                  className="space-y-3 shadow-[0px_2px_12px_0px_#003D3914] p-4 rounded-lg"
-                >
+              allReview.data.map((review: Review) => {
+                const reviewerName = getReviewerName(review);
+                const reviewerImage = getReviewerImage(review);
+
+                return (
+                  <div
+                    key={review._id}
+                    className="space-y-3 shadow-[0px_2px_12px_0px_#003D3914] p-4 rounded-lg"
+                  >
                   <div className="flex items-start gap-3">
                     <div>
                       <Avatar className="h-10 w-10">
-                        <AvatarImage src={review.user.imageLink} />
+                        <AvatarImage src={reviewerImage} />
                         <AvatarFallback className="bg-yellow-500 text-white">
-                          {review.user.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
+                          {getReviewerInitials(reviewerName)}
                         </AvatarFallback>
                       </Avatar>
                     </div>
@@ -224,7 +240,7 @@ export default function BdDashComponent() {
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <h4 className="font-semibold text-gray-900 text-sm">
-                            {review.user.name}
+                            {reviewerName}
                           </h4>
                           {review.report?.isReport && (
                             <span className="text-xs text-red-500">
@@ -253,7 +269,8 @@ export default function BdDashComponent() {
                     </p>
                   )}
                 </div>
-              ))
+                );
+              })
             ) : (
               <div className="flex flex-col items-center justify-center h-full">
                 <div className="text-center p-8">

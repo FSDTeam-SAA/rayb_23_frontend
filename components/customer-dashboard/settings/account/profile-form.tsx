@@ -34,6 +34,7 @@ import {
 } from "@/lib/api";
 import { User, Mail, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { signOut } from "next-auth/react";
 
 // ✅ Zod schema
 const profileFormSchema = z.object({
@@ -130,17 +131,19 @@ export default function UserProfileForm() {
     setSelectedFile(null);
   };
 
-  const { mutate: deactivateAccountMutation } = useMutation({
-    mutationFn: () =>
-      deactivateAccount({ deactivedReason: deactivationReason }),
-    onSuccess: (data) => {
-      toast.success(data.message);
-      queryClient.invalidateQueries({ queryKey: ["userData"] });
-    },
-    onError: (error) => {
-      if (error instanceof Error) toast.error(error.message);
-    },
-  });
+  const { mutate: deactivateAccountMutation, isPending: isDeactivating } =
+    useMutation({
+      mutationFn: () =>
+        deactivateAccount({ deactivateReason: deactivationReason }),
+      onSuccess: (data) => {
+        toast.success(data.message);
+        queryClient.invalidateQueries({ queryKey: ["userData"] });
+        signOut({ callbackUrl: "/" });
+      },
+      onError: (error) => {
+        if (error instanceof Error) toast.error(error.message);
+      },
+    });
 
   const handleDeactivateAccount = () => {
     deactivateAccountMutation();
@@ -364,10 +367,17 @@ export default function UserProfileForm() {
             <Button
               variant="secondary"
               className="bg-gray-200 hover:bg-gray-300 text-gray-700 w-full sm:w-auto"
-              disabled={!deactivationReason}
+              disabled={!deactivationReason || isDeactivating}
               onClick={handleDeactivateAccount}
             >
-              Deactivate Account
+              {isDeactivating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deactivating...
+                </>
+              ) : (
+                "Deactivate Account"
+              )}
             </Button>
           </div>
         </CardContent>

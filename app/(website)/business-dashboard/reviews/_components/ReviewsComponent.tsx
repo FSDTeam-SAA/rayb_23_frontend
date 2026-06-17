@@ -47,9 +47,11 @@ interface Review {
   feedback: string;
   image: string[];
   status: "pending" | "approved" | "rejected";
-  user: User;
+  user: User | null;
   business: string;
   googlePlaceId: string | null;
+  googleAuthorName?: string | null;
+  googleAuthorPhoto?: string | null;
   createdAt: string;
   updatedAt: string;
   report: Report;
@@ -311,6 +313,19 @@ export default function ReviewsComponent() {
     });
   };
 
+  const getReviewerName = (review: Review) =>
+    review.user?.name || review.googleAuthorName || "Anonymous User";
+
+  const getReviewerImage = (review: Review) =>
+    review.user?.imageLink || review.googleAuthorPhoto || "";
+
+  const getReviewerInitials = (name: string) =>
+    name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+
   // Show skeleton while loading
   if (isLoading) {
     return <ReviewsSkeleton />;
@@ -421,30 +436,30 @@ export default function ReviewsComponent() {
       {/* Reviews List */}
       <div className="space-y-6">
         {filteredReviews.length ? (
-          filteredReviews.map((review) => (
-            <Card
-              key={review._id}
-              className="border border-gray-200 overflow-hidden"
-            >
+          filteredReviews.map((review) => {
+            const reviewerName = getReviewerName(review);
+            const reviewerImage = getReviewerImage(review);
+
+            return (
+              <Card
+                key={review._id}
+                className="border border-gray-200 overflow-hidden"
+              >
               <CardContent className="p-6">
                 <div className="space-y-4">
                   {/* Review Header */}
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
                       <Avatar className="h-10 w-10">
-                        <AvatarImage src={review.user.imageLink || ""} />
+                        <AvatarImage src={reviewerImage} />
                         <AvatarFallback className="bg-gradient-to-br from-yellow-400 to-yellow-500 text-white font-semibold">
-                          {review.user.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .toUpperCase()}
+                          {getReviewerInitials(reviewerName)}
                         </AvatarFallback>
                       </Avatar>
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <h4 className="font-semibold text-gray-900">
-                            {review.user.name}
+                            {reviewerName}
                           </h4>
                           <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
                             {review.status}
@@ -572,7 +587,8 @@ export default function ReviewsComponent() {
                 </div>
               </CardContent>
             </Card>
-          ))
+            );
+          })
         ) : (
           <div className="flex flex-col items-center justify-center h-64 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
             <FileText className="h-12 w-12 text-gray-400 mb-4" />
