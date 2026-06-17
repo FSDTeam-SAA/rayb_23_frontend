@@ -544,9 +544,10 @@ const AddBusiness = () => {
       })),
       buyInstruments: selectedOptions.buy,
       sellInstruments: selectedOptions.sell,
+      tradeInstruments: selectedOptions.trade,
+      rentInstruments: selectedOptions.rent,
+      isMusicLessons: selectedOptions.music,
       offerMusicLessons: selectedMusic.length > 0,
-      status: "pending",
-      isVerified: false,
     };
 
     formData.append("data", JSON.stringify(businessData));
