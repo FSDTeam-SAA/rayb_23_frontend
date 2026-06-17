@@ -13,6 +13,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useState } from "react";
+import { toast } from "sonner";
 
 interface Review {
   _id: string;
@@ -60,6 +61,11 @@ const ClaimReviewBusiness = () => {
   const route = useRouter();
   const session = useSession();
   const status = session?.status;
+  const role = session?.data?.user?.userType;
+  const isBusinessAccount = role === "businessMan";
+  const reviewRestrictionTitle = isBusinessAccount
+    ? "As a business account, you cannot review another business."
+    : undefined;
   const [businessID, setBusinessID] = useState<string>();
   const [isOpen, setIsOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -301,10 +307,18 @@ const ClaimReviewBusiness = () => {
                                       if (status === "unauthenticated") {
                                         return setLoginModalOpen(true);
                                       }
+                                      if (isBusinessAccount) {
+                                        toast.error(
+                                          "Business accounts cannot review another business.",
+                                        );
+                                        return;
+                                      }
                                       setIsOpen(true);
                                       setBusinessID(business?._id);
                                     }}
-                                    className="w-full sm:w-[180px] bg-[#e0f2f1] h-[48px] text-[#139a8e] px-5 rounded-lg"
+                                    disabled={isBusinessAccount}
+                                    title={reviewRestrictionTitle}
+                                    className="w-full sm:w-[180px] bg-[#e0f2f1] h-[48px] text-[#139a8e] px-5 rounded-lg disabled:cursor-not-allowed disabled:opacity-50"
                                   >
                                     Review Business
                                   </button>
