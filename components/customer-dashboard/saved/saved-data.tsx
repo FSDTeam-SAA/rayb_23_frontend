@@ -43,6 +43,7 @@ export interface SavedBusiness {
   createdAt: string;
   updatedAt: string;
   savedBusiness: {
+    _id?: string;
     businessInfo: BusinessInfo;
     review: Review[];
   };
@@ -178,6 +179,7 @@ export default function UserSavedData() {
         const averageRating = calculateAverageRating(
           business?.savedBusiness?.review || [],
         );
+        const savedBusinessId = business?.savedBusiness?._id || business?._id;
 
         return (
           <div
@@ -201,7 +203,7 @@ export default function UserSavedData() {
 
             <div className="flex flex-col gap-5 h-full">
               {/* Profile Image */}
-              <Link href={`/search-result/${business?._id}`}>
+              <Link href={`/search-result/${savedBusinessId}`}>
                 <div className="flex-shrink-0 overflow-hidden rounded-lg">
                   <Image
                     src={
@@ -223,7 +225,7 @@ export default function UserSavedData() {
               </Link>
 
               {/* Content */}
-              <Link href={`/search-result/${business?._id}`}>
+              <Link href={`/search-result/${savedBusinessId}`}>
                 <div className="flex-1 flex flex-col">
                   <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                     <div className="flex-1">
