@@ -70,7 +70,7 @@ const hasGoogleReviews = (reviews: Review[] = []) => {
 };
 
 const truncateServiceName = (name = "") => {
-  return name.length > 17 ? `${name.slice(0, 16)}...` : name;
+  return name.length > 17 ? `${name.slice(0, 10)}...` : name;
 };
 
 // Skeleton component
