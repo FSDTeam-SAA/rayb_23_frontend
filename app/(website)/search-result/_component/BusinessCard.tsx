@@ -24,9 +24,9 @@ interface BusinessItem {
 
 interface Service {
   newInstrumentName: string;
-  price: string;
-  minPrice: string;
-  maxPrice: string;
+  price: string | number | null;
+  minPrice: string | number | null;
+  maxPrice: string | number | null;
   pricingType: string;
 }
 
@@ -74,9 +74,7 @@ const BusinessCard = ({ business }: { business: Business }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const images = business?.images || [];
 
-  const { search, serviceTag } = useFilterStore();
-
-  console.log("serviceTag: ", serviceTag);
+  const { search, serviceTag, minPriceRange, maxPriceRange } = useFilterStore();
 
   // Check if business has Google reviews
   const hasGoogleReview = useMemo(
@@ -108,42 +106,94 @@ const BusinessCard = ({ business }: { business: Business }) => {
   // Calculate average rating
   const averageRating = calculateAverageRating(business?.review);
 
+  const hasPrice = (value: Service["price"]) =>
+    value !== null &&
+    value !== undefined &&
+    value !== "" &&
+    !Number.isNaN(Number(value));
+
+  const isPricedService = (service: Service) => {
+    if (service.pricingType === "range") {
+      return hasPrice(service.minPrice) && hasPrice(service.maxPrice);
+    }
+
+    return hasPrice(service.price);
+  };
+
+  const matchesPriceRange = (service: Service) => {
+    const hasMinFilter = minPriceRange.trim() !== "";
+    const hasMaxFilter = maxPriceRange.trim() !== "";
+
+    if (!hasMinFilter && !hasMaxFilter) return true;
+
+    const filterMin = hasMinFilter ? Number(minPriceRange) : 0;
+    const filterMax = hasMaxFilter
+      ? Number(maxPriceRange)
+      : Number.POSITIVE_INFINITY;
+
+    if (service.pricingType === "range") {
+      if (!hasPrice(service.minPrice) || !hasPrice(service.maxPrice))
+        return false;
+
+      const serviceMin = Number(service.minPrice);
+      const serviceMax = Number(service.maxPrice);
+
+      return serviceMax >= filterMin && serviceMin <= filterMax;
+    }
+
+    if (!hasPrice(service.price)) return false;
+
+    const servicePrice = Number(service.price);
+    return servicePrice >= filterMin && servicePrice <= filterMax;
+  };
+
   // Price display function
   const getDisplayPrice = (service: Service) => {
-    if (service.pricingType === "exact" && service.price) {
+    if (service.pricingType === "exact" && hasPrice(service.price)) {
       return `$${service.price}`;
     } else if (
       service.pricingType === "range" &&
-      service.minPrice &&
-      service.maxPrice
+      hasPrice(service.minPrice) &&
+      hasPrice(service.maxPrice)
     ) {
       return `$${service.minPrice} - $${service.maxPrice}`;
-    } else if (service.price) {
+    } else if (hasPrice(service.price)) {
       return `$${service.price}`;
-    } else if (service.minPrice && service.maxPrice) {
+    } else if (hasPrice(service.minPrice) && hasPrice(service.maxPrice)) {
       return `$${service.minPrice} - $${service.maxPrice}`;
     }
   };
 
-  // Filter services based on search or serviceTag
-  const filteredServices = business?.services?.filter((service) => {
+  const pricedServices = business?.services?.filter(isPricedService) || [];
+  const hasActiveServiceFilter =
+    search.trim() !== "" ||
+    serviceTag.length > 0 ||
+    minPriceRange.trim() !== "" ||
+    maxPriceRange.trim() !== "";
+
+  // Filter services based on search, serviceTag, and price range
+  const filteredServices = pricedServices.filter((service) => {
     const serviceName = service?.newInstrumentName?.toLowerCase() || "";
 
-    // If there's a search term, filter by it
-    if (search?.trim()) {
-      return serviceName.includes(search.toLowerCase().trim());
+    if (search.trim() && !serviceName.includes(search.toLowerCase().trim())) {
+      return false;
     }
 
-    // If there's a serviceTag, filter by it
-    if (serviceTag && serviceTag.length > 0) {
-      return serviceTag.some((tag) =>
+    if (
+      serviceTag.length > 0 &&
+      !serviceTag.some((tag) =>
         serviceName.includes(tag.label?.toLowerCase()?.trim()),
-      );
+      )
+    ) {
+      return false;
     }
 
-    // If neither search nor serviceTag, return all services
-    return true;
+    return matchesPriceRange(service);
   });
+
+  const displayedServices = hasActiveServiceFilter
+    ? filteredServices
+    : pricedServices;
 
   return (
     <div>
@@ -266,19 +316,8 @@ const BusinessCard = ({ business }: { business: Business }) => {
 
                 <div className="flex flex-col gap-2">
                   <div className="flex flex-wrap items-center gap-2 mb-2">
-                    {filteredServices && filteredServices.length > 0 ? (
-                      filteredServices.slice(0, 1).map((service, index) => (
-                        <button
-                          type="button"
-                          className="h-[40px] lg:h-[48px] px-4 lg:px-5 rounded-lg bg-[#F8F8F8] text-sm lg:text-base flex items-center gap-5"
-                          key={index}
-                        >
-                          <span>{service.newInstrumentName}</span>
-                          <span>{getDisplayPrice(service)}</span>
-                        </button>
-                      ))
-                    ) : business?.services?.length > 0 ? (
-                      business.services.slice(0, 1).map((service, index) => (
+                    {displayedServices.length > 0 ? (
+                      displayedServices.slice(0, 1).map((service, index) => (
                         <button
                           type="button"
                           className="h-[40px] lg:h-[48px] px-4 lg:px-5 rounded-lg bg-[#F8F8F8] text-sm lg:text-base flex items-center gap-5"
@@ -290,7 +329,7 @@ const BusinessCard = ({ business }: { business: Business }) => {
                       ))
                     ) : (
                       <span className="text-sm text-gray-500">
-                        No services available
+                        No priced services available
                       </span>
                     )}
                   </div>
