@@ -61,6 +61,47 @@ const ServiceType: React.FC<ServiceTypeProps> = ({
   groupedServices,
   formatPrice,
 }) => {
+  const availableOtherServices = [
+    singleBusiness.buyInstruments ? "buying" : null,
+    singleBusiness.sellInstruments ? "selling" : null,
+    singleBusiness.tradeInstruments ? "trading" : null,
+    singleBusiness.rentInstruments ? "rental" : null,
+  ].filter((service): service is string => Boolean(service));
+
+  const renderOtherServicesList = () => {
+    if (availableOtherServices.length === 0) {
+      return <span className="font-semibold">other</span>;
+    }
+
+    if (availableOtherServices.length === 1) {
+      return <span className="font-semibold">{availableOtherServices[0]}</span>;
+    }
+
+    if (availableOtherServices.length === 2) {
+      return (
+        <>
+          <span className="font-semibold">{availableOtherServices[0]}</span>
+          {" and "}
+          <span className="font-semibold">{availableOtherServices[1]}</span>
+        </>
+      );
+    }
+
+    return (
+      <>
+        {availableOtherServices.slice(0, -1).map((service) => (
+          <span key={service} className="font-semibold">
+            {service},{" "}
+          </span>
+        ))}
+        and{" "}
+        <span className="font-semibold">
+          {availableOtherServices[availableOtherServices.length - 1]}
+        </span>
+      </>
+    );
+  };
+
   const groupedLessons = singleBusiness.musicLessons.reduce(
     (acc: Record<string, MusicLesson[]>, lesson) => {
       const family = "Strings";
@@ -268,21 +309,7 @@ const ServiceType: React.FC<ServiceTypeProps> = ({
 
         {expandedSections.otherService && (
           <div className="py-4 text-gray-700 leading-relaxed">
-            The business provides{" "}
-            {singleBusiness.buyInstruments && (
-              <span className="font-semibold">buying, </span>
-            )}
-            {singleBusiness.sellInstruments && (
-              <span className="font-semibold">selling, </span>
-            )}
-            {singleBusiness.tradeInstruments && (
-              <span className="font-semibold">trading, </span>
-            )}
-            and{" "}
-            {singleBusiness.rentInstruments && (
-              <span className="font-semibold">rental </span>
-            )}
-            services. Please{" "}
+            The business provides {renderOtherServicesList()} services. Please{" "}
             <Link
               href={singleBusiness.businessInfo.website}
               target="_blank"
