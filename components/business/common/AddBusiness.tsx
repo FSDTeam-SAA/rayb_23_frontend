@@ -402,6 +402,7 @@ const AddBusiness = () => {
         minPrice: lesson.minPrice,
         maxPrice: lesson.maxPrice,
         selectedInstrumentsGroupMusic: lesson.selectedInstrumentsGroupMusic,
+        instrumentFamily: lesson.instrumentFamily || getInstrumentFamilyByName(lesson.selectedInstrumentsGroupMusic),
       })),
       businessHours: businessHours.map((hour) => ({
         day: hour.day,
@@ -533,6 +534,7 @@ const AddBusiness = () => {
         minPrice: lesson.minPrice,
         maxPrice: lesson.maxPrice,
         selectedInstrumentsGroupMusic: lesson.selectedInstrumentsGroupMusic,
+        instrumentFamily: lesson.instrumentFamily || getInstrumentFamilyByName(lesson.selectedInstrumentsGroupMusic),
       })),
       businessHours: businessHours.map((hour) => ({
         day: hour.day,
