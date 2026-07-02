@@ -22,6 +22,7 @@ interface MusicLesson {
   minPrice: string;
   maxPrice: string;
   selectedInstrumentsGroupMusic: string;
+  instrumentFamily: string; // ✅ Make sure this is included
 }
 
 interface SelectedInstrument {
@@ -102,9 +103,11 @@ const ServiceType: React.FC<ServiceTypeProps> = ({
     );
   };
 
+  // ✅ FIXED: Group lessons by actual instrumentFamily from the data
   const groupedLessons = singleBusiness.musicLessons.reduce(
     (acc: Record<string, MusicLesson[]>, lesson) => {
-      const family = "Strings";
+      // Use the actual instrumentFamily from the lesson data
+      const family = lesson.instrumentFamily || "Uncategorized";
       if (!acc[family]) acc[family] = [];
       acc[family].push(lesson);
       return acc;

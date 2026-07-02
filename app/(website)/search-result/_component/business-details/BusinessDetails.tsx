@@ -72,6 +72,16 @@ interface Review {
   googleAuthorPhoto: string | null;
 }
 
+interface MusicLesson {
+  newInstrumentName: string;
+  pricingType: string;
+  price: string;
+  minPrice: string;
+  maxPrice: string;
+  selectedInstrumentsGroupMusic: string;
+  instrumentFamily: string;
+}
+
 interface BusinessProfileProps {
   singleBusiness: {
     _id: string;
@@ -103,14 +113,7 @@ interface BusinessProfileProps {
       instrumentName: string;
       instrumentFamily: string;
     }>;
-    musicLessons: Array<{
-      newInstrumentName: string;
-      pricingType: string;
-      price: string;
-      minPrice: string;
-      maxPrice: string;
-      selectedInstrumentsGroupMusic: string;
-    }>;
+    musicLessons: MusicLesson[];
     businessHours: Array<{
       day: string;
       startTime: string;
