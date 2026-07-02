@@ -8,7 +8,7 @@ import { useFilterStore } from "@/zustand/stores/search-store";
 import React, { useState } from "react";
 
 const PriceRange = ({}) => {
-  const { setMinPriceRange, setMaxPriceRange } = useFilterStore();
+  const { setMinPriceRange, setMaxPriceRange, minPriceRange, maxPriceRange } = useFilterStore();
   const [error, setError] = useState<string>("");
 
   const validatePrice = (minValue: string, maxValue: string): boolean => {
@@ -84,6 +84,7 @@ const PriceRange = ({}) => {
                 min="0"
                 className="border border-gray-200 focus:outline-none h-[50px] p-2 rounded-md bg-[#f7f8f8] w-[150px] lg:w-[110px]"
                 placeholder="Min"
+                value={minPriceRange}
                 onChange={handleMinPriceChange}
                 onBlur={(e) => {
                   // Optional: Validate again on blur
@@ -99,6 +100,7 @@ const PriceRange = ({}) => {
                 min="0"
                 className="border border-gray-200 focus:outline-none h-[50px] p-2 rounded-md bg-[#f7f8f8] w-[150px] lg:w-[110px]"
                 placeholder="Max"
+                value={maxPriceRange}
                 onChange={handleMaxPriceChange}
                 onBlur={(e) => {
                   // Optional: Validate again on blur
