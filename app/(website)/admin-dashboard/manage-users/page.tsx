@@ -26,7 +26,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -70,14 +69,10 @@ const fetchUserDetails = async (userId: string) => {
 // API function to toggle user status (suspend/unsuspend)
 const toggleUserStatus = async ({
   userId,
-  reason,
-  token,
-  isActive
+  token
 }: {
   userId: string;
-  reason: string;
   token?: string;
-  isActive: boolean;
 }) => {
   const headers: HeadersInit = {
     "Content-Type": "application/json",
@@ -92,10 +87,6 @@ const toggleUserStatus = async ({
     {
       method: "PUT",
       headers,
-      body: JSON.stringify({ 
-        deactivedReason: reason,
-        isActive: !isActive // Toggle the status
-      }),
     }
   );
   if (!response.ok) throw new Error("Failed to toggle user status");
@@ -135,8 +126,6 @@ export default function ManageUsersPage() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [statusReason, setStatusReason] = useState("");
-  const [deleteReason, setDeleteReason] = useState("");
   const [actionType, setActionType] = useState<"suspend" | "unsuspend" | "delete">("suspend");
   const { data: session } = useSession();
   const token = session?.user?.accessToken;
@@ -156,39 +145,48 @@ export default function ManageUsersPage() {
 
   // Mutation for toggling user status (suspend/unsuspend)
   const toggleStatusMutation = useMutation({
-    mutationFn: ({ 
-      userId, 
-      reason, 
-      isActive 
-    }: { 
-      userId: string; 
-      reason: string; 
-      isActive: boolean;
-    }) => toggleUserStatus({ userId, reason, token, isActive }),
+    mutationFn: ({ userId }: { userId: string }) =>
+      toggleUserStatus({ userId, token }),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      toast.success(data.message || `User ${actionType === "suspend" ? "suspended" : "unsuspended"} successfully`);
+      queryClient.invalidateQueries({ queryKey: ["users", userType, sortBy, timeRange] });
+      queryClient.invalidateQueries({ queryKey: ["userDetails"] });
+      toast.success(data.message || `User updated successfully`);
       setIsStatusModalOpen(false);
-      setStatusReason("");
       setSelectedUserId(null);
     },
-    onError: (error) => {
-      toast.error(error.message || `Failed to ${actionType} user`);
+    onError: (error: any) => {
+      toast.error(error.message || `Failed to update user`);
+    },
+    onSettled: () => {
+      // Ensure modal closes even if there's an error
+      setTimeout(() => {
+        if (toggleStatusMutation.isPending === false) {
+          // Only proceed if mutation is not pending
+        }
+      }, 100);
     },
   });
 
   // Mutation for deleting user
   const deleteUserMutation = useMutation({
     mutationFn: (userId: string) => deleteUser(userId, token),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      toast.success('User deleted successfully!');
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["users", userType, sortBy, timeRange] });
+      queryClient.invalidateQueries({ queryKey: ["userDetails"] });
+      toast.success(data?.message || 'User deleted successfully!');
       setIsDeleteModalOpen(false);
-      setDeleteReason("");
       setSelectedUserId(null);
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast.error(error.message || 'Failed to delete user');
+    },
+    onSettled: () => {
+      // Ensure modal closes even if there's an error
+      setTimeout(() => {
+        if (deleteUserMutation.isPending === false) {
+          // Only proceed if mutation is not pending
+        }
+      }, 100);
     },
   });
 
@@ -211,14 +209,7 @@ export default function ManageUsersPage() {
 
   const confirmToggleStatus = () => {
     if (selectedUserId) {
-      const user = users?.find((u: any) => u._id === selectedUserId);
-      if (user) {
-        toggleStatusMutation.mutate({
-          userId: selectedUserId,
-          reason: statusReason,
-          isActive: user.isActive
-        });
-      }
+      toggleStatusMutation.mutate({ userId: selectedUserId });
     }
   };
 
@@ -514,7 +505,7 @@ export default function ManageUsersPage() {
               </div>
               <div>
                 <Label>Active Status</Label>
-                <p>{userDetails.isActive ? "Active" : "Suspended"}</p>
+                <p>{userDetails.isActive ? "Active" : "Deleted"}</p>
               </div>
               <div>
                 <Label>Created At</Label>
@@ -546,17 +537,6 @@ export default function ManageUsersPage() {
             <p>
               Are you sure you want to {actionType} this user?
             </p>
-            <div>
-              <Label htmlFor="status-reason">
-                {actionType === "suspend" ? "Suspension" : "Unsuspension"} Reason
-              </Label>
-              <Input
-                id="status-reason"
-                value={statusReason}
-                onChange={(e) => setStatusReason(e.target.value)}
-                placeholder={`Enter ${actionType} reason`}
-              />
-            </div>
           </div>
           <DialogFooter>
             <Button
@@ -568,7 +548,7 @@ export default function ManageUsersPage() {
             <Button
               variant={actionType === "suspend" ? "destructive" : "default"}
               onClick={confirmToggleStatus}
-              disabled={toggleStatusMutation.isPending || !statusReason}
+              disabled={toggleStatusMutation.isPending}
               className={
                 actionType === "unsuspend" 
                   ? "bg-green-600 hover:bg-green-700 text-white" 
@@ -592,15 +572,6 @@ export default function ManageUsersPage() {
           </DialogHeader>
           <div className="space-y-4">
             <p>Are you sure you want to delete this user? This action cannot be undone.</p>
-            <div>
-              <Label htmlFor="delete-reason">Deletion Reason</Label>
-              <Input
-                id="delete-reason"
-                value={deleteReason}
-                onChange={(e) => setDeleteReason(e.target.value)}
-                placeholder="Enter deletion reason"
-              />
-            </div>
           </div>
           <DialogFooter>
             <Button
@@ -612,7 +583,7 @@ export default function ManageUsersPage() {
             <Button
               variant="destructive"
               onClick={confirmDelete}
-              disabled={deleteUserMutation.isPending || !deleteReason}
+              disabled={deleteUserMutation.isPending}
             >
               {deleteUserMutation.isPending ? "Deleting..." : "Delete"}
             </Button>
