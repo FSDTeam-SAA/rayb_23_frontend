@@ -19,6 +19,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
+import Link from "next/link";
 
 interface User {
   _id: string;
@@ -485,19 +486,13 @@ export default function ReviewsComponent() {
                         </div>
                       </div>
                     </div>
-                    {review.report?.isReport ? (
-                      <span className="text-xs px-2 py-1 bg-red-50 text-red-600 rounded-full">
-                        Reported
-                      </span>
-                    ) : (
-                      <Button
+                    <Link href={`mailto:support@instrufix.com`}><Button
                         variant="ghost"
                         size="sm"
                         className="text-gray-500 hover:text-gray-700 text-sm"
                       >
                         Report
-                      </Button>
-                    )}
+                      </Button></Link>
                   </div>
 
                   {/* Review Content */}
