@@ -305,10 +305,10 @@ export default function ContributionTabs() {
             <div className="flex justify-between items-center bg-[#F7F8F8] p-6 rounded-md">
               <div className="flex items-center gap-4">
                 <Image
-                  src="/images/review.png"
+                  src="/images/review.svg"
                   alt="No reviews yet"
-                  width={300}
-                  height={300}
+                  width={1000}
+                  height={1000}
                   className="h-16 w-16 object-contain"
                 />
                 <div className="space-y-2">
@@ -371,10 +371,10 @@ export default function ContributionTabs() {
             <div className="flex justify-between items-center bg-[#F7F8F8] p-6 rounded-md">
               <div className="flex items-center gap-4">
                 <Image
-                  src="/images/photo.png"
+                  src="/images/photo.svg"
                   alt="No photos yet"
-                  width={300}
-                  height={300}
+                  width={1000}
+                  height={1000}
                   className="h-16 w-16 object-contain"
                 />
                 <div className="space-y-2">
@@ -414,10 +414,10 @@ export default function ContributionTabs() {
             <div className="flex justify-between items-center bg-[#F7F8F8] p-6 rounded-md">
               <div className="flex items-center gap-4">
                 <Image
-                  src="/images/business.png"
+                  src="/images/business.svg"
                   alt="No photos yet"
-                  width={300}
-                  height={300}
+                  width={1000}
+                  height={1000}
                   className="h-16 w-16 object-contain"
                 />
                 <div className="space-y-2">
