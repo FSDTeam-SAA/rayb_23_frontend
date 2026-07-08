@@ -49,8 +49,8 @@ const AddBusinessSection = () => {
         <div className="flex gap-6 items-start md:items-center">
           <div>
             <Image
-              src={"/images/location.png"}
-              alt="location.png"
+              src={"/images/business.svg"}
+              alt="business.svg"
               width={1000}
               height={1000}
               className="w-[48px] h-[60px]"
