@@ -9,6 +9,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
   ChevronDown,
   Menu,
   Bell,
@@ -219,52 +225,67 @@ const Navbar = () => {
                 )}
 
                 {/* Mobile Dropdowns */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="w-full justify-between text-gray-900 hover:text-primary flex items-center p-2 rounded-lg hover:bg-gray-50">
-                    For Customer <ChevronDown className="h-4 w-4" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-white text-gray-900 border-gray-200 w-full">
-                    <Link href={`/review-a-business`}>
-                      <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
-                        Write a Review
-                      </DropdownMenuItem>
-                    </Link>
-                    <Link href={`/add-a-business`}>
-                      <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
-                        Add a Business
-                      </DropdownMenuItem>
-                    </Link>
-                    {sessionStatus === "unauthenticated" && (
-                      <DropdownMenuItem className="hover:bg-gray-100 focus:bg-gray-100 cursor-pointer">
-                        <Link href="/auth/login">Log In</Link>
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="customer" className="border-b-0">
+                    <AccordionTrigger className="w-full text-gray-900 hover:text-primary p-2 rounded-lg hover:bg-gray-50 hover:no-underline">
+                      For Customer
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-0">
+                      <div className="flex flex-col gap-1 pt-1">
+                        <Link
+                          href="/review-a-business"
+                          className="rounded-lg px-3 py-2 hover:bg-gray-100"
+                        >
+                          Write a Review
+                        </Link>
+                        <Link
+                          href="/add-a-business"
+                          className="rounded-lg px-3 py-2 hover:bg-gray-100"
+                        >
+                          Add a Business
+                        </Link>
+                        {sessionStatus === "unauthenticated" && (
+                          <Link
+                            href="/auth/login"
+                            className="rounded-lg px-3 py-2 hover:bg-gray-100"
+                          >
+                            Log In
+                          </Link>
+                        )}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="w-full justify-between text-gray-900 hover:text-primary flex items-center p-2 rounded-lg hover:bg-gray-50">
-                    For Business <ChevronDown className="h-4 w-4" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-white text-gray-900 border-gray-200 w-full">
-                    <Link href={`/add-my-business`}>
-                      <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
-                        Add my Business
-                      </DropdownMenuItem>
-                    </Link>
-                    <Link href={`/claim-my-business`}>
-                      {" "}
-                      <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
-                        Claim my Business
-                      </DropdownMenuItem>
-                    </Link>
-                    {sessionStatus === "unauthenticated" && (
-                      <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
-                        <Link href="/auth/login">Log In</Link>
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  <AccordionItem value="business" className="border-b-0">
+                    <AccordionTrigger className="w-full text-gray-900 hover:text-primary p-2 rounded-lg hover:bg-gray-50 hover:no-underline">
+                      For Business
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-0">
+                      <div className="flex flex-col gap-1 pt-1">
+                        <Link
+                          href="/add-my-business"
+                          className="rounded-lg px-3 py-2 hover:bg-gray-100"
+                        >
+                          Add my Business
+                        </Link>
+                        <Link
+                          href="/claim-my-business"
+                          className="rounded-lg px-3 py-2 hover:bg-gray-100"
+                        >
+                          Claim my Business
+                        </Link>
+                        {sessionStatus === "unauthenticated" && (
+                          <Link
+                            href="/auth/login"
+                            className="rounded-lg px-3 py-2 hover:bg-gray-100"
+                          >
+                            Log In
+                          </Link>
+                        )}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
 
                 {/* Mobile Auth Buttons or User Actions */}
                 {sessionStatus === "unauthenticated" ? (
