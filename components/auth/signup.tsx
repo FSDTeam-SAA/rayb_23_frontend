@@ -245,7 +245,7 @@ export default function SignupForm() {
                 <span className="underline cursor-pointer">
                   Terms and Conditions
                 </span>
-              </Link>
+              </Link>{" "}
               and{" "}
               <Link href={`/privacy-policy`}>
                 <span className="underline cursor-pointer">Privacy Policy</span>
