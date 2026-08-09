@@ -37,7 +37,7 @@ export default function BannerHome() {
             Back to Life
           </h1>
           <p className="text-lg sm:text-xl md:text-2xl text-gray-800 font-medium mb-4 lg:max-w-[540px]">
-            Find the best instrument repair shops near you.
+            Find the best musical instrument repair shops near you.
           </p>
 
           <SearchForm
