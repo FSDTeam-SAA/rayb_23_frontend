@@ -58,11 +58,18 @@ const Navbar = () => {
     enabled: sessionStatus === "authenticated",
   });
 
-  // Filter only unread notifications for the count
-  const unreadNotifications = notifications.filter(
-    (notification: any) => notification.isRead === false,
+  // Separate unread message notifications and general notifications
+  const unreadMessageNotifications = notifications.filter(
+    (notification: any) =>
+      notification.type === "new_message" && notification.isRead === false,
   );
-  const notificationCount = unreadNotifications.length;
+  const unreadMessageCount = unreadMessageNotifications.length;
+
+  const unreadOtherNotifications = notifications.filter(
+    (notification: any) =>
+      notification.type !== "new_message" && notification.isRead === false,
+  );
+  const notificationCount = unreadOtherNotifications.length;
 
   const markAllAsReadMutation = useMutation({
     mutationFn: () =>
@@ -95,6 +102,12 @@ const Navbar = () => {
 
   const handleNotificationClick = () => {
     if (notificationCount > 0 && !markAllAsReadMutation.isPending) {
+      markAllAsReadMutation.mutate();
+    }
+  };
+
+  const handleInboxClick = () => {
+    if (unreadMessageCount > 0 && !markAllAsReadMutation.isPending) {
       markAllAsReadMutation.mutate();
     }
   };
@@ -214,8 +227,29 @@ const Navbar = () => {
                     </div>
 
                     <div className="flex gap-3">
-                      <div className="flex items-center justify-center h-12 w-12 bg-[#F7F8F8] rounded-full">
-                        <Inbox className="h-6 w-6" />
+                      <div className="flex items-center justify-center h-12 w-12 bg-[#F7F8F8] rounded-full relative">
+                        <Link
+                          onClick={handleInboxClick}
+                          href={
+                            session?.user?.userType === "admin"
+                              ? "/admin-dashboard/messages"
+                              : session?.user?.userType === "user"
+                                ? "/customer-dashboard/messages"
+                                : session?.user?.userType === "businessMan"
+                                  ? "/business-dashboard/messages"
+                                  : "/customer-dashboard/messages"
+                          }
+                        >
+                          <Inbox className="h-6 w-6" />
+                          {unreadMessageCount > 0 && (
+                            <span
+                              className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full"
+                              style={{ transform: "translate(50%, -50%)" }}
+                            >
+                              {unreadMessageCount > 99 ? "99+" : unreadMessageCount}
+                            </span>
+                          )}
+                        </Link>
                       </div>
                       <div className="flex items-center justify-center h-12 w-12 bg-[#F7F8F8] rounded-full">
                         <Bookmark className="h-6 w-6" />
@@ -412,8 +446,9 @@ const Navbar = () => {
             </div>
           ) : (
             <div className="flex gap-3">
-              <div className="flex items-center justify-center h-12 w-12 bg-[#F7F8F8] rounded-full">
+              <div className="flex items-center justify-center h-12 w-12 bg-[#F7F8F8] rounded-full relative">
                 <Link
+                  onClick={handleInboxClick}
                   href={
                     session?.user?.userType === "admin"
                       ? "/admin-dashboard/messages"
@@ -425,6 +460,14 @@ const Navbar = () => {
                   }
                 >
                   <Inbox className="h-6 w-6" />
+                  {unreadMessageCount > 0 && (
+                    <span
+                      className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full"
+                      style={{ transform: "translate(50%, -50%)" }}
+                    >
+                      {unreadMessageCount > 99 ? "99+" : unreadMessageCount}
+                    </span>
+                  )}
                 </Link>
               </div>
               {session?.user?.userType === "user" && (

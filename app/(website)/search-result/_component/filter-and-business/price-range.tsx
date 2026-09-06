@@ -5,10 +5,11 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useFilterStore } from "@/zustand/stores/search-store";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const PriceRange = ({}) => {
-  const { setMinPriceRange, setMaxPriceRange, minPriceRange, maxPriceRange } = useFilterStore();
+  const { setMinPriceRange, setMaxPriceRange, minPriceRange, maxPriceRange } =
+    useFilterStore();
   const [error, setError] = useState<string>("");
 
   const validatePrice = (minValue: string, maxValue: string): boolean => {
@@ -24,39 +25,29 @@ const PriceRange = ({}) => {
       return false;
     }
 
-    if (minValue && maxValue && min > max) {
-      setError("Minimum price cannot be greater than maximum price");
+    if ((minValue && isNaN(min)) || (maxValue && isNaN(max))) {
+      setError("Please enter valid numbers");
       return false;
     }
 
-    if ((minValue && isNaN(min)) || (maxValue && isNaN(max))) {
-      setError("Please enter valid numbers");
+    if (minValue && maxValue && min > max) {
+      setError("Minimum price cannot be greater than maximum price");
       return false;
     }
 
     return true;
   };
 
+  useEffect(() => {
+    validatePrice(minPriceRange, maxPriceRange);
+  }, [minPriceRange, maxPriceRange]);
+
   const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    const currentMax = useFilterStore.getState().maxPriceRange || "";
-    
-    if (validatePrice(value, currentMax)) {
-      setMinPriceRange(value);
-    } else {
-      setMinPriceRange(""); 
-    }
+    setMinPriceRange(e.target.value);
   };
 
   const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    const currentMin = useFilterStore.getState().minPriceRange || "";
-    
-    if (validatePrice(currentMin, value)) {
-      setMaxPriceRange(value);
-    } else {
-      setMaxPriceRange("");
-    }
+    setMaxPriceRange(e.target.value);
   };
 
   return (
@@ -86,11 +77,6 @@ const PriceRange = ({}) => {
                 placeholder="Min"
                 value={minPriceRange}
                 onChange={handleMinPriceChange}
-                onBlur={(e) => {
-                  // Optional: Validate again on blur
-                  const currentMax = useFilterStore.getState().maxPriceRange || "";
-                  validatePrice(e.target.value, currentMax);
-                }}
               />
 
               <div className="border w-[25px]"></div>
@@ -102,11 +88,6 @@ const PriceRange = ({}) => {
                 placeholder="Max"
                 value={maxPriceRange}
                 onChange={handleMaxPriceChange}
-                onBlur={(e) => {
-                  // Optional: Validate again on blur
-                  const currentMin = useFilterStore.getState().minPriceRange || "";
-                  validatePrice(currentMin, e.target.value);
-                }}
               />
             </div>
 
