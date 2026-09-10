@@ -51,7 +51,7 @@
     "react-leaflet": "^4.2.1",
     "react-rating": "^0.3.0",
     "react-stars": "^2.2.5",
-    "sharp": "^0.34.3",
+    "sharp": "^0.35.4",
     "socket.io-client": "^4.8.1",
     "sonner": "^2.0.5",
     "swiper": "^12.0.2",
