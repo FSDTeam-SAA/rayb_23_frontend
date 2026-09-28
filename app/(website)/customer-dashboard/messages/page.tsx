@@ -21,7 +21,14 @@ export default function CustomerInboxPage() {
         getChatImage: (chat: any) => chat?.businessId?.businessInfo?.image?.[0],
         getChatId: (chat: any) => chat?._id,
 
-        getReceiverId: (chat: any) => chat?.businessId?.user,
+        getReceiverId: (chat: any) =>
+          chat?.participants?.[0]?.userId?._id ||
+          (typeof chat?.participants?.[0]?.userId === "string"
+            ? chat?.participants?.[0]?.userId
+            : undefined) ||
+          (typeof chat?.businessId?.user === "object"
+            ? chat?.businessId?.user?._id
+            : chat?.businessId?.user),
 
         emptyStateText: "You have no messages yet.",
         emptyStateLink: "/search-result",

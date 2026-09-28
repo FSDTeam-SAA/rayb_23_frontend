@@ -62,12 +62,27 @@ const BusinessInfo = () => {
     open,
     sort,
     search,
+    setSearch,
     setSort,
   } = useFilterStore();
 
-  const { location } = useSearchStore();
+  const { location, setLocation } = useSearchStore();
   const searchLocation = location || "";
   const urlSort = searchParams.get("sort");
+  const urlQ = searchParams.get("q");
+  const urlLocation = searchParams.get("location");
+
+  React.useEffect(() => {
+    if (urlQ !== null && urlQ !== search) {
+      setSearch(urlQ);
+    }
+  }, [urlQ, search, setSearch]);
+
+  React.useEffect(() => {
+    if (urlLocation !== null && urlLocation !== location) {
+      setLocation(urlLocation);
+    }
+  }, [urlLocation, location, setLocation]);
 
   React.useEffect(() => {
     if (

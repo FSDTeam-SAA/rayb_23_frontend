@@ -39,10 +39,10 @@ const AlsoOffers = ({}) => {
             Also Offers
           </AccordionTrigger>
 
-          <AccordionContent className="flex flex-col gap-2">
-            <div className="space-y-4">
+          <AccordionContent className="flex flex-col w-full gap-2">
+            <div className="flex flex-col w-full space-y-3 lg:space-y-4">
               {items.map((item, index) => (
-                <label key={index} className="flex items-center gap-2">
+                <label key={index} className="flex items-center gap-2 w-full cursor-pointer">
                   <input
                     type="checkbox"
                     className="h-4 w-4 accent-primary"

@@ -169,11 +169,12 @@ export default function InboxComponent({ config }: InboxComponentProps) {
       .then((res) => {
         console.log("Loaded messages:", res.data.length);
         setLiveMessages(res.data);
+        queryClient.invalidateQueries({ queryKey: ["all-notifications"] });
       })
       .catch((error) => {
         console.error("Error loading messages:", error);
       });
-  }, [selectedChat, config, myUserId]);
+  }, [selectedChat, config, myUserId, queryClient]);
 
   // Send message mutation
   // const sendMutation = useMutation({

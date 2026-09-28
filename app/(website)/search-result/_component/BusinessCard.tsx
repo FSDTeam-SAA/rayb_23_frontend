@@ -28,6 +28,8 @@ interface Service {
   minPrice: string | number | null;
   maxPrice: string | number | null;
   pricingType: string;
+  selectedInstrumentsGroup?: string;
+  instrumentFamily?: string;
 }
 
 interface Business {
@@ -150,7 +152,9 @@ const BusinessCard = ({ business }: { business: Business }) => {
 
   // Price display function
   const getDisplayPrice = (service: Service) => {
-    if (service.pricingType === "exact" && hasPrice(service.price)) {
+    if (service.pricingType === "hourly" && hasPrice(service.price)) {
+      return `$${service.price}/hr`;
+    } else if (service.pricingType === "exact" && hasPrice(service.price)) {
       return `$${service.price}`;
     } else if (
       service.pricingType === "range" &&
@@ -175,8 +179,18 @@ const BusinessCard = ({ business }: { business: Business }) => {
   // Filter services based on search, serviceTag, and price range
   const filteredServices = allServices.filter((service) => {
     const serviceName = service?.newInstrumentName?.toLowerCase() || "";
+    const groupName = service?.selectedInstrumentsGroup?.toLowerCase() || "";
+    const familyName = service?.instrumentFamily?.toLowerCase() || "";
+    const businessName = business?.businessInfo?.name?.toLowerCase() || "";
+    const searchLower = search.toLowerCase().trim();
 
-    if (search.trim() && !serviceName.includes(search.toLowerCase().trim())) {
+    if (
+      searchLower &&
+      !serviceName.includes(searchLower) &&
+      !groupName.includes(searchLower) &&
+      !familyName.includes(searchLower) &&
+      !businessName.includes(searchLower)
+    ) {
       return false;
     }
 

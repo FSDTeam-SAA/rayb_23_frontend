@@ -117,12 +117,16 @@ const Navbar = () => {
 
     const socket = initSocket();
     socket.emit("joinNotification", session.user.id);
-    socket.on("new_notification", () => {
+    const handleNotificationUpdate = () => {
       queryClient.invalidateQueries({ queryKey: ["all-notifications"] });
-    });
+    };
+
+    socket.on("new_notification", handleNotificationUpdate);
+    socket.on("newMessage", handleNotificationUpdate);
 
     return () => {
-      socket.off("new_notification");
+      socket.off("new_notification", handleNotificationUpdate);
+      socket.off("newMessage", handleNotificationUpdate);
     };
   }, [queryClient, session?.user?.id, sessionStatus]);
 
@@ -229,6 +233,7 @@ const Navbar = () => {
                     <div className="flex gap-3">
                       <div className="flex items-center justify-center h-12 w-12 bg-[#F7F8F8] rounded-full relative">
                         <Link
+                          className="relative flex items-center justify-center w-full h-full"
                           onClick={handleInboxClick}
                           href={
                             session?.user?.userType === "admin"
@@ -448,6 +453,7 @@ const Navbar = () => {
             <div className="flex gap-3">
               <div className="flex items-center justify-center h-12 w-12 bg-[#F7F8F8] rounded-full relative">
                 <Link
+                  className="relative flex items-center justify-center w-full h-full"
                   onClick={handleInboxClick}
                   href={
                     session?.user?.userType === "admin"
