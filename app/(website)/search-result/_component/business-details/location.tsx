@@ -49,8 +49,8 @@ const Location: React.FC<LocationProps> = ({
             className="h-full w-full rounded-xl shadow-lg"
           >
             <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-              attribution=""
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             />
             <Marker position={[coords.lat, coords.lng]} icon={customMarker}>
               <Popup>{singleBusiness.businessInfo.name}</Popup>
